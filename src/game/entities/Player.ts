@@ -25,6 +25,21 @@ const MAX_CHARGE_MS = 1100;
 const LAND_POSE_MS = 90;
 const SHOOT_POSE_MS = 150;
 const SHOOT_FRAME_COUNT = 3;
+const PLAYER_SCALE = 1;
+
+const PLAYER_FRAMES = {
+  crouch: 5,
+  skid: 6,
+  walkBase: 8,
+  runBase: 16,
+  apex: 27,
+  fall: 28,
+  aimForward: [32, 33],
+  aimUpward: [34, 35],
+  shootForward: [36, 37, 38],
+  shootUpward: [39, 40, 41],
+  charge: [42, 43, 44],
+} as const;
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   private readonly cursors: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -60,20 +75,21 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private previousX: number;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, 'player-idle-0');
+    super(scene, x, y, 'player-sheet', 0);
 
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
     this.previousX = x;
 
+    this.setScale(PLAYER_SCALE);
     this.setCollideWorldBounds(true);
     this.setMaxVelocity(RUN_SPEED, 520);
     this.setDragX(GROUND_DRAG);
 
     const body = this.body as Phaser.Physics.Arcade.Body;
-    body.setSize(14, 27);
-    body.setOffset(5, 4);
+    body.setSize(14, 26);
+    body.setOffset(9, 3);
 
     const keyboard = scene.input.keyboard!;
     this.cursors = keyboard.createCursorKeys();
@@ -274,6 +290,21 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.scene.cameras.main.shake(charged ? 45 : 22, charged ? 0.0015 : 0.0007);
   }
 
+  private setPlayerFrame(frame: number): void {
+    this.anims.stop();
+    this.setFrame(frame);
+  }
+
+  private isUpwardPose(aimPose: AimPose): boolean {
+    return aimPose === 'up' || aimPose === 'up-diagonal';
+  }
+
+  private spriteGaitFrame(): number {
+    // O modelo antigo invertia a ordem para compensar a arte procedural.
+    // A nova spritesheet já foi desenhada no sentido correto de avanço.
+    return (8 - this.gaitFrame) % 8;
+  }
+
   private updateVisualState(
     time: number,
     grounded: boolean,
@@ -286,16 +317,15 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     if (this.charging) {
       const chargeTime = Phaser.Math.Clamp(time - this.chargeStartedAt, 0, MAX_CHARGE_MS);
-      const chargeFrame = Math.min(3, Math.floor(chargeTime / 260));
+      const chargeFrame = Math.min(2, Math.floor(chargeTime / 260));
       const aimPose = resolveAimPose(this.aimX, this.aimY);
-      this.anims.stop();
 
-      if (movingOnGround) {
-        this.setTexture(`player-${this.gaitMode}-charge-${this.gaitFrame}-${aimPose}-${chargeFrame}`);
-      } else if (grounded) {
-        this.setTexture(`player-charge-ground-${aimPose}-${chargeFrame}`);
+      if (this.isUpwardPose(aimPose)) {
+        this.setPlayerFrame(PLAYER_FRAMES.aimUpward[chargeFrame > 0 ? 1 : 0]);
+      } else if (chargeFrame === 0) {
+        this.setPlayerFrame(PLAYER_FRAMES.aimForward[0]);
       } else {
-        this.setTexture(`player-charge-air-${aimPose}-${chargeFrame}`);
+        this.setPlayerFrame(PLAYER_FRAMES.charge[chargeFrame]);
       }
       return;
     }
@@ -306,16 +336,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         SHOOT_FRAME_COUNT - 1,
         Math.floor(elapsed / (SHOOT_POSE_MS / SHOOT_FRAME_COUNT)),
       );
-      this.anims.stop();
 
-      if (this.shotGrounded && movingOnGround) {
-        this.setTexture(
-          `player-${this.gaitMode}-shoot-${this.gaitFrame}-${this.shotAimPose}-${shootFrame}`,
-        );
-      } else if (this.shotGrounded) {
-        this.setTexture(`player-shoot-ground-${this.shotAimPose}-${shootFrame}`);
+      if (this.isUpwardPose(this.shotAimPose)) {
+        this.setPlayerFrame(PLAYER_FRAMES.shootUpward[shootFrame]);
       } else {
-        this.setTexture(`player-shoot-air-${this.shotAimPose}-${shootFrame}`);
+        this.setPlayerFrame(PLAYER_FRAMES.shootForward[shootFrame]);
       }
       return;
     }
@@ -327,20 +352,18 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       }
 
       if (Math.abs(body.velocity.y) <= 35) {
-        this.anims.stop();
-        this.setTexture('player-apex');
+        this.setPlayerFrame(PLAYER_FRAMES.apex);
         return;
       }
 
-      this.play('player-fall', true);
+      this.setPlayerFrame(PLAYER_FRAMES.fall);
       return;
     }
 
     if (time < this.landPoseUntil) return;
 
     if (vertical > 0) {
-      this.anims.stop();
-      this.setTexture('player-crouch');
+      this.setPlayerFrame(PLAYER_FRAMES.crouch);
       return;
     }
 
@@ -348,14 +371,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       horizontal !== 0 && speed > 36 && Math.sign(body.velocity.x) !== horizontal;
 
     if (movingAgainstVelocity) {
-      this.anims.stop();
-      this.setTexture('player-skid');
+      this.setPlayerFrame(PLAYER_FRAMES.skid);
       return;
     }
 
     if (movingOnGround) {
-      this.anims.stop();
-      this.setTexture(`player-${this.gaitMode}-${this.gaitFrame}`);
+      const base = this.gaitMode === 'run' ? PLAYER_FRAMES.runBase : PLAYER_FRAMES.walkBase;
+      this.setPlayerFrame(base + this.spriteGaitFrame());
       return;
     }
 
