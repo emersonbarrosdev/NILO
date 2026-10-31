@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { SCENE_KEYS } from '../config/constants';
 import { Player } from '../entities/Player';
+import { addPixelText } from '../ui/PixelText';
 
 export class GameScene extends Phaser.Scene {
   private player?: Player;
@@ -18,13 +19,29 @@ export class GameScene extends Phaser.Scene {
     this.player = new Player(this, 38, 130);
     this.physics.add.collider(this.player, ground);
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
+    this.cameras.main.setRoundPixels(true);
 
-    this.add.text(20, 20, '1-1 TELHADOS DO MERCADO', {
-      fontFamily: 'monospace', fontSize: '8px', color: '#ffffff', backgroundColor: '#00000088', padding: { x: 4, y: 3 },
-    }).setScrollFactor(0);
-    this.add.text(20, 34, 'SETAS: mover | Z: pular', {
-      fontFamily: 'monospace', fontSize: '7px', color: '#fde68a', backgroundColor: '#00000088', padding: { x: 4, y: 2 },
-    }).setScrollFactor(0);
+    addPixelText(this, 8, 20, '1-1 TELHADOS DO MERCADO', {
+      scale: 1,
+      color: 0xffffff,
+      paddingX: 4,
+      paddingY: 3,
+      backgroundColor: 0x17324a,
+      backgroundAlpha: 0.92,
+      scrollFactor: 0,
+      depth: 900,
+    });
+
+    addPixelText(this, 8, 36, 'SETAS MOVER  Z PULAR', {
+      scale: 1,
+      color: 0xffe082,
+      paddingX: 4,
+      paddingY: 2,
+      backgroundColor: 0x17324a,
+      backgroundAlpha: 0.92,
+      scrollFactor: 0,
+      depth: 900,
+    });
 
     this.scene.launch(SCENE_KEYS.ui);
   }
