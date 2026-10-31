@@ -1,95 +1,89 @@
 # ESTALO 88 — Bíblia de Tarefas da Fase 1-1
 
-## Escopo desta bíblia
+> `ESTALO 88` é codinome. Esta bíblia cobre somente o vertical slice da **Fase 1-1 — Vale da Brisa**.
 
-Esta documentação cobre **somente a produção completa da Fase 1-1 — Telhados do Mercado** e a fundação técnica indispensável para fazê-la funcionar como vertical slice. Não produzir fases 1-2 em diante, chefes ou sistemas que existam apenas para conteúdo futuro. A meta é terminar uma fase pequena, polida e representativa antes de expandir o jogo.
+## Escopo
 
-## Definição de pronto do vertical slice
+A meta é terminar uma fase pequena, polida e representativa antes de produzir qualquer outra fase. A direção urbana anterior foi descartada: **não usar prédios, skyline, telhados, metrô ou estética de cidade como identidade desta fase**.
 
-A Fase 1-1 deve poder ser aberta a partir do fluxo inicial, jogada do início ao fim, concluída, reiniciada após morte e rejogada. Deve possuir personagem em sprite final, movimentação, estilingue, inimigos, obstáculos, plataformas, puzzle curto, checkpoints, coletáveis, vida, vidas, HUD, áudio, stage clear, game over/continue, save básico e performance estável.
+A 1-1 deve ser aberta, colorida, natural e convidar ao movimento. O jogador precisa enxergar céu, colinas, vegetação, relevo, madeira, bandeirolas e plataformas legíveis.
 
-Tempo-alvo da primeira conclusão: **6–8 minutos**. Jogador experiente: **3–5 minutos**.
+**Tempo-alvo:** 6–8 min na primeira conclusão; 3–5 min para jogador experiente.
+
+## Definição de pronto
+
+A fase só é considerada pronta quando possuir:
+
+- personagem em sprite final;
+- movimento e pulo polidos;
+- estilingue funcional;
+- 3 inimigos diferentes;
+- obstáculos e plataformas fixas/móveis;
+- pelo menos 1 puzzle curto;
+- checkpoint;
+- coletáveis, coração e 1-UP;
+- vidas e respawn;
+- HUD;
+- áudio;
+- stage clear;
+- game over/continue;
+- save básico;
+- arte natural/colorida coerente;
+- performance estável;
+- início, meio e fim claros.
 
 ---
 
 # ÉPICO 01 — Fundação técnica
 
-## Tarefa 01 — Inicializar Phaser + TypeScript + Vite
+## Tarefa 01 — Validar runtime
 
-**Objetivo:** estabelecer runtime limpo e reproduzível.
+Manter Phaser 4 + TypeScript + Vite + Arcade Physics. Resolução lógica 320×180, `pixelArt: true`, antialias desligado e `roundPixels: true`.
 
-**Implementação:**
-- Phaser 4;
-- TypeScript strict;
-- Vite;
-- Arcade Physics;
-- resolução lógica 320×180;
-- pixel art habilitada;
-- antialias desligado;
-- scale FIT + centralização;
-- scripts `dev`, `typecheck`, `build` e `preview`.
+**Aceite:** `npm install`, `npm run typecheck` e `npm run build` sem erros.
 
-**Aceite:** `npm install`, `npm run typecheck` e `npm run build` executam sem erro.
+## Tarefa 02 — Garantir escala pixel-perfect
 
-## Tarefa 02 — Criar arquitetura base
+O canvas só pode usar multiplicadores inteiros sempre que possível: 2×, 3×, 4×, 5× etc. Não usar escala fracionária que borre fonte e sprites.
 
-Criar e conectar:
-- BootScene;
-- PreloadScene;
-- TitleScene;
-- MenuScene;
-- IntroScene;
-- MapScene;
-- GameScene;
-- UIScene;
-- StageClearScene;
-- GameOverScene;
-- EndingScene placeholder;
-- Player;
-- Projectile;
-- systems de combate, coletáveis, checkpoint, save e áudio;
-- dados/configs de fase.
+## Tarefa 03 — Consolidar fluxo inicial
 
-**Aceite:** fluxo mínimo Title → Menu → Intro → Map → Game funciona sem reload da página.
+Fluxo visível do vertical slice:
 
-## Tarefa 03 — Configurar pipeline de assets
+**Tela inicial/menu → Rota da Aventura → Fase 1-1**.
 
-Definir convenções de nomes, spritesheets, tilesets, áudio e mapas. Nenhum sprite final deve ser desenhado por primitives em runtime. Primitives são aceitas exclusivamente durante graybox e devem ser removidas antes da aprovação visual.
+Boot/Preload permanecem técnicos. Intro narrativa não entra enquanto história/arte não forem aprovadas.
+
+## Tarefa 04 — Pipeline de assets
+
+Definir nomes e pastas para spritesheets, tilesets, backgrounds, UI, mapas e áudio. Primitives em runtime são permitidas apenas durante graybox.
 
 ---
 
-# ÉPICO 02 — Controle do protagonista
+# ÉPICO 02 — Protagonista e controles
 
-## Tarefa 04 — Graybox de movimento
+## Tarefa 05 — Movimento horizontal
 
-Implementar:
-- aceleração horizontal;
-- velocidade máxima;
-- desaceleração;
-- direção/facing;
-- colisão com chão e paredes;
-- estado grounded/airborne.
+Implementar aceleração, velocidade máxima, desaceleração, direção/facing e colisão estável.
 
-**Validação:** testar andando em terreno plano por pelo menos 2 minutos e ajustar até não haver sensação de gelo ou travamento.
+Controles:
+- A/D ou ←/→ mover;
+- S/↓ direção para baixo/agachar quando implementado.
 
-## Tarefa 05 — Pulo responsivo
+## Tarefa 06 — Pulo responsivo
 
-Implementar:
-- pulo de altura variável;
-- gravidade adequada;
-- coyote time discreto;
-- jump buffer;
-- queda mais responsiva que subida quando necessário;
-- atravessar plataformas finas por comando.
+W, ↑ e SPACE devem pular. Implementar altura variável, coyote time e jump buffer discretos.
 
-**Aceite:** saltos curtos, longos, na borda e entre plataformas estreitas são previsíveis.
+## Tarefa 07 — Plataformas semissólidas
 
-## Tarefa 06 — Produzir spritesheet final do protagonista
+Permitir atravessar plataformas finas para baixo quando a mecânica entrar no level design.
 
-Criar personagem humano jovem, urbano, mensageiro e altamente legível em pixel art. Não usar vetor ou boneco provisório na entrega final.
+## Tarefa 08 — Spritesheet final do protagonista
+
+Produzir personagem cartunesco e legível, sem estética urbana obrigatória e sem associação visual a Sonic/Mogli.
 
 Animações mínimas:
-- idle 4 frames;
+- idle 4;
 - run 6–8;
 - jump 2–3;
 - fall 2;
@@ -100,388 +94,282 @@ Animações mínimas:
 - hit 2;
 - death 6.
 
-**Aceite:** corrida alterna membros corretamente e não parece slide; transições não deixam frame congelado incorreto.
+**Aceite:** corrida alterna membros corretamente e não parece slide.
 
 ---
 
 # ÉPICO 03 — Estilingue
 
-## Tarefa 07 — Tiro rápido
+## Tarefa 09 — Tiro rápido
 
-Implementar projétil normal ilimitado, cooldown curto, origem alinhada à mão/estilingue, direção baseada no facing e feedback de impacto.
+Projétil normal ilimitado, cooldown curto e origem alinhada à mão/estilingue.
 
-**Aceite:** disparar em sequência não cria spam ilimitado nem atravessa colisores indevidos.
+## Tarefa 10 — Mira
 
-## Tarefa 08 — Mira e tiro carregado
+Permitir mira horizontal, vertical e diagonal de forma simples e previsível.
 
-Segurar ataque entra em estado de carga. Permitir até 8 direções. A carga deve possuir feedback de sprite/SFX. Ao soltar, criar tiro mais forte/rápido conforme regra definida.
+## Tarefa 11 — Tiro carregado
 
-**Aceite:** mirar no chão, diagonal, cima e horizontal funciona inclusive no ar quando permitido pelo design.
+Segurar ataque aumenta força/alcance. Feedback visual e sonoro obrigatório.
 
-## Tarefa 09 — Combate aéreo
+## Tarefa 12 — Combate aéreo
 
-Permitir pular e disparar sem zerar artificialmente o momentum horizontal. Validar sequências `correr → pular → atirar → aterrissar`.
+Permitir `correr → pular → atirar → aterrissar` sem zerar momentum horizontal.
 
----
+## Tarefa 13 — Impacto e feedback
 
-# ÉPICO 04 — Level design graybox 1-1
-
-## Tarefa 10 — Construir macro-layout
-
-Criar graybox horizontal de Telhados do Mercado com duração-alvo de 6–8 minutos na primeira jogada. Dividir em cinco atos:
-
-1. **Abertura segura:** movimento e primeiro salto.
-2. **Primeiro combate:** inimigo simples e primeiro tiro.
-3. **Verticalidade:** toldos, caixas, pequenas plataformas e inimigo aéreo.
-4. **Puzzle/segredo:** contrapeso e primeira rota opcional.
-5. **Trecho final:** combina movimento, combate, plataformas móveis e chegada ao ponto de saída.
-
-Evitar corredores vazios longos e saltos cegos.
-
-## Tarefa 11 — Plataformas fixas e semissólidas
-
-Criar blocos de rooftop, plataformas finas atravessáveis, bordas claras e alturas coerentes com métricas do pulo.
-
-## Tarefa 12 — Plataformas móveis
-
-Adicionar pelo menos dois padrões:
-- horizontal;
-- vertical.
-
-A velocidade deve permitir leitura antes do salto. Evitar esmagamento injusto.
-
-## Tarefa 13 — Toldos elásticos
-
-Criar toldos que funcionam como trampolim. O jogador deve reconhecer visualmente o comportamento antes do primeiro uso obrigatório.
-
-## Tarefa 14 — Obstáculos ambientais
-
-Adicionar e validar:
-- buracos/quedas;
-- caixas empilhadas;
-- placas móveis;
-- obstáculos de teto;
-- trechos de precisão curta.
-
-Nenhum obstáculo fatal pode depender de informação fora da tela.
+Criar hit flash, pequeno recuo, SFX e partículas pixeladas apropriadas.
 
 ---
 
-# ÉPICO 05 — Inimigos da Fase 1-1
+# ÉPICO 04 — Level design da 1-1
 
-## Tarefa 15 — Lata
+## Tarefa 14 — Macro-layout
 
-Inimigo básico de patrulha. Anda entre limites, muda direção em bordas/obstáculos conforme regra e morre com um tiro normal.
+Construir Vale da Brisa em cinco atos:
 
-Função pedagógica: ensinar que o estilingue derrota inimigos.
+1. abertura segura e primeiro salto;
+2. primeiro inimigo e primeiro tiro;
+3. plataformas com verticalidade e inimigo aéreo;
+4. puzzle curto + rota opcional;
+5. trecho final combinando movimento, combate e plataformas móveis.
 
-## Tarefa 16 — Saltador
+## Tarefa 15 — Terreno principal
 
-Permanece em patrulha curta ou espera; ao jogador entrar na zona de detecção, prepara visualmente e salta. Um tiro normal derrota.
+Usar terra/pedra com topo de grama. Variar altura e largura para evitar uma faixa reta contínua.
 
-Função: obrigar o jogador a reagir verticalmente.
+## Tarefa 16 — Plataformas naturais
 
-## Tarefa 17 — Pipa-Drone
+Criar plataformas de terra, pedra, madeira e pequenas estruturas de caminho/feira. Nada de rooftops urbanos.
 
-Inimigo aéreo com movimento simples, aproximação previsível e vulnerabilidade clara.
+## Tarefa 17 — Plataformas móveis
 
-Função: ensinar mira vertical/diagonal e tiro no ar.
+Adicionar pelo menos uma horizontal e uma vertical.
 
-## Tarefa 18 — Sistema comum de inimigos
+## Tarefa 18 — Elemento de impulso
 
-Padronizar:
-- dano ao jogador;
-- hit flash/piscar;
-- knockback moderado;
-- morte;
-- desativação fora de câmera conforme necessário;
-- respawn apenas quando apropriado após morte/checkpoint;
-- colisão sem dano múltiplo por frame.
+Criar um elemento próprio do mundo que lance o personagem para cima/frente. Pode ser flor, tecido elástico, folha, mola estilizada ou outro conceito aprovado visualmente.
 
----
+## Tarefa 19 — Obstáculos
 
-# ÉPICO 06 — Puzzle e interação de cenário
+Adicionar:
+- buracos;
+- troncos/pedras;
+- espinhos ou perigo equivalente;
+- pequenas quedas;
+- plataformas estreitas;
+- trecho curto de precisão.
 
-## Tarefa 19 — Contrapeso de plataforma
+Nenhuma morte pode depender de informação fora da tela.
 
-Criar puzzle principal da 1-1: um peso/engate visível segura uma plataforma em posição inadequada. O jogador atira no alvo, o mecanismo solta e a plataforma assume nova posição.
+## Tarefa 20 — Rotas alternativas
 
-**Regras:**
-- solução deve ser lida visualmente;
-- não usar texto explicativo obrigatório;
-- resolução em poucos segundos;
-- resposta audiovisual imediata.
-
-## Tarefa 20 — Segredo opcional com tiro carregado
-
-Criar uma pequena rota opcional em que um alvo distante ou protegido exige o tiro carregado. Recompensa: cartão-postal ou 1-UP. O jogador que não descobrir deve conseguir concluir a fase normalmente.
+Criar pelo menos uma rota alta e uma rota baixa que se reencontrem.
 
 ---
 
-# ÉPICO 07 — Coletáveis, vida e checkpoint
+# ÉPICO 05 — Inimigos
 
-## Tarefa 21 — Selos
+## Tarefa 21 — Inimigo terrestre básico
 
-Distribuir selos em linhas que ensinem saltos e sugiram rotas. Implementar contador e regra de 50 selos = +1 vida.
+Patrulha simples, 1 tiro normal para derrotar e telegraph claro.
 
-## Tarefa 22 — Cartões-postais
+## Tarefa 22 — Inimigo saltador
 
-Inserir exatamente 3:
-1. visível e relativamente fácil;
-2. escondido por exploração;
-3. associado ao desafio opcional mais difícil.
+Reage à aproximação do jogador com preparação visível antes do salto.
 
-Salvar coleta por fase e impedir duplicação permanente indevida no mesmo save.
+## Tarefa 23 — Inimigo aéreo
 
-## Tarefa 23 — Coração
+Movimento previsível que ensina mira vertical/diagonal e combate durante salto.
 
-Implementar pickup que recupera 1 coração sem exceder máximo.
+## Tarefa 24 — Redesign artístico dos placeholders
 
-## Tarefa 24 — 1-UP físico
+Os nomes `lata`, `saltador` e `pipa-drone` são técnicos. Criar criaturas/inimigos coerentes com o mundo natural/fantástico antes da aprovação final.
 
-Inserir exatamente 1 vida extra escondida na fase, separada da vida obtida por 50 selos.
+## Tarefa 25 — Sistema comum de inimigos
 
-## Tarefa 25 — Caixa de correio/checkpoint
-
-Adicionar pelo menos 1 checkpoint principal aproximadamente após metade da fase. Deve levantar bandeira, tocar SFX, registrar posição e servir de respawn.
+Padronizar dano, knockback, invulnerabilidade, morte, ativação fora de câmera e respawn consistente.
 
 ---
 
-# ÉPICO 08 — Dano, morte e continue
+# ÉPICO 06 — Puzzle e interação
 
-## Tarefa 26 — Sistema de corações
+## Tarefa 26 — Puzzle principal da 1-1
 
-3 corações máximos, dano de 1 coração, invulnerabilidade temporária, feedback de hit e knockback controlado.
+Criar um mecanismo visual acionado por estilingue que altere uma plataforma ou passagem. Resolver em poucos segundos e sem texto obrigatório.
 
-## Tarefa 27 — Queda fatal
+## Tarefa 27 — Segredo com tiro carregado
 
-Definir kill zone e respawn. Evitar perder várias vidas pelo mesmo evento.
+Alvo opcional distante/protegido abre rota secreta ou recompensa.
 
-## Tarefa 28 — Morte e respawn
+## Tarefa 28 — Interações de cenário
 
-Executar animação curta, consumir 1 vida e retornar ao checkpoint. Resetar inimigos/objetos conforme regra consistente.
-
-## Tarefa 29 — Game Over / Continue
-
-Ao zerar vidas, abrir GameOverScene com `CONTINUE?`. Sim reinicia a fase com 3 vidas; não retorna ao menu/mapa conforme decisão final. Nunca apagar progresso global.
+Adicionar pelo menos dois objetos do ambiente que reajam a tiros sem virar puzzle longo.
 
 ---
 
-# ÉPICO 09 — HUD e telas necessárias para 1-1
+# ÉPICO 07 — Coletáveis e vidas
 
-## Tarefa 30 — HUD definitivo do vertical slice
+## Tarefa 29 — Coletável comum
 
-Exibir com leitura rápida:
-- ♥ corações;
-- × vidas;
-- selos;
-- cartões da fase;
-- munição especial somente quando existir.
+Manter temporariamente `selos` como nome técnico. Distribuir em linhas que ensinem movimento e revelem rotas.
 
-Não cobrir área significativa do gameplay.
+Regra atual: 50 = +1 vida.
 
-## Tarefa 31 — Title Screen provisória de qualidade
+## Tarefa 30 — Três segredos da fase
 
-Criar composição pixel art coerente com o jogo, `ESTALO 88` como título de trabalho e `PRESS START`. Pode ser refinada depois, mas não deve parecer formulário web.
+Manter exatamente 3 cartões-postais ou equivalente:
+1. fácil/visível;
+2. exploração;
+3. desafio opcional.
 
-## Tarefa 32 — Menu mínimo
+O nome/arte pode mudar com a identidade final.
 
-Para o vertical slice, Novo Jogo e Continuar podem ser os fluxos funcionais principais. Opções ainda podem ser reduzidas, desde que áudio/controles essenciais estejam acessíveis.
+## Tarefa 31 — Coração
 
-## Tarefa 33 — Mapa de transporte mínimo
+Pickup recupera 1 HP sem ultrapassar o máximo.
 
-Exibir 1-1 ativa e demais estações bloqueadas/sem produção. Não implementar conteúdo das outras fases.
+## Tarefa 32 — 1-UP escondido
 
-## Tarefa 34 — Pré-fase
+Adicionar exatamente 1 vida extra física em rota secreta ou de risco.
 
-Exibir `1-1 — Telhados do Mercado`, cartões coletados e melhor tempo quando houver.
+## Tarefa 33 — Checkpoint
 
-## Tarefa 35 — Stage Clear
-
-Exibir tempo, selos, inimigos derrotados, cartões e score. Permitir retornar ao mapa/rejogar conforme fluxo definido.
-
-## Tarefa 36 — Pause
-
-Continuar, reiniciar fase, controles e sair para mapa. Pausa deve congelar física e timers relevantes.
+Trocar a antiga caixa de correio por marcador coerente com a direção natural: bandeira, marco, totem ou conceito final aprovado.
 
 ---
 
-# ÉPICO 10 — Arte da Fase 1-1
+# ÉPICO 08 — Dano e falha
 
-## Tarefa 37 — Tileset Telhados do Mercado
+## Tarefa 34 — Sistema de HP
 
-Criar tileset 16×16 com:
-- telhados;
-- paredes;
+3 pontos/corações, 1 de dano por hit e invulnerabilidade curta.
+
+## Tarefa 35 — Queda fatal
+
+Kill zone clara e respawn seguro.
+
+## Tarefa 36 — Morte e respawn
+
+Consumir uma vida, executar animação curta e retornar ao checkpoint.
+
+## Tarefa 37 — Game Over / Continue
+
+Ao zerar vidas, `CONTINUE?`. Reiniciar a fase com 3 vidas sem apagar progresso global.
+
+---
+
+# ÉPICO 09 — UI e fluxo
+
+## Tarefa 38 — HUD definitivo
+
+Exibir somente HP, vidas, coletável comum, segredos da fase e munição especial quando existir.
+
+## Tarefa 39 — Tela inicial
+
+Criar composição natural/colorida com logo de trabalho. Não usar prédios ou skyline urbano. O título deve continuar legível mesmo se o nome comercial mudar.
+
+## Tarefa 40 — Rota da Aventura
+
+Mapa simples e visual, com 1-1 ativa e futuros pontos bloqueados. Não usar linguagem de metrô/transporte.
+
+## Tarefa 41 — Stage Clear
+
+Tempo, coletáveis, inimigos derrotados, segredos e score.
+
+## Tarefa 42 — Pause
+
+Continuar, reiniciar fase, controles e sair para mapa.
+
+---
+
+# ÉPICO 10 — Arte de Vale da Brisa
+
+## Tarefa 43 — Tileset 16×16
+
+Produzir:
+- grama;
+- terra;
+- pedra;
 - bordas;
-- caixas;
-- toldos;
-- placas;
-- estruturas de mercado;
-- elementos de colisão claramente legíveis.
+- madeira;
+- plataformas;
+- arbustos;
+- flores;
+- bandeirolas;
+- obstáculos;
+- elementos de puzzle.
 
-## Tarefa 38 — Background em camadas
+## Tarefa 44 — Background em camadas
 
-Criar céu, skyline distante e camada intermediária com parallax leve. O fundo nunca pode competir visualmente com jogador, inimigos, projéteis e plataformas.
+Criar céu, nuvens, colinas distantes e vegetação intermediária com parallax leve. Nenhum prédio urbano.
 
-## Tarefa 39 — Sprites dos três inimigos
+## Tarefa 45 — Sprites de inimigos
 
-Cada inimigo precisa de silhueta própria, telegraph visual e animação suficiente para não parecer objeto estático arrastado.
+Cada inimigo precisa de silhueta própria e animação suficiente para não parecer primitive arrastada.
 
-## Tarefa 40 — Itens e efeitos
+## Tarefa 46 — Itens e efeitos
 
-Produzir sprites/animações para:
-- selo;
-- cartão-postal;
-- coração;
-- 1-UP;
-- caixa de correio;
-- pedra/projétil;
-- impacto;
-- poeira de corrida/pouso quando adequado;
-- hit feedback.
+Sprites para coletável, segredo, coração, 1-UP, checkpoint, projétil, impacto, poeira, hit e stage clear.
 
-## Tarefa 41 — Revisão visual de legibilidade
+## Tarefa 47 — Revisão visual
 
-Capturar screenshots de cada ato da fase e validar se jogador, inimigos, obstáculos e coletáveis são identificáveis sem precisar conhecer o código.
+Capturar screenshots de todos os atos e validar contraste de jogador, inimigos, plataformas, perigos e itens.
 
 ---
 
-# ÉPICO 11 — Áudio da Fase 1-1
+# ÉPICO 11 — Áudio
 
-## Tarefa 42 — Tema musical 1-1
+## Tarefa 48 — Tema de Vale da Brisa
 
-Criar faixa chiptune melódica própria para Telhados do Mercado. Deve transmitir manhã ensolarada, movimento e aventura urbana. Loop sem corte perceptível e sem copiar melodias de referências.
+Criar chiptune melódico próprio, alegre e energético, com loop limpo. A música deve incentivar movimento sem copiar melodias de referências.
 
-## Tarefa 43 — SFX essenciais
+## Tarefa 49 — SFX essenciais
 
-Criar/integrar:
-- pulo;
-- estilingue;
-- tiro carregado;
-- impacto;
-- inimigo derrotado;
-- dano;
-- morte;
-- selo;
-- cartão;
-- coração;
-- 1-UP;
-- checkpoint;
-- puzzle acionado;
-- stage clear.
+Pulo, estilingue, carga, impacto, inimigo, dano, morte, coletável, segredo, coração, 1-UP, checkpoint, puzzle e stage clear.
 
-## Tarefa 44 — Mixer básico
+## Tarefa 50 — Mixer
 
-Separar volume de música e SFX. Evitar clipping quando vários selos/projéteis são processados em sequência.
+Separar música e SFX, evitar clipping e permitir volume básico.
 
 ---
 
-# ÉPICO 12 — Save e métricas
+# ÉPICO 12 — Save, métricas e QA
 
-## Tarefa 45 — Save local versionado
+## Tarefa 51 — Save local versionado
 
-Salvar em localStorage:
-- versão do schema;
-- fase desbloqueada;
-- cartões coletados;
-- melhor tempo;
-- configurações essenciais.
+Salvar fase, segredos coletados, melhor tempo e configurações essenciais.
 
-Falha/corrupção do save deve cair para estado seguro, não quebrar o boot.
+## Tarefa 52 — Cronômetro
 
-## Tarefa 46 — Cronômetro e melhor tempo
+Pausa não conta. Stage Clear registra melhor tempo.
 
-Medir tempo efetivo de gameplay. Pausa não conta. Stage Clear registra melhor tempo.
+## Tarefa 53 — Teclado e gamepad
 
-## Tarefa 47 — Score simples
+Validar WASD, setas, SPACE e layout padrão de controle.
 
-Definir fórmula baseada em selos, inimigos, cartões e tempo apenas se ela não atrapalhar a clareza. Não criar economia ou progressão em torno do score.
+## Tarefa 54 — Browser desktop/mobile
 
----
+Preservar proporção, escala inteira e pixel-perfect. No mobile, priorizar landscape e ocupação máxima sem distorção.
 
-# ÉPICO 13 — Qualidade, responsividade e performance
+## Tarefa 55 — Performance
 
-## Tarefa 48 — Teclado e gamepad
+Validar 60 FPS estáveis no cenário-alvo e ausência de vazamentos ao reiniciar a fase.
 
-Validar teclado e pelo menos layout padrão de gamepad. Não bloquear futuras remap options, mas evitar criar sistema complexo de configuração antes do vertical slice.
+## Tarefa 56 — Playtest completo
 
-## Tarefa 49 — Escala desktop/mobile browser
+Executar múltiplas runs sem cheats, registrando mortes injustas, saltos cegos, inimigos ambíguos, puzzles lentos e pontos sem ritmo.
 
-Canvas deve preservar proporção, ocupar o maior espaço possível sem deformar e manter pixel art nítida. Em celular, o canvas deve adaptar-se à área disponível; controles touch são tarefa futura separada caso entrem no escopo do primeiro release.
+## Tarefa 57 — Gate final do vertical slice
 
-## Tarefa 50 — Câmera
+Só aprovar a Fase 1-1 quando:
 
-Follow suave sem atraso excessivo. Look-ahead horizontal discreto pode ser testado. Impedir mostrar área fora do mapa.
-
-## Tarefa 51 — Performance
-
-Meta de 60 FPS em hardware desktop comum. Evitar criar/destroçar objetos por frame desnecessariamente. Usar pools quando projéteis/efeitos justificarem.
-
-## Tarefa 52 — Testes manuais obrigatórios
-
-Executar pelo menos:
-- concluir fase sem morrer;
-- concluir perdendo 1 vida;
-- zerar vidas e continuar;
-- ativar checkpoint e morrer antes/depois dele;
-- pegar 50 selos e ganhar vida;
-- coletar os 3 cartões;
-- coletar coração cheio e ferido;
-- encontrar 1-UP;
-- matar cada inimigo com tiro normal;
-- validar tiro carregado;
-- pular/atirar simultaneamente;
-- pausar durante movimento;
-- reiniciar fase;
-- recarregar navegador e restaurar save;
-- concluir em diferentes tamanhos de janela.
-
-## Tarefa 53 — Build de produção
-
-`npm run typecheck` e `npm run build` devem finalizar sem erro. Testar build de produção via preview, não apenas dev server.
-
----
-
-# ÉPICO 14 — Polimento final do vertical slice
-
-## Tarefa 54 — Game feel
-
-Revisar:
-- screen shake muito sutil em impactos relevantes;
-- hit stop curto quando apropriado;
-- partículas pixeladas;
-- SFX sincronizados;
-- pouso;
-- recoil visual do estilingue;
-- feedback de carga;
-- feedback de coleta.
-
-Tudo deve melhorar leitura, não virar excesso visual.
-
-## Tarefa 55 — Balanceamento
-
-Ajustar posições de inimigos e plataformas depois de jogar a fase repetidamente. A primeira metade deve ensinar; a segunda combinar. Remover mortes baratas e trechos vazios.
-
-## Tarefa 56 — Auditoria de identidade
-
-Revisar a fase procurando elementos que pareçam cópia direta de Sonic, Mario, Batman, Road Fighter ou outro jogo. Referências devem existir em filosofia de design, não em layout, inimigo, personagem, música ou asset.
-
-## Tarefa 57 — Gate de aprovação
-
-A Fase 1-1 só é aprovada quando:
-- é divertida sem conteúdo futuro;
-- personagem não usa placeholder;
-- todos os assets principais são sprites/pixel art finais;
-- estilingue é satisfatório;
-- 3 inimigos têm comportamento distinto;
-- puzzle é claro;
-- 3 cartões e 1-UP funcionam;
-- checkpoint funciona;
-- morte/continue funcionam;
-- HUD e Stage Clear funcionam;
-- música/SFX funcionam;
-- build passa;
-- não há bug bloqueador conhecido.
-
-**Somente depois deste gate será escrita a Bíblia detalhada da Fase 1-2 e das etapas seguintes.**
+- for divertida sem depender de outras fases;
+- possuir começo, meio e fim;
+- estilingue estiver prazeroso;
+- movimento/pulo estiverem polidos;
+- arte natural e colorida estiver consistente;
+- não houver restos de estética urbana antiga;
+- todos os sistemas essenciais funcionarem;
+- typecheck/build passarem;
+- não existirem bugs bloqueadores.
