@@ -1,6 +1,6 @@
-# ESTALO 88 — Bíblia de Tarefas da Fase 1-1
+# NILO — Bíblia de Tarefas da Fase 1-1
 
-> `ESTALO 88` é codinome. Esta bíblia cobre somente o vertical slice da **Fase 1-1 — Vale da Brisa**.
+> **NILO** é o nome oficial do jogo e do protagonista. Esta bíblia cobre somente o vertical slice da **Fase 1-1 — Vale da Brisa**.
 
 ## Escopo
 
@@ -80,7 +80,7 @@ Permitir atravessar plataformas finas para baixo quando a mecânica entrar no le
 
 ## Tarefa 08 — Spritesheet final do protagonista
 
-Produzir personagem cartunesco e legível, sem estética urbana obrigatória e sem associação visual a Sonic/Mogli.
+Produzir Nilo cartunesco e legível, sem estética urbana obrigatória e sem associação visual a Sonic/Mogli.
 
 Animações mínimas:
 - idle 4;
@@ -267,7 +267,7 @@ Exibir somente HP, vidas, coletável comum, segredos da fase e munição especia
 
 ## Tarefa 39 — Tela inicial
 
-Criar composição natural/colorida com logo de trabalho. Não usar prédios ou skyline urbano. O título deve continuar legível mesmo se o nome comercial mudar.
+Criar composição natural/colorida com o logo **NILO**. Não usar prédios ou skyline urbano. O título deve ser imediatamente legível e memorável.
 
 ## Tarefa 40 — Rota da Aventura
 
