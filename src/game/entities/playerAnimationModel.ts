@@ -5,6 +5,10 @@ export const RUN_ENTER_SPEED = 62;
 export const RUN_EXIT_SPEED = 50;
 export const GAIT_MIN_SPEED = 6;
 
+// A passada precisa ser reproduzida no sentido visual oposto ao desenho-base.
+// Mantemos a defasagem rígida de 180 graus entre as pernas.
+const GAIT_PLAYBACK_ORDER = [0, 7, 6, 5, 4, 3, 2, 1] as const;
+
 export type GaitMode = 'walk' | 'run';
 export type AimPose = 'horizontal' | 'up-diagonal' | 'up' | 'down-diagonal' | 'down';
 export type LegSupport = 'right' | 'left' | 'flight';
@@ -124,7 +128,8 @@ export function advanceGaitPhase(
 
 export function gaitFrameFromPhase(phase: number): number {
   const normalized = ((phase % 1) + 1) % 1;
-  return Math.floor(normalized * GAIT_FRAME_COUNT) % GAIT_FRAME_COUNT;
+  const playbackIndex = Math.floor(normalized * GAIT_FRAME_COUNT) % GAIT_FRAME_COUNT;
+  return GAIT_PLAYBACK_ORDER[playbackIndex];
 }
 
 export function resolveAimPose(x: number, y: number): AimPose {
@@ -146,6 +151,26 @@ function sameLegPose(a: LegPose, b: LegPose): boolean {
     a.footX === b.footX &&
     a.footY === b.footY
   );
+}
+
+function validatePlaybackOrder(): void {
+  if (GAIT_PLAYBACK_ORDER.length !== GAIT_FRAME_COUNT) {
+    throw new Error('GAIT_PLAYBACK_ORDER precisa conter exatamente 8 frames.');
+  }
+
+  const uniqueFrames = new Set<number>(GAIT_PLAYBACK_ORDER);
+  if (uniqueFrames.size !== GAIT_FRAME_COUNT) {
+    throw new Error('GAIT_PLAYBACK_ORDER não pode repetir frames.');
+  }
+
+  for (let index = 0; index < GAIT_FRAME_COUNT / 2; index += 1) {
+    const current = GAIT_PLAYBACK_ORDER[index];
+    const opposite = GAIT_PLAYBACK_ORDER[index + GAIT_FRAME_COUNT / 2];
+
+    if ((current + GAIT_FRAME_COUNT / 2) % GAIT_FRAME_COUNT !== opposite) {
+      throw new Error(`GAIT_PLAYBACK_ORDER: índice ${index} perdeu a defasagem de 180 graus.`);
+    }
+  }
 }
 
 export function validateGaitCycle(name: string, cycle: GaitFrame[], allowFlight: boolean): void {
@@ -182,6 +207,7 @@ export function validateGaitCycle(name: string, cycle: GaitFrame[], allowFlight:
 }
 
 export function validatePlayerAnimationModel(): void {
+  validatePlaybackOrder();
   validateGaitCycle('WALK_GAIT', WALK_GAIT, false);
   validateGaitCycle('RUN_GAIT', RUN_GAIT, true);
 }
