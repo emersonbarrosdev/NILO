@@ -1,6 +1,6 @@
 export const GAME_WIDTH = 320;
 export const GAME_HEIGHT = 180;
-export const GAME_TITLE = 'ESTALO 88';
+export const GAME_TITLE = 'NILO';
 
 export const SCENE_KEYS = {
   boot: 'boot',
