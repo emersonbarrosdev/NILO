@@ -1,6 +1,6 @@
 export const STAGE_1_1 = {
   id: '1-1',
-  name: 'Telhados do Mercado',
+  name: 'Vale da Brisa',
   worldWidth: 2400,
   worldHeight: 360,
   targetDurationMinutes: 7,
