@@ -13,7 +13,7 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   private createPlayerPlaceholder(): void {
-    const g = this.make.graphics({ x: 0, y: 0 });
+    const g = this.add.graphics();
 
     // Cabelo / cabeça.
     g.fillStyle(0x17243b).fillRect(4, 1, 8, 3);
@@ -47,7 +47,7 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   private createEnemyPlaceholder(): void {
-    const g = this.make.graphics({ x: 0, y: 0 });
+    const g = this.add.graphics();
 
     g.fillStyle(0x8e2948).fillRect(3, 5, 10, 8);
     g.fillStyle(0xef5b5b).fillRect(2, 6, 12, 5);
