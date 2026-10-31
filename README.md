@@ -47,6 +47,20 @@ O protótipo atual já possui estados visuais separados para:
 - tiro no ar;
 - carga do estilingue.
 
+### Regra do ciclo de corrida
+
+A corrida não avança por relógio ou `frameRate` da engine. O ciclo visual avança pela **distância real percorrida em X**:
+
+- 8 frames por ciclo;
+- frames 0–3 representam a fase liderada pela perna direita;
+- frames 4–7 representam a mesma sequência defasada em 180°, liderada pela perna esquerda;
+- frames 3 e 7 são fases curtas de voo/troca;
+- parar de deslocar em X interrompe imediatamente o avanço do ciclo;
+- mudar a velocidade altera naturalmente a velocidade da passada;
+- tiro e carga em movimento reutilizam o mesmo indexador de pernas, evitando congelar as pernas enquanto o personagem continua andando.
+
+Isso impede o efeito de personagem deslizando enquanto uma animação de corrida independente toca em outra velocidade.
+
 A arte desses frames ainda é **procedural e temporária** para validar movimento e leitura. A spritesheet final desenhada substituirá esses frames sem mudar a máquina de estados.
 
 ## Estilingue
