@@ -1,10 +1,10 @@
-# ESTALO 88 — Bíblia do Jogo
+# NILO — Bíblia do Jogo
 
-> **Status do nome:** `ESTALO 88` é codinome. O título comercial ainda não está fechado.
+**NILO** é o nome oficial do jogo e do protagonista.
 
 ## 1. Visão
 
-ESTALO 88 é um action-platformer 2D em pixel art 8-bit, colorido, direto e baseado em habilidade. O jogo combina plataforma precisa, combate à distância com estilingue, inimigos, obstáculos, pequenos puzzles integrados ao movimento, segredos, vidas e coletáveis.
+NILO é um action-platformer 2D em pixel art 8-bit, colorido, direto e baseado em habilidade. O jogo combina plataforma precisa, combate à distância com estilingue, inimigos, obstáculos, pequenos puzzles integrados ao movimento, segredos, vidas e coletáveis.
 
 A referência aos clássicos 8-bit está na filosofia: controles imediatos, fases memoráveis, progressão clara, visual legível, cores fortes e trilha melódica. O objetivo **não** é copiar Sonic, Mario, Batman ou Road Fighter.
 
@@ -28,17 +28,17 @@ A referência aos clássicos 8-bit está na filosofia: controles imediatos, fase
 
 A antiga premissa de cidade vertical, mensageiro urbano, mapa de metrô, telhados e Museu das Alturas está **descartada** e não deve orientar novas implementações.
 
-A história definitiva ainda não está fechada. Durante o vertical slice, o foco é validar personagem, estilingue, movimentação, inimigos, plataformas, coletáveis, estética natural/colorida e música.
+A história oficial agora acompanha Nilo, uma criança que escapa após ser levada para longe de casa e atravessa diferentes regiões para conseguir voltar para casa. Durante o vertical slice, o foco continua sendo validar personagem, estilingue, movimentação, inimigos, plataformas, coletáveis, estética natural/colorida e música.
 
 ## 4. Protagonista
 
-Nome e aparência final continuam em aberto.
+O protagonista se chama **Nilo**. A aparência final continua em refinamento, mas ele deve ser claramente uma criança em idade escolar.
 
 ### Regras visuais
 
 - personagem cartunesco e legível em sprite pequeno;
 - silhueta reconhecível;
-- roupa/acessórios coloridos;
+- roupa escolar/casual e acessórios coloridos;
 - estilingue integrado à silhueta ou animação;
 - não parecer Sonic com outra roupa;
 - não criar estética de “menino da selva” que remeta a Mogli/Tarzan;
@@ -46,7 +46,7 @@ Nome e aparência final continuam em aberto.
 
 ### Personalidade
 
-A definir junto com o design final. Deve ser simples, carismático e funcionar com pouca exposição narrativa.
+Nilo deve ser simples, carismático, curioso e esperto, funcionando com pouca exposição narrativa. Pequenas animações de personalidade devem reforçar que ele ainda é uma criança.
 
 ## 5. Controles
 
@@ -174,9 +174,9 @@ Pelo menos um puzzle curto baseado em estilingue e cenário, resolvido em segund
 
 ## 11. Mundos futuros
 
-Os mundos 2, 3 e 4 **não têm tema definitivo nesta etapa**. Não assumir cidade, ferrovia ou museu como destino final.
+A estrutura narrativa oficial dos mundos está descrita em `docs/STORY_CAMPAIGN.md`. Nenhuma produção detalhada dos mundos 2, 3 e 4 deve começar antes da aprovação da Fase 1-1.
 
-Apenas manter estas regras:
+Regras:
 
 - cada mundo deve ter identidade visual própria;
 - cada mundo deve introduzir uma ideia dominante;
@@ -206,7 +206,7 @@ Técnicas e invisíveis enquanto o carregamento for instantâneo.
 
 ### Tela inicial/menu
 
-Uma única tela forte: cenário natural colorido + logo/codinome + Novo Jogo/Continuar quando houver save.
+Uma única tela forte: cenário natural colorido + logo **NILO** + Novo Jogo/Continuar quando houver save.
 
 ### Mapa
 
@@ -214,7 +214,7 @@ Uma única tela forte: cenário natural colorido + logo/codinome + Novo Jogo/Con
 
 ### Intro
 
-Só entra no fluxo depois que história e arte narrativa forem aprovadas.
+A introdução deve mostrar rapidamente que Nilo foi levado para longe, escapou na mata e precisa voltar para casa. Pouco texto, animação curta e leitura imediata.
 
 ### HUD
 
@@ -241,7 +241,7 @@ Tempo, coletáveis, inimigos derrotados, segredos e score. Sem XP ou sistemas de
 - `roundPixels: true`;
 - antialias desligado;
 - tiles base de 16×16;
-- personagem aproximadamente 24×32;
+- personagem aproximadamente 24×32 a 48×48 conforme leitura final;
 - inimigos comuns 16×16 a 32×32;
 - chefes 64×64 a 96×96;
 - fundos com parallax discreto;
@@ -264,6 +264,12 @@ Tempo, coletáveis, inimigos derrotados, segredos e score. Sem XP ou sistemas de
 | Death | 6 |
 
 A corrida deve alternar corretamente pernas e braços. Não aceitar personagem deslizando com sprite quase estático.
+
+### Idle especial
+
+- após 10 segundos sem input, Nilo senta;
+- enquanto estiver sentado, joga uma pedrinha a cada 5 segundos;
+- qualquer input cancela imediatamente o idle especial.
 
 ## 16. Direção sonora
 
