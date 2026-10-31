@@ -1,12 +1,20 @@
 import Phaser from 'phaser';
-import { SCENE_KEYS } from '../config/constants';
+import { GAME_WIDTH, SCENE_KEYS } from '../config/constants';
+import { addPixelText } from '../ui/PixelText';
 
 export class UIScene extends Phaser.Scene {
   constructor() { super(SCENE_KEYS.ui); }
 
   create(): void {
-    this.add.text(8, 8, '♥♥♥   ×3   SELOS 00   ▣□□', {
-      fontFamily: 'monospace', fontSize: '8px', color: '#ffffff',
+    this.add.rectangle(GAME_WIDTH / 2, 7, GAME_WIDTH, 14, 0x152238, 0.92)
+      .setScrollFactor(0)
+      .setDepth(1000);
+
+    addPixelText(this, 6, 3, 'HP 3  VIDAS 3  SELOS 00  POSTAIS 0/3', {
+      scale: 1,
+      color: 0xffffff,
+      scrollFactor: 0,
+      depth: 1001,
     });
   }
 }
