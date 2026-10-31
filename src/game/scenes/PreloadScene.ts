@@ -4,6 +4,8 @@ import { SCENE_KEYS } from '../config/constants';
 type PlayerPose =
   | 'idle'
   | 'run'
+  | 'run-shoot'
+  | 'run-charge'
   | 'jump'
   | 'apex'
   | 'fall'
@@ -14,10 +16,73 @@ type PlayerPose =
   | 'shoot-air'
   | 'charge';
 
+type LegSupport = 'right' | 'left' | 'flight';
+
+type LegPose = {
+  thighX: number;
+  thighY: number;
+  shinX: number;
+  shinY: number;
+  footX: number;
+  footY: number;
+};
+
+type RunGaitFrame = {
+  support: LegSupport;
+  right: LegPose;
+  left: LegPose;
+};
+
+// Ciclo mestre de 8 frames. A segunda metade e a primeira metade estão
+// rigidamente separadas por 180 graus (4 frames): direita -> esquerda.
+const RUN_GAIT: RunGaitFrame[] = [
+  {
+    support: 'right',
+    right: { thighX: 12, thighY: 21, shinX: 14, shinY: 24, footX: 14, footY: 28 },
+    left: { thighX: 8, thighY: 21, shinX: 6, shinY: 23, footX: 5, footY: 25 },
+  },
+  {
+    support: 'right',
+    right: { thighX: 12, thighY: 22, shinX: 13, shinY: 25, footX: 13, footY: 28 },
+    left: { thighX: 8, thighY: 21, shinX: 7, shinY: 23, footX: 6, footY: 25 },
+  },
+  {
+    support: 'right',
+    right: { thighX: 11, thighY: 22, shinX: 10, shinY: 25, footX: 9, footY: 28 },
+    left: { thighX: 10, thighY: 21, shinX: 12, shinY: 23, footX: 13, footY: 25 },
+  },
+  {
+    support: 'flight',
+    right: { thighX: 10, thighY: 21, shinX: 7, shinY: 24, footX: 5, footY: 27 },
+    left: { thighX: 12, thighY: 21, shinX: 15, shinY: 23, footX: 16, footY: 25 },
+  },
+  {
+    support: 'left',
+    right: { thighX: 8, thighY: 21, shinX: 6, shinY: 23, footX: 5, footY: 25 },
+    left: { thighX: 12, thighY: 21, shinX: 14, shinY: 24, footX: 14, footY: 28 },
+  },
+  {
+    support: 'left',
+    right: { thighX: 8, thighY: 21, shinX: 7, shinY: 23, footX: 6, footY: 25 },
+    left: { thighX: 12, thighY: 22, shinX: 13, shinY: 25, footX: 13, footY: 28 },
+  },
+  {
+    support: 'left',
+    right: { thighX: 10, thighY: 21, shinX: 12, shinY: 23, footX: 13, footY: 25 },
+    left: { thighX: 11, thighY: 22, shinX: 10, shinY: 25, footX: 9, footY: 28 },
+  },
+  {
+    support: 'flight',
+    right: { thighX: 12, thighY: 21, shinX: 15, shinY: 23, footX: 16, footY: 25 },
+    left: { thighX: 10, thighY: 21, shinX: 7, shinY: 24, footX: 5, footY: 27 },
+  },
+];
+
 export class PreloadScene extends Phaser.Scene {
   constructor() { super(SCENE_KEYS.preload); }
 
   create(): void {
+    this.validateRunCycleDefinition();
     this.createPlayerPrototypeFrames();
     this.createProjectileTextures();
     this.createEnemyPlaceholder();
@@ -27,13 +92,42 @@ export class PreloadScene extends Phaser.Scene {
     this.scene.start(SCENE_KEYS.title);
   }
 
+  private validateRunCycleDefinition(): void {
+    if (RUN_GAIT.length !== 8) {
+      throw new Error('RUN_GAIT precisa ter exatamente 8 frames.');
+    }
+
+    for (let frame = 0; frame < 4; frame += 1) {
+      const firstHalf = RUN_GAIT[frame];
+      const oppositeHalf = RUN_GAIT[frame + 4];
+
+      if (firstHalf.support === 'right' && oppositeHalf.support !== 'left') {
+        throw new Error(`RUN_GAIT inválido: frame ${frame} não alterna apoio 180 graus depois.`);
+      }
+
+      if (firstHalf.support === 'flight' && oppositeHalf.support !== 'flight') {
+        throw new Error(`RUN_GAIT inválido: frame de voo ${frame} não possui par a 180 graus.`);
+      }
+    }
+  }
+
   private createPlayerPrototypeFrames(): void {
     for (let frame = 0; frame < 4; frame += 1) {
       this.createPlayerFrame(`player-idle-${frame}`, 'idle', frame);
     }
 
-    for (let frame = 0; frame < 8; frame += 1) {
-      this.createPlayerFrame(`player-run-${frame}`, 'run', frame);
+    for (let runFrame = 0; runFrame < 8; runFrame += 1) {
+      this.createPlayerFrame(`player-run-${runFrame}`, 'run', runFrame, runFrame);
+      this.createPlayerFrame(`player-run-shoot-${runFrame}`, 'run-shoot', 1, runFrame);
+
+      for (let chargeFrame = 0; chargeFrame < 4; chargeFrame += 1) {
+        this.createPlayerFrame(
+          `player-run-charge-${runFrame}-${chargeFrame}`,
+          'run-charge',
+          chargeFrame,
+          runFrame,
+        );
+      }
     }
 
     for (let frame = 0; frame < 2; frame += 1) {
@@ -56,11 +150,16 @@ export class PreloadScene extends Phaser.Scene {
     }
   }
 
-  private createPlayerFrame(key: string, pose: PlayerPose, frame: number): void {
+  private createPlayerFrame(
+    key: string,
+    pose: PlayerPose,
+    actionFrame: number,
+    gaitFrame = actionFrame,
+  ): void {
     const g = this.add.graphics();
-
+    const runningPose = pose === 'run' || pose === 'run-shoot' || pose === 'run-charge';
     const isCrouching = pose === 'crouch' || pose === 'land';
-    const bodyShiftY = isCrouching ? 4 : pose === 'run' && frame % 2 === 1 ? 1 : 0;
+    const bodyShiftY = isCrouching ? 4 : runningPose && gaitFrame % 2 === 1 ? 1 : 0;
     const headY = 3 + bodyShiftY;
     const torsoY = 12 + bodyShiftY;
 
@@ -89,8 +188,8 @@ export class PreloadScene extends Phaser.Scene {
     g.fillStyle(0xa7683f, 1).fillRect(16, torsoY + 5, 3, 1);
     g.fillStyle(0xf4d07b, 1).fillRect(10, torsoY, 1, 9);
 
-    this.drawArms(g, pose, frame, torsoY);
-    this.drawLegs(g, pose, frame, torsoY);
+    this.drawArms(g, pose, actionFrame, gaitFrame, torsoY);
+    this.drawLegs(g, pose, gaitFrame, torsoY);
 
     g.generateTexture(key, 24, 32);
     g.destroy();
@@ -99,20 +198,31 @@ export class PreloadScene extends Phaser.Scene {
   private drawArms(
     g: Phaser.GameObjects.Graphics,
     pose: PlayerPose,
-    frame: number,
+    actionFrame: number,
+    gaitFrame: number,
     torsoY: number,
   ): void {
     const skin = 0xf2b879;
     const sling = 0x6a3c27;
+    const shootingPose =
+      pose === 'shoot-ground' ||
+      pose === 'shoot-air' ||
+      pose === 'charge' ||
+      pose === 'run-shoot' ||
+      pose === 'run-charge';
 
-    if (pose === 'shoot-ground' || pose === 'shoot-air' || pose === 'charge') {
-      const pull = pose === 'charge' ? Math.min(4, 1 + frame) : frame === 0 ? 2 : frame === 1 ? 4 : 1;
+    if (shootingPose) {
+      const charging = pose === 'charge' || pose === 'run-charge';
+      const pull = charging
+        ? Math.min(4, 1 + actionFrame)
+        : actionFrame === 0
+          ? 2
+          : actionFrame === 1
+            ? 4
+            : 1;
 
-      // Braço da frente sustenta o estilingue.
       g.fillStyle(skin, 1).fillRect(16, torsoY + 2, 5, 2);
       g.fillRect(20, torsoY + 1, 2, 3);
-
-      // Braço de trás puxa o elástico para perto do rosto.
       g.fillRect(5, torsoY + 3, 5, 2);
       g.fillRect(4, torsoY + 1, 2, 3);
 
@@ -128,7 +238,8 @@ export class PreloadScene extends Phaser.Scene {
     }
 
     if (pose === 'run') {
-      const swing = [0, 1, 2, 1, 0, -1, -2, -1][frame % 8];
+      // Braços também usam o mesmo indexador mestre; não existe animação independente.
+      const swing = [0, 1, 2, 1, 0, -1, -2, -1][gaitFrame % 8];
       g.fillStyle(skin, 1).fillRect(5, torsoY + 2 + Math.max(0, swing), 2, 6);
       g.fillRect(17, torsoY + 2 + Math.max(0, -swing), 2, 6);
       return;
@@ -147,79 +258,83 @@ export class PreloadScene extends Phaser.Scene {
   private drawLegs(
     g: Phaser.GameObjects.Graphics,
     pose: PlayerPose,
-    frame: number,
+    gaitFrame: number,
     torsoY: number,
   ): void {
     const shorts = 0x243653;
-    const shoes = 0xf8ecbd;
-    const skin = 0xe9a66c;
+    const rightLeg = 0xf0ad72;
+    const leftLeg = 0xc9895d;
+    const rightShoe = 0xfff0c4;
+    const leftShoe = 0xc9b88f;
 
     const hipY = torsoY + 8;
     g.fillStyle(shorts, 1).fillRect(8, hipY, 8, 4);
 
-    if (pose === 'run') {
-      const run = [
-        { frontX: 15, frontY: 23, backX: 6, backY: 22 },
-        { frontX: 16, frontY: 23, backX: 7, backY: 21 },
-        { frontX: 14, frontY: 24, backX: 8, backY: 20 },
-        { frontX: 12, frontY: 25, backX: 9, backY: 20 },
-        { frontX: 8, frontY: 22, backX: 15, backY: 23 },
-        { frontX: 7, frontY: 21, backX: 16, backY: 23 },
-        { frontX: 8, frontY: 20, backX: 14, backY: 24 },
-        { frontX: 9, frontY: 20, backX: 12, backY: 25 },
-      ][frame % 8];
+    const runningPose = pose === 'run' || pose === 'run-shoot' || pose === 'run-charge';
+    if (runningPose) {
+      const gait = RUN_GAIT[gaitFrame % RUN_GAIT.length];
 
-      g.fillStyle(skin, 1).fillRect(run.frontX, run.frontY, 3, 5);
-      g.fillRect(run.backX, run.backY, 3, 5);
-      g.fillStyle(shoes, 1).fillRect(run.frontX - 1, run.frontY + 5, 5, 2);
-      g.fillRect(run.backX - 1, run.backY + 5, 5, 2);
+      // Perna esquerda fica um tom atrás para distinguir fisicamente os membros.
+      this.drawLeg(g, gait.left, leftLeg, leftShoe);
+      this.drawLeg(g, gait.right, rightLeg, rightShoe);
       return;
     }
 
     if (pose === 'jump') {
-      g.fillStyle(skin, 1).fillRect(8, 24, 3, 4);
-      g.fillRect(14, 22, 3, 4);
-      g.fillStyle(shoes, 1).fillRect(7, 27, 5, 2);
-      g.fillRect(13, 25, 5, 2);
+      g.fillStyle(rightLeg, 1).fillRect(8, 24, 3, 4);
+      g.fillStyle(leftLeg, 1).fillRect(14, 22, 3, 4);
+      g.fillStyle(rightShoe, 1).fillRect(7, 27, 5, 2);
+      g.fillStyle(leftShoe, 1).fillRect(13, 25, 5, 2);
       return;
     }
 
     if (pose === 'apex') {
-      g.fillStyle(skin, 1).fillRect(7, 23, 3, 4);
-      g.fillRect(15, 23, 3, 4);
-      g.fillStyle(shoes, 1).fillRect(6, 26, 5, 2);
-      g.fillRect(14, 26, 5, 2);
+      g.fillStyle(rightLeg, 1).fillRect(7, 23, 3, 4);
+      g.fillStyle(leftLeg, 1).fillRect(15, 23, 3, 4);
+      g.fillStyle(rightShoe, 1).fillRect(6, 26, 5, 2);
+      g.fillStyle(leftShoe, 1).fillRect(14, 26, 5, 2);
       return;
     }
 
     if (pose === 'fall') {
-      g.fillStyle(skin, 1).fillRect(7, 23, 3, 6);
-      g.fillRect(15, 23, 3, 6);
-      g.fillStyle(shoes, 1).fillRect(6, 28, 5, 2);
-      g.fillRect(14, 28, 5, 2);
+      g.fillStyle(rightLeg, 1).fillRect(7, 23, 3, 6);
+      g.fillStyle(leftLeg, 1).fillRect(15, 23, 3, 6);
+      g.fillStyle(rightShoe, 1).fillRect(6, 28, 5, 2);
+      g.fillStyle(leftShoe, 1).fillRect(14, 28, 5, 2);
       return;
     }
 
     if (pose === 'crouch' || pose === 'land') {
-      g.fillStyle(skin, 1).fillRect(7, 27, 4, 2);
-      g.fillRect(14, 27, 4, 2);
-      g.fillStyle(shoes, 1).fillRect(5, 29, 6, 2);
-      g.fillRect(14, 29, 6, 2);
+      g.fillStyle(rightLeg, 1).fillRect(7, 27, 4, 2);
+      g.fillStyle(leftLeg, 1).fillRect(14, 27, 4, 2);
+      g.fillStyle(rightShoe, 1).fillRect(5, 29, 6, 2);
+      g.fillStyle(leftShoe, 1).fillRect(14, 29, 6, 2);
       return;
     }
 
     if (pose === 'skid') {
-      g.fillStyle(skin, 1).fillRect(6, 24, 3, 5);
-      g.fillRect(15, 23, 3, 5);
-      g.fillStyle(shoes, 1).fillRect(4, 28, 6, 2);
-      g.fillRect(14, 27, 6, 2);
+      g.fillStyle(rightLeg, 1).fillRect(6, 24, 3, 5);
+      g.fillStyle(leftLeg, 1).fillRect(15, 23, 3, 5);
+      g.fillStyle(rightShoe, 1).fillRect(4, 28, 6, 2);
+      g.fillStyle(leftShoe, 1).fillRect(14, 27, 6, 2);
       return;
     }
 
-    g.fillStyle(skin, 1).fillRect(8, 24, 3, 5);
-    g.fillRect(14, 24, 3, 5);
-    g.fillStyle(shoes, 1).fillRect(7, 28, 5, 2);
-    g.fillRect(13, 28, 5, 2);
+    g.fillStyle(rightLeg, 1).fillRect(8, 24, 3, 5);
+    g.fillStyle(leftLeg, 1).fillRect(14, 24, 3, 5);
+    g.fillStyle(rightShoe, 1).fillRect(7, 28, 5, 2);
+    g.fillStyle(leftShoe, 1).fillRect(13, 28, 5, 2);
+  }
+
+  private drawLeg(
+    g: Phaser.GameObjects.Graphics,
+    leg: LegPose,
+    skinColor: number,
+    shoeColor: number,
+  ): void {
+    g.fillStyle(skinColor, 1).fillRect(leg.thighX, leg.thighY, 3, 4);
+    g.fillRect(leg.shinX, leg.shinY, 3, 4);
+    g.fillStyle(shoeColor, 1).fillRect(leg.footX, leg.footY, 5, 2);
   }
 
   private createProjectileTextures(): void {
@@ -261,13 +376,6 @@ export class PreloadScene extends Phaser.Scene {
       key: 'player-idle',
       frames: [0, 1, 2, 3].map((frame) => ({ key: `player-idle-${frame}` })),
       frameRate: 4,
-      repeat: -1,
-    });
-
-    this.anims.create({
-      key: 'player-run',
-      frames: Array.from({ length: 8 }, (_, frame) => ({ key: `player-run-${frame}` })),
-      frameRate: 12,
       repeat: -1,
     });
 
