@@ -1,20 +1,24 @@
-# ESTALO 88
+# NILO
 
 Action-platformer 2D em pixel art 8-bit, construído com **Phaser 4 + TypeScript + Vite**.
 
-> `ESTALO 88` é o codinome atual do projeto. O nome comercial ainda não está fechado.
+**NILO** é o nome oficial do jogo e também do protagonista.
+
+## Premissa
+
+Nilo é uma criança em idade escolar. Depois de ser levado para longe de casa, ele consegue escapar em uma região de mata e inicia uma jornada para voltar para casa. A campanha acompanha essa travessia por florestas, rios, serras, campos e caminhos cada vez mais familiares.
 
 ## Estado atual
 
-Fundação técnica e pré-produção do **vertical slice da Fase 1-1 — Vale da Brisa**.
+Fundação técnica e produção do **vertical slice da Fase 1-1 — Vale da Brisa**.
 
 ## Direção atual
 
-- mundo aberto, colorido e fantástico;
-- primeira fase natural, com céu amplo, colinas, vegetação, plataformas e elementos de caminho;
+- mundo colorido, natural e fantástico;
+- primeira fase com céu amplo, colinas, vegetação, plataformas e elementos de caminho;
 - **não usar cidade, skyline de prédios ou estética urbana como identidade do jogo**;
 - inspiração nos clássicos 8-bit está na fluidez, leitura, ritmo, cores e música — não em copiar fases ou personagens;
-- protagonista definido como **criança aventureira**, não adulto;
+- protagonista criança, com roupa escolar/casual e estilingue;
 - combate principal com estilingue;
 - plataforma, inimigos, obstáculos, puzzles curtos e exploração;
 - música chiptune melódica e memorável;
@@ -31,12 +35,12 @@ Fundação técnica e pré-produção do **vertical slice da Fase 1-1 — Vale d
 - segurar **J/X**: carregar tiro;
 - durante a carga, usar **WASD/setas** para mirar, incluindo diagonais.
 
-## Protótipo do protagonista
+## Protagonista
 
-O protótipo atual já possui estados visuais separados para:
+Nilo já possui estados visuais separados para:
 
 - idle;
-- corrida em 8 frames;
+- caminhada/corrida;
 - salto/subida;
 - ápice;
 - queda;
@@ -45,40 +49,33 @@ O protótipo atual já possui estados visuais separados para:
 - frenagem/troca de direção;
 - tiro no chão;
 - tiro no ar;
-- carga do estilingue.
+- carga do estilingue;
+- idle especial após 10 segundos parado.
 
 ### Regra do ciclo de corrida
 
-A corrida não avança por relógio ou `frameRate` da engine. O ciclo visual avança pela **distância real percorrida em X**:
+O ciclo visual avança pela **distância real percorrida em X**, mantendo a passada ligada ao deslocamento do personagem e evitando o efeito de deslize.
 
-- 8 frames por ciclo;
-- frames 0–3 representam a fase liderada pela perna direita;
-- frames 4–7 representam a mesma sequência defasada em 180°, liderada pela perna esquerda;
-- frames 3 e 7 são fases curtas de voo/troca;
-- parar de deslocar em X interrompe imediatamente o avanço do ciclo;
-- mudar a velocidade altera naturalmente a velocidade da passada;
-- tiro e carga em movimento reutilizam o mesmo indexador de pernas, evitando congelar as pernas enquanto o personagem continua andando.
+### Idle especial
 
-Isso impede o efeito de personagem deslizando enquanto uma animação de corrida independente toca em outra velocidade.
-
-A arte desses frames ainda é **procedural e temporária** para validar movimento e leitura. A spritesheet final desenhada substituirá esses frames sem mudar a máquina de estados.
+- após 10 segundos sem input, Nilo senta;
+- enquanto estiver sentado, joga uma pedrinha a cada 5 segundos;
+- qualquer input cancela imediatamente o idle especial.
 
 ## Estilingue
 
 - pedra normal visível;
+- origem do projétil alinhada ao estilingue conforme a direção da mira;
 - tiro carregado maior e mais rápido;
 - disparo permitido durante o salto;
 - tiro não cancela o momentum do personagem;
-- pedra colide com chão/plataformas e gera impacto pixelado;
-- câmera recebe feedback mínimo no disparo, mais forte no carregado.
+- pedra colide com chão/plataformas e gera impacto pixelado.
 
 ## Fluxo atual
 
 As cenas `BootScene` e `PreloadScene` são técnicas e ficam invisíveis para o jogador. O fluxo visível do vertical slice é:
 
 **Tela inicial/menu → rota da aventura → Fase 1-1**
-
-A `IntroScene` permanece no projeto para uma introdução narrativa futura, mas não participa do fluxo enquanto história e arte definitivas não forem aprovadas.
 
 ## Stack
 
@@ -107,6 +104,5 @@ npm run build
 ## Documentação
 
 - [`docs/GAME_BIBLE.md`](docs/GAME_BIBLE.md) — Bíblia geral do jogo.
+- [`docs/STORY_CAMPAIGN.md`](docs/STORY_CAMPAIGN.md) — história e estrutura da campanha.
 - [`docs/PHASE_1_1_TASK_BIBLE.md`](docs/PHASE_1_1_TASK_BIBLE.md) — plano para produzir somente a Fase 1-1.
-
-> O nome e a arte final do protagonista continuam em aberto. Já estão fechados: protagonista criança, estilingue, direção natural/colorida e foco em movimento 8-bit responsivo.
