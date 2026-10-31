@@ -1,9 +1,9 @@
 export const GAIT_FRAME_COUNT = 8;
-export const WALK_DISTANCE_PER_CYCLE = 34;
+export const WALK_DISTANCE_PER_CYCLE = 36;
 export const RUN_DISTANCE_PER_CYCLE = 52;
-export const RUN_ENTER_SPEED = 96;
-export const RUN_EXIT_SPEED = 78;
-export const GAIT_MIN_SPEED = 10;
+export const RUN_ENTER_SPEED = 62;
+export const RUN_EXIT_SPEED = 50;
+export const GAIT_MIN_SPEED = 6;
 
 export type GaitMode = 'walk' | 'run';
 export type AimPose = 'horizontal' | 'up-diagonal' | 'up' | 'down-diagonal' | 'down';
