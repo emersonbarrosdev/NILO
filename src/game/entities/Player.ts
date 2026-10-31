@@ -10,12 +10,12 @@ import {
   type GaitMode,
 } from './playerAnimationModel';
 
-const RUN_SPEED = 145;
-const GROUND_ACCELERATION = 260;
-const BRAKE_ACCELERATION = 900;
-const AIR_ACCELERATION = 420;
-const GROUND_DRAG = 700;
-const AIR_DRAG = 70;
+const RUN_SPEED = 100;
+const GROUND_ACCELERATION = 130;
+const BRAKE_ACCELERATION = 650;
+const AIR_ACCELERATION = 300;
+const GROUND_DRAG = 520;
+const AIR_DRAG = 55;
 const JUMP_SPEED = 305;
 const COYOTE_TIME_MS = 90;
 const JUMP_BUFFER_MS = 110;
@@ -56,6 +56,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private gaitPhase = 0;
   private gaitFrame = 0;
   private gaitMode: GaitMode = 'walk';
+  private gaitDirection = 1;
   private previousX: number;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
@@ -133,7 +134,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     if (horizontal !== 0) {
       const velocityDirection = Math.sign(body.velocity.x);
-      const reversing = grounded && Math.abs(body.velocity.x) > 28 && velocityDirection !== horizontal;
+      const reversing = grounded && Math.abs(body.velocity.x) > 22 && velocityDirection !== horizontal;
       const acceleration = grounded
         ? reversing
           ? BRAKE_ACCELERATION
@@ -233,7 +234,22 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const speed = Math.abs(body.velocity.x);
     this.gaitMode = resolveGaitMode(this.gaitMode, speed);
 
-    if (!grounded || speed <= GAIT_MIN_SPEED || deltaX <= 0.001) return;
+    const velocityDirection = Math.sign(body.velocity.x);
+    if (velocityDirection !== 0 && velocityDirection !== this.gaitDirection) {
+      this.gaitDirection = velocityDirection;
+      this.gaitPhase = 0;
+      this.gaitFrame = 0;
+    }
+
+    if (!grounded) return;
+
+    if (speed <= GAIT_MIN_SPEED || deltaX <= 0.001) {
+      if (speed <= GAIT_MIN_SPEED) {
+        this.gaitPhase = 0;
+        this.gaitFrame = 0;
+      }
+      return;
+    }
 
     this.gaitPhase = advanceGaitPhase(this.gaitPhase, deltaX, this.gaitMode);
     this.gaitFrame = gaitFrameFromPhase(this.gaitPhase);
@@ -329,7 +345,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     const movingAgainstVelocity =
-      horizontal !== 0 && speed > 45 && Math.sign(body.velocity.x) !== horizontal;
+      horizontal !== 0 && speed > 36 && Math.sign(body.velocity.x) !== horizontal;
 
     if (movingAgainstVelocity) {
       this.anims.stop();
