@@ -3,10 +3,8 @@ import { GAME_WIDTH, SCENE_KEYS } from '../config/constants';
 import { addPixelText } from '../ui/PixelText';
 
 const LOGO_GLYPHS: Record<string, string[]> = {
-  E: ['111111','110000','110000','111110','110000','110000','111111'],
-  S: ['011111','110000','110000','011110','000011','000011','111110'],
-  T: ['111111','001100','001100','001100','001100','001100','001100'],
-  A: ['011110','110011','110011','111111','110011','110011','110011'],
+  N: ['110011','111011','111111','110111','110011','110011','110011'],
+  I: ['111111','001100','001100','001100','001100','001100','111111'],
   L: ['110000','110000','110000','110000','110000','110000','111111'],
   O: ['011110','110011','110011','110011','110011','110011','011110'],
 };
@@ -28,26 +26,16 @@ export class TitleScene extends Phaser.Scene {
     const shadow = this.add.graphics();
     const logo = this.add.graphics();
 
-    this.drawLogoWord(shadow, 61, 23, 3, 0x301447, 2, 2);
-    this.drawLogoWord(logo, 61, 23, 3, 0xffef9b, 0, 0);
-    this.drawGlyph(logo, LOGO_GLYPHS.T, 103, 23, 3, 0xff8a3d);
-    this.drawGlyph(shadow, LOGO_GLYPHS.T, 105, 25, 3, 0x301447);
+    this.drawLogoWord(shadow, 118, 23, 3, 0x301447, 2, 2);
+    this.drawLogoWord(logo, 118, 23, 3, 0xffef9b, 0, 0);
 
-    logo.fillStyle(0xffd05a, 1).fillRect(117, 17, 5, 5);
-    logo.fillStyle(0xff8a3d, 1).fillRect(122, 18, 3, 3);
-    logo.fillStyle(0x9ee8ff, 1).fillRect(126, 19, 14, 1);
-    logo.fillRect(132, 17, 8, 1);
+    // Pequeno acento visual inspirado no estilingue, sem competir com o nome.
+    logo.fillStyle(0xff8a3d, 1).fillRect(185, 16, 4, 5);
+    logo.fillRect(191, 16, 4, 5);
+    logo.fillRect(188, 20, 4, 6);
+    logo.fillStyle(0x9ee8ff, 1).fillRect(193, 18, 12, 1);
 
-    this.add.rectangle(237, 35, 38, 24, 0x16253e, 0.95)
-      .setStrokeStyle(2, 0xff8a3d, 1);
-    addPixelText(this, 237, 35, '88', {
-      scale: 2,
-      color: 0xff9f43,
-      originX: 0.5,
-      originY: 0.5,
-    });
-
-    addPixelText(this, GAME_WIDTH / 2, 55, 'AVENTURA 8-BIT EM MOVIMENTO', {
+    addPixelText(this, GAME_WIDTH / 2, 55, 'DE VOLTA PRA CASA', {
       scale: 1,
       color: 0xe5fbff,
       originX: 0.5,
@@ -65,7 +53,7 @@ export class TitleScene extends Phaser.Scene {
     offsetY: number,
   ): void {
     let x = startX + offsetX;
-    for (const char of 'ESTALO') {
+    for (const char of 'NILO') {
       this.drawGlyph(graphics, LOGO_GLYPHS[char], x, startY + offsetY, pixel, color);
       x += 7 * pixel;
     }
