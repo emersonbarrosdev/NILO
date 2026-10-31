@@ -1,0 +1,13 @@
+:":root {
+  font-family: monospace;
+  color: #ffffff;
+  background: #090b12;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+* { box-sizing: border-box; }
+html, body, #app { margin: 0; min-width: 100%; min-height: 100%; }
+body { min-height: 100vh; overflow: hidden; }
+#app { display: grid; place-items: center; min-height: 100vh; background: #090b12; }
+canvas { image-rendering: pixelated; image-rendering: crisp-edges; }
