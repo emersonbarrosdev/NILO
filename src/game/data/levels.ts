@@ -13,7 +13,7 @@ export const STAGES: Record<StageId, StageSummary> = {
     id: '1-1',
     world: 1,
     stage: 1,
-    name: 'Telhados do Mercado',
+    name: 'Vale da Brisa',
     postcardCount: 3,
   },
 };
