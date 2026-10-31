@@ -83,8 +83,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const input = this.readDirectionalInput();
     this.updateFacing(input.horizontal);
     this.updateMovement(input.horizontal, grounded);
-    this.updateJump(time, grounded);
     this.updateAttack(time, grounded, input.horizontal, input.vertical);
+    this.updateJump(time, grounded);
     this.updateVisualState(time, grounded, input.horizontal, input.vertical);
   }
 
@@ -126,10 +126,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   private updateJump(time: number, grounded: boolean): void {
     const body = this.body as Phaser.Physics.Arcade.Body;
+    const aimingWithSlingshot = this.charging || this.shootKeyJ.isDown || this.shootKeyX.isDown;
+
     const jumpPressed =
       Phaser.Input.Keyboard.JustDown(this.jumpKey) ||
-      Phaser.Input.Keyboard.JustDown(this.keyW) ||
-      Phaser.Input.Keyboard.JustDown(this.cursors.up);
+      (!aimingWithSlingshot && (
+        Phaser.Input.Keyboard.JustDown(this.keyW) ||
+        Phaser.Input.Keyboard.JustDown(this.cursors.up)
+      ));
 
     if (jumpPressed) {
       this.jumpBufferedAt = time;
@@ -145,7 +149,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.play('player-jump', true);
     }
 
-    const jumpHeld = this.jumpKey.isDown || this.keyW.isDown || this.cursors.up.isDown;
+    const jumpHeld =
+      this.jumpKey.isDown ||
+      (!aimingWithSlingshot && (this.keyW.isDown || this.cursors.up.isDown));
+
     if (!jumpHeld && body.velocity.y < -135) {
       this.setVelocityY(-135);
     }
@@ -214,7 +221,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     this.scene.events.emit('player-shot', projectile);
 
-    // Recuo somente visual/sonoro: o tiro não altera a trajetória física do pulo.
+    // Recuo somente visual: o tiro não altera a trajetória física do salto.
     this.scene.cameras.main.shake(charged ? 45 : 22, charged ? 0.0015 : 0.0007);
   }
 
