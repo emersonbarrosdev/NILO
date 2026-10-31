@@ -49,17 +49,23 @@ export class GameScene extends Phaser.Scene {
       depth: 900,
     });
 
-    const controlsHint = addPixelText(this, 8, 36, 'A D / SETAS  MOVER\nW / CIMA / SPACE  PULAR', {
-      scale: 1,
-      color: 0xffe082,
-      paddingX: 4,
-      paddingY: 2,
-      lineSpacing: 2,
-      backgroundColor: 0x17324a,
-      backgroundAlpha: 0.9,
-      scrollFactor: 0,
-      depth: 900,
-    });
+    const controlsHint = addPixelText(
+      this,
+      8,
+      36,
+      'A D / SETAS  MOVER\nW / CIMA / SPACE  PULAR\nJ / X  ESTILINGUE  SEGURE CARREGAR',
+      {
+        scale: 1,
+        color: 0xffe082,
+        paddingX: 4,
+        paddingY: 2,
+        lineSpacing: 2,
+        backgroundColor: 0x17324a,
+        backgroundAlpha: 0.9,
+        scrollFactor: 0,
+        depth: 900,
+      },
+    );
 
     this.tweens.add({
       targets: stageLabel,
@@ -72,7 +78,7 @@ export class GameScene extends Phaser.Scene {
     this.tweens.add({
       targets: controlsHint,
       alpha: 0,
-      delay: 4200,
+      delay: 5200,
       duration: 300,
       onComplete: () => controlsHint.destroy(),
     });
@@ -80,8 +86,8 @@ export class GameScene extends Phaser.Scene {
     this.scene.launch(SCENE_KEYS.ui);
   }
 
-  update(): void {
-    this.player?.update();
+  update(time: number): void {
+    this.player?.update(time);
   }
 
   private addGrassPlatform(x: number, y: number, width: number, height: number): void {
@@ -167,7 +173,7 @@ export class GameScene extends Phaser.Scene {
       g.fillStyle((x / 92) % 2 === 0 ? 0xff8a5b : 0xffdf68, 1).fillRect(x + 8, 143, 4, 3);
     }
 
-    // Pequenas bandeirolas de feira/caminho, sem arquitetura urbana.
+    // Pequenas bandeirolas de caminho, sem arquitetura urbana.
     const flagGroups = [190, 420, 658, 836];
     flagGroups.forEach((x) => {
       g.fillStyle(0x6b4930, 1).fillRect(x, 135, 2, 20);
