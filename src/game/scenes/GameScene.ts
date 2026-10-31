@@ -19,7 +19,6 @@ export class GameScene extends Phaser.Scene {
     this.player = new Player(this, 38, 130);
     this.physics.add.collider(this.player, ground);
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
-    this.cameras.main.setRoundPixels(true);
 
     addPixelText(this, 8, 20, '1-1 TELHADOS DO MERCADO', {
       scale: 1,
