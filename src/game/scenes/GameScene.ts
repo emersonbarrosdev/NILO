@@ -16,32 +16,35 @@ export class GameScene extends Phaser.Scene {
     this.drawBackdrop();
     this.drawWorldDecor();
 
-    const ground = this.add.rectangle(480, 168, 960, 24, 0x914c3d)
+    const ground = this.add.rectangle(480, 168, 960, 24, 0x6f4932)
       .setDepth(2);
-    ground.setStrokeStyle(2, 0x5c2e31, 1);
     this.physics.add.existing(ground, true);
+
+    // Faixa de grama no topo do terreno, separada da colisão para manter leitura visual.
+    this.add.rectangle(480, 157, 960, 5, 0x68c95a).setDepth(3);
+    this.add.rectangle(480, 160, 960, 2, 0x3f9147).setDepth(3);
 
     this.player = new Player(this, 38, 132);
     this.player.setDepth(10);
     this.physics.add.collider(this.player, ground);
 
-    this.addRoofPlatform(142, 124, 52, 8, 0xd97545);
-    this.addRoofPlatform(238, 105, 46, 8, 0x397594);
-    this.addRoofPlatform(346, 132, 62, 8, 0xd9a13f);
-    this.addRoofPlatform(470, 112, 54, 8, 0xb95448);
-    this.addRoofPlatform(610, 126, 68, 8, 0x397594);
-    this.addRoofPlatform(746, 102, 50, 8, 0xd97545);
-    this.addRoofPlatform(850, 128, 58, 8, 0xd9a13f);
+    this.addGrassPlatform(142, 124, 52, 8);
+    this.addGrassPlatform(238, 105, 46, 8);
+    this.addGrassPlatform(346, 132, 62, 8);
+    this.addGrassPlatform(470, 112, 54, 8);
+    this.addGrassPlatform(610, 126, 68, 8);
+    this.addGrassPlatform(746, 102, 50, 8);
+    this.addGrassPlatform(850, 128, 58, 8);
 
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
 
-    const stageLabel = addPixelText(this, 8, 20, '1-1  TELHADOS DO MERCADO', {
+    const stageLabel = addPixelText(this, 8, 20, '1-1  VALE DA BRISA', {
       scale: 1,
       color: 0xffffff,
       paddingX: 4,
       paddingY: 3,
       backgroundColor: 0x17324a,
-      backgroundAlpha: 0.94,
+      backgroundAlpha: 0.9,
       scrollFactor: 0,
       depth: 900,
     });
@@ -53,7 +56,7 @@ export class GameScene extends Phaser.Scene {
       paddingY: 2,
       lineSpacing: 2,
       backgroundColor: 0x17324a,
-      backgroundAlpha: 0.94,
+      backgroundAlpha: 0.9,
       scrollFactor: 0,
       depth: 900,
     });
@@ -81,94 +84,104 @@ export class GameScene extends Phaser.Scene {
     this.player?.update();
   }
 
-  private addRoofPlatform(x: number, y: number, width: number, height: number, color: number): void {
-    const platform = this.add.rectangle(x, y, width, height, color)
-      .setDepth(3)
-      .setStrokeStyle(2, 0x4a3040, 1);
+  private addGrassPlatform(x: number, y: number, width: number, height: number): void {
+    const platform = this.add.rectangle(x, y, width, height, 0x7a5136)
+      .setDepth(4)
+      .setStrokeStyle(1, 0x4f3328, 1);
 
     this.physics.add.existing(platform, true);
     if (this.player) {
       this.physics.add.collider(this.player, platform);
     }
 
-    // Pequena base visual para a plataforma não parecer flutuando sem explicação.
-    this.add.rectangle(x, y + height / 2 + 4, Math.max(12, width - 12), 6, 0x29445d, 1)
-      .setDepth(1);
+    // Grama e sombra deixam a plataforma natural e não flutuante visualmente.
+    this.add.rectangle(x, y - height / 2, width, 3, 0x72cf5b, 1).setDepth(5);
+    this.add.rectangle(x, y + height / 2 + 3, Math.max(12, width - 10), 5, 0x5a3b2d, 1).setDepth(2);
+
+    // Pequenas raízes/pedras quebram a forma retangular sem alterar a colisão.
+    this.add.rectangle(x - width / 4, y + 6, 4, 4, 0x8c6544, 1).setDepth(3);
+    this.add.rectangle(x + width / 5, y + 5, 5, 3, 0x8c6544, 1).setDepth(3);
   }
 
   private drawBackdrop(): void {
-    const graphics = this.add.graphics().setScrollFactor(0).setDepth(-20);
+    const g = this.add.graphics().setScrollFactor(0).setDepth(-20);
 
-    graphics.fillStyle(0x2f86bd, 1).fillRect(0, 0, 320, 58);
-    graphics.fillStyle(0x48acd3, 1).fillRect(0, 58, 320, 88);
+    g.fillStyle(0x2f86bd, 1).fillRect(0, 0, 320, 58);
+    g.fillStyle(0x48acd3, 1).fillRect(0, 58, 320, 88);
 
-    // Nuvens.
-    graphics.fillStyle(0xd9f4fb, 1);
-    graphics.fillRect(18, 48, 34, 5);
-    graphics.fillRect(25, 42, 19, 6);
-    graphics.fillRect(226, 38, 42, 5);
-    graphics.fillRect(235, 32, 22, 6);
+    // Sol e nuvens.
+    g.fillStyle(0xffd45a, 1);
+    g.fillRect(278, 18, 14, 22);
+    g.fillRect(274, 22, 22, 14);
 
-    // Skyline distante fixo para manter profundidade enquanto a câmera acompanha o jogador.
-    const skyline = [
-      { x: 0, y: 82, w: 35, h: 64, c: 0x315f7f },
-      { x: 30, y: 92, w: 28, h: 54, c: 0x294d6b },
-      { x: 55, y: 72, w: 46, h: 74, c: 0x356987 },
-      { x: 96, y: 98, w: 32, h: 48, c: 0x24445f },
-      { x: 124, y: 79, w: 45, h: 67, c: 0x315f7f },
-      { x: 165, y: 88, w: 31, h: 58, c: 0x294d6b },
-      { x: 192, y: 70, w: 50, h: 76, c: 0x356987 },
-      { x: 237, y: 94, w: 35, h: 52, c: 0x24445f },
-      { x: 268, y: 78, w: 52, h: 68, c: 0x315f7f },
-    ];
+    g.fillStyle(0xe7fbff, 1);
+    g.fillRect(18, 48, 34, 5);
+    g.fillRect(25, 42, 19, 6);
+    g.fillRect(226, 38, 42, 5);
+    g.fillRect(235, 32, 22, 6);
 
-    skyline.forEach((building, index) => {
-      graphics.fillStyle(building.c, 1).fillRect(building.x, building.y, building.w, building.h);
-      graphics.fillStyle(index % 2 === 0 ? 0xffdf68 : 0x83e3ff, 1);
-      for (let wy = building.y + 8; wy < building.y + building.h - 5; wy += 11) {
-        for (let wx = building.x + 6; wx < building.x + building.w - 4; wx += 12) {
-          graphics.fillRect(wx, wy, 3, 4);
-        }
-      }
-    });
+    // Colinas distantes em camadas; nenhuma silhueta urbana.
+    g.fillStyle(0x4b9b77, 1);
+    g.fillRect(0, 92, 58, 54);
+    g.fillRect(14, 81, 30, 11);
+    g.fillRect(50, 103, 68, 43);
+    g.fillRect(68, 91, 34, 12);
+    g.fillRect(110, 88, 72, 58);
+    g.fillRect(130, 75, 36, 13);
+    g.fillRect(176, 102, 62, 44);
+    g.fillRect(191, 90, 34, 12);
+    g.fillRect(230, 87, 70, 59);
+    g.fillRect(249, 74, 34, 13);
+    g.fillRect(294, 105, 26, 41);
+
+    g.fillStyle(0x327158, 1);
+    for (let x = 0; x < 320; x += 26) {
+      const h = 8 + ((x / 26) % 3) * 4;
+      g.fillRect(x, 146 - h, 30, h);
+    }
   }
 
   private drawWorldDecor(): void {
-    const graphics = this.add.graphics().setDepth(1);
+    const g = this.add.graphics().setDepth(1);
 
-    // Parapeito contínuo dos telhados.
-    graphics.fillStyle(0x663746, 1).fillRect(0, 151, 960, 7);
-    graphics.fillStyle(0xe0814d, 1).fillRect(0, 151, 960, 3);
-
-    // Toldos de mercado e placas espalhados ao longo do percurso.
-    for (let x = 76; x < 940; x += 172) {
-      graphics.fillStyle(0xf6c453, 1).fillRect(x, 143, 34, 4);
-      graphics.fillStyle(0xe25d4d, 1);
-      for (let stripe = 0; stripe < 4; stripe += 1) {
-        graphics.fillRect(x + stripe * 9, 147, 5, 4);
-      }
-      graphics.fillStyle(0x31556f, 1).fillRect(x + 3, 151, 2, 5);
-      graphics.fillRect(x + 29, 151, 2, 5);
+    // Textura simples no solo.
+    g.fillStyle(0x8d603e, 1);
+    for (let x = 8; x < 952; x += 24) {
+      g.fillRect(x, 166 + ((x / 24) % 2) * 5, 7, 3);
     }
 
-    // Chaminés, caixas d'água e antenas.
-    const vents = [118, 296, 430, 566, 708, 902];
-    vents.forEach((x, index) => {
-      graphics.fillStyle(index % 2 === 0 ? 0x31556f : 0x4a6f84, 1);
-      graphics.fillRect(x, 139, 9, 12);
-      graphics.fillStyle(0x6f94a6, 1).fillRect(x - 2, 137, 13, 3);
+    // Árvores pequenas e arbustos ao longo do percurso.
+    const treeXs = [82, 286, 526, 704, 918];
+    treeXs.forEach((x, index) => {
+      g.fillStyle(0x69452f, 1).fillRect(x, 136, 4, 20);
+      g.fillStyle(index % 2 === 0 ? 0x3c9452 : 0x2f7f49, 1);
+      g.fillRect(x - 8, 128, 20, 8);
+      g.fillRect(x - 5, 122, 14, 7);
+      g.fillStyle(0x62ba55, 1).fillRect(x - 3, 125, 8, 4);
     });
 
-    graphics.fillStyle(0x29445d, 1).fillRect(515, 129, 18, 22);
-    graphics.fillStyle(0x547a91, 1).fillRect(512, 126, 24, 5);
-    graphics.fillStyle(0x9ee8ff, 1).fillRect(522, 114, 2, 12);
-    graphics.fillRect(524, 114, 12, 2);
+    // Arbustos e flores dão cor e leitura de velocidade perto do chão.
+    for (let x = 46; x < 940; x += 92) {
+      g.fillStyle(0x3d954e, 1).fillRect(x, 149, 18, 7);
+      g.fillStyle(0x67c45b, 1).fillRect(x + 4, 146, 10, 4);
+      g.fillStyle((x / 92) % 2 === 0 ? 0xff8a5b : 0xffdf68, 1).fillRect(x + 8, 143, 4, 3);
+    }
 
-    // Caixas e mercadorias como obstáculos puramente visuais nesta etapa.
-    [190, 404, 666, 812].forEach((x, index) => {
-      graphics.fillStyle(index % 2 === 0 ? 0xbf6d3d : 0x9b5a36, 1).fillRect(x, 143, 12, 8);
-      graphics.lineStyle(1, 0x663b2c, 1).strokeRect(x, 143, 12, 8);
-      graphics.lineBetween(x, 143, x + 12, 151);
+    // Pequenas bandeirolas de feira/caminho, sem arquitetura urbana.
+    const flagGroups = [190, 420, 658, 836];
+    flagGroups.forEach((x) => {
+      g.fillStyle(0x6b4930, 1).fillRect(x, 135, 2, 20);
+      g.fillRect(x + 34, 135, 2, 20);
+      g.fillStyle(0xffcf55, 1).fillRect(x + 2, 136, 8, 4);
+      g.fillStyle(0xef6b57, 1).fillRect(x + 11, 136, 8, 4);
+      g.fillStyle(0x6ecbe0, 1).fillRect(x + 20, 136, 8, 4);
+      g.fillStyle(0xffcf55, 1).fillRect(x + 29, 136, 5, 4);
+    });
+
+    // Pedras e troncos decorativos.
+    [118, 370, 574, 792].forEach((x, index) => {
+      g.fillStyle(index % 2 === 0 ? 0x756b60 : 0x665d55, 1).fillRect(x, 149, 12, 7);
+      g.fillStyle(0x9a8d80, 1).fillRect(x + 2, 147, 7, 2);
     });
   }
 }
