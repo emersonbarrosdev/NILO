@@ -5,11 +5,6 @@ export const RUN_ENTER_SPEED = 62;
 export const RUN_EXIT_SPEED = 50;
 export const GAIT_MIN_SPEED = 6;
 
-// A arte do ciclo foi desenhada na direção temporal oposta à sensação de avanço.
-// Mantemos os frames/poses originais e invertemos somente a ordem de reprodução.
-// Frame 0 continua sendo o contato inicial para evitar salto visual ao começar a andar.
-const GAIT_PLAYBACK_ORDER = [0, 7, 6, 5, 4, 3, 2, 1] as const;
-
 export type GaitMode = 'walk' | 'run';
 export type AimPose = 'horizontal' | 'up-diagonal' | 'up' | 'down-diagonal' | 'down';
 export type LegSupport = 'right' | 'left' | 'flight';
@@ -43,6 +38,23 @@ function buildOpposedCycle(firstHalf: GaitFrame[]): GaitFrame[] {
   }));
 
   return [...firstHalf, ...secondHalf];
+}
+
+function mirrorLegPoseHorizontally(leg: LegPose): LegPose {
+  return {
+    ...leg,
+    thighX: 21 - leg.thighX,
+    shinX: 21 - leg.shinX,
+    footX: 19 - leg.footX,
+  };
+}
+
+function mirrorCycleLegs(cycle: GaitFrame[]): GaitFrame[] {
+  return cycle.map((frame) => ({
+    ...frame,
+    right: mirrorLegPoseHorizontally(frame.right),
+    left: mirrorLegPoseHorizontally(frame.left),
+  }));
 }
 
 const WALK_FIRST_HALF: GaitFrame[] = [
@@ -91,8 +103,8 @@ const RUN_FIRST_HALF: GaitFrame[] = [
   },
 ];
 
-export const WALK_GAIT = buildOpposedCycle(WALK_FIRST_HALF);
-export const RUN_GAIT = buildOpposedCycle(RUN_FIRST_HALF);
+export const WALK_GAIT = mirrorCycleLegs(buildOpposedCycle(WALK_FIRST_HALF));
+export const RUN_GAIT = mirrorCycleLegs(buildOpposedCycle(RUN_FIRST_HALF));
 
 export function resolveGaitMode(current: GaitMode, speed: number): GaitMode {
   if (current === 'walk' && speed >= RUN_ENTER_SPEED) return 'run';
@@ -112,8 +124,7 @@ export function advanceGaitPhase(
 
 export function gaitFrameFromPhase(phase: number): number {
   const normalized = ((phase % 1) + 1) % 1;
-  const playbackIndex = Math.floor(normalized * GAIT_FRAME_COUNT) % GAIT_FRAME_COUNT;
-  return GAIT_PLAYBACK_ORDER[playbackIndex];
+  return Math.floor(normalized * GAIT_FRAME_COUNT) % GAIT_FRAME_COUNT;
 }
 
 export function resolveAimPose(x: number, y: number): AimPose {
@@ -135,26 +146,6 @@ function sameLegPose(a: LegPose, b: LegPose): boolean {
     a.footX === b.footX &&
     a.footY === b.footY
   );
-}
-
-function validatePlaybackOrder(): void {
-  if (GAIT_PLAYBACK_ORDER.length !== GAIT_FRAME_COUNT) {
-    throw new Error('GAIT_PLAYBACK_ORDER precisa conter exatamente 8 frames.');
-  }
-
-  const uniqueFrames = new Set<number>(GAIT_PLAYBACK_ORDER);
-  if (uniqueFrames.size !== GAIT_FRAME_COUNT) {
-    throw new Error('GAIT_PLAYBACK_ORDER não pode repetir frames.');
-  }
-
-  for (let index = 0; index < GAIT_FRAME_COUNT / 2; index += 1) {
-    const current = GAIT_PLAYBACK_ORDER[index];
-    const opposite = GAIT_PLAYBACK_ORDER[index + GAIT_FRAME_COUNT / 2];
-
-    if ((current + GAIT_FRAME_COUNT / 2) % GAIT_FRAME_COUNT !== opposite) {
-      throw new Error(`GAIT_PLAYBACK_ORDER: índice ${index} perdeu a defasagem de 180 graus.`);
-    }
-  }
 }
 
 export function validateGaitCycle(name: string, cycle: GaitFrame[], allowFlight: boolean): void {
@@ -191,7 +182,6 @@ export function validateGaitCycle(name: string, cycle: GaitFrame[], allowFlight:
 }
 
 export function validatePlayerAnimationModel(): void {
-  validatePlaybackOrder();
   validateGaitCycle('WALK_GAIT', WALK_GAIT, false);
   validateGaitCycle('RUN_GAIT', RUN_GAIT, true);
 }
