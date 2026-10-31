@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '../config/constants';
+import { addPixelText } from '../ui/PixelText';
 
 export class PreloadScene extends Phaser.Scene {
   constructor() { super(SCENE_KEYS.preload); }
@@ -12,11 +13,12 @@ export class PreloadScene extends Phaser.Scene {
     graphics.generateTexture('enemy-placeholder', 16, 16);
     graphics.destroy();
 
-    this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2, 'CARREGANDO...', {
-      fontFamily: 'monospace',
-      fontSize: '10px',
-      color: '#ffffff',
-    }).setOrigin(0.5);
+    addPixelText(this, GAME_WIDTH / 2, GAME_HEIGHT / 2, 'CARREGANDO...', {
+      scale: 1,
+      color: 0xffffff,
+      originX: 0.5,
+      originY: 0.5,
+    });
 
     this.time.delayedCall(120, () => this.scene.start(SCENE_KEYS.title));
   }
