@@ -11,10 +11,10 @@ Fundação técnica e pré-produção do **vertical slice da Fase 1-1 — Vale d
 ## Direção atual
 
 - mundo aberto, colorido e fantástico;
-- primeira fase natural, com céu amplo, colinas, vegetação, plataformas e elementos de feira/caminho;
+- primeira fase natural, com céu amplo, colinas, vegetação, plataformas e elementos de caminho;
 - **não usar cidade, skyline de prédios ou estética urbana como identidade do jogo**;
 - inspiração nos clássicos 8-bit está na fluidez, leitura, ritmo, cores e música — não em copiar fases ou personagens;
-- controles simples e precisos;
+- protagonista definido como **criança aventureira**, não adulto;
 - combate principal com estilingue;
 - plataforma, inimigos, obstáculos, puzzles curtos e exploração;
 - música chiptune melódica e memorável;
@@ -25,7 +25,38 @@ Fundação técnica e pré-produção do **vertical slice da Fase 1-1 — Vale d
 
 - **A / D** ou **← / →**: mover;
 - **W**, **↑** ou **SPACE**: pular;
-- **S** ou **↓**: direção para baixo / base para agachar e atravessar plataformas quando essas ações entrarem no vertical slice.
+- **S** ou **↓**: agachar/direcionar mira para baixo;
+- **J** ou **X**: estilingue;
+- tocar **J/X**: tiro normal;
+- segurar **J/X**: carregar tiro;
+- durante a carga, usar **WASD/setas** para mirar, incluindo diagonais.
+
+## Protótipo do protagonista
+
+O protótipo atual já possui estados visuais separados para:
+
+- idle;
+- corrida em 8 frames;
+- salto/subida;
+- ápice;
+- queda;
+- aterrissagem;
+- agachado;
+- frenagem/troca de direção;
+- tiro no chão;
+- tiro no ar;
+- carga do estilingue.
+
+A arte desses frames ainda é **procedural e temporária** para validar movimento e leitura. A spritesheet final desenhada substituirá esses frames sem mudar a máquina de estados.
+
+## Estilingue
+
+- pedra normal visível;
+- tiro carregado maior e mais rápido;
+- disparo permitido durante o salto;
+- tiro não cancela o momentum do personagem;
+- pedra colide com chão/plataformas e gera impacto pixelado;
+- câmera recebe feedback mínimo no disparo, mais forte no carregado.
 
 ## Fluxo atual
 
@@ -64,4 +95,4 @@ npm run build
 - [`docs/GAME_BIBLE.md`](docs/GAME_BIBLE.md) — Bíblia geral do jogo.
 - [`docs/PHASE_1_1_TASK_BIBLE.md`](docs/PHASE_1_1_TASK_BIBLE.md) — plano para produzir somente a Fase 1-1.
 
-> O nome, aparência final e história do protagonista continuam deliberadamente em aberto. A mecânica do estilingue e a direção 8-bit colorida são os pilares já aprovados.
+> O nome e a arte final do protagonista continuam em aberto. Já estão fechados: protagonista criança, estilingue, direção natural/colorida e foco em movimento 8-bit responsivo.
