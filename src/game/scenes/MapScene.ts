@@ -9,24 +9,24 @@ export class MapScene extends Phaser.Scene {
     this.drawBackground();
     this.drawRoute();
 
-    addPixelText(this, GAME_WIDTH / 2, 20, 'ROTA DA CIDADE', {
+    addPixelText(this, GAME_WIDTH / 2, 20, 'ROTA DA AVENTURA', {
       scale: 2,
       color: 0xfff1a8,
       originX: 0.5,
       originY: 0.5,
     });
 
-    addPixelText(this, GAME_WIDTH / 2, 43, 'BAIRRO SOLAR', {
+    addPixelText(this, GAME_WIDTH / 2, 43, 'MUNDO 1', {
       scale: 1,
-      color: 0x9ee8ff,
+      color: 0xd9fbff,
       originX: 0.5,
       originY: 0.5,
     });
 
-    this.add.rectangle(GAME_WIDTH / 2, 144, 246, 43, 0x101b32, 0.96)
-      .setStrokeStyle(1, 0x3c7295, 1);
+    this.add.rectangle(GAME_WIDTH / 2, 144, 246, 43, 0x17314a, 0.95)
+      .setStrokeStyle(1, 0x6dc66a, 1);
 
-    addPixelText(this, GAME_WIDTH / 2, 136, '1-1  TELHADOS DO MERCADO', {
+    addPixelText(this, GAME_WIDTH / 2, 136, '1-1  VALE DA BRISA', {
       scale: 1,
       color: 0xffffff,
       originX: 0.5,
@@ -54,75 +54,90 @@ export class MapScene extends Phaser.Scene {
   }
 
   private drawBackground(): void {
-    const graphics = this.add.graphics();
+    const g = this.add.graphics();
 
-    graphics.fillStyle(0x17264a, 1).fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    graphics.fillStyle(0x1c3159, 1).fillRect(0, 38, GAME_WIDTH, 92);
+    g.fillStyle(0x246aa7, 1).fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    g.fillStyle(0x49afd0, 1).fillRect(0, 45, GAME_WIDTH, 80);
 
-    // Grade urbana discreta ao fundo, como um mapa de metrô impresso.
-    graphics.lineStyle(1, 0x27456b, 0.55);
-    for (let x = 12; x < GAME_WIDTH; x += 24) {
-      graphics.lineBetween(x, 42, x, 126);
-    }
-    for (let y = 50; y < 128; y += 18) {
-      graphics.lineBetween(8, y, GAME_WIDTH - 8, y);
-    }
+    // Ilhas/colinas ao fundo para o mapa parecer parte do mundo e não uma tela de metrô.
+    g.fillStyle(0x3a8a6b, 1);
+    g.fillRect(0, 103, 58, 22);
+    g.fillRect(12, 94, 34, 9);
+    g.fillRect(47, 108, 73, 17);
+    g.fillRect(67, 98, 32, 10);
+    g.fillRect(112, 100, 75, 25);
+    g.fillRect(136, 89, 31, 11);
+    g.fillRect(180, 108, 58, 17);
+    g.fillRect(194, 97, 32, 11);
+    g.fillRect(232, 99, 88, 26);
+    g.fillRect(258, 88, 36, 11);
 
-    // Silhuetas de prédios nas laterais.
-    graphics.fillStyle(0x101b32, 1);
-    graphics.fillRect(0, 96, 34, 34);
-    graphics.fillRect(8, 84, 18, 12);
-    graphics.fillRect(286, 91, 34, 39);
-    graphics.fillRect(294, 78, 18, 13);
+    g.fillStyle(0x65bd55, 1).fillRect(0, 124, GAME_WIDTH, 8);
+    g.fillStyle(0x6d4933, 1).fillRect(0, 132, GAME_WIDTH, 48);
+
+    // Nuvens e sol.
+    g.fillStyle(0xe5faff, 1);
+    g.fillRect(18, 62, 34, 5);
+    g.fillRect(25, 56, 18, 6);
+    g.fillRect(240, 54, 38, 5);
+    g.fillRect(249, 48, 20, 6);
+
+    g.fillStyle(0xffd45a, 1);
+    g.fillRect(288, 23, 12, 20);
+    g.fillRect(284, 27, 20, 12);
   }
 
   private drawRoute(): void {
-    const graphics = this.add.graphics();
-    const stations = [58, 126, 194, 262];
+    const g = this.add.graphics();
+    const stations = [54, 126, 198, 270];
+    const y = 79;
 
-    // Linha principal.
-    graphics.fillStyle(0x60dff4, 1).fillRect(stations[0], 78, stations[3] - stations[0], 2);
-
-    // Estação ativa com halo.
-    graphics.fillStyle(0x4b3b16, 1).fillRect(stations[0] - 8, 70, 16, 18);
-    graphics.fillStyle(0xffcf33, 1).fillRect(stations[0] - 5, 73, 10, 12);
-    graphics.fillStyle(0xffffff, 1).fillRect(stations[0] - 2, 76, 4, 6);
-
-    // Próximos distritos ficam visíveis, mas bloqueados.
-    for (let index = 1; index < stations.length; index += 1) {
-      const x = stations[index];
-      graphics.fillStyle(0x425675, 1).fillRect(x - 6, 72, 12, 14);
-      graphics.fillStyle(0x71829a, 1).fillRect(x - 3, 75, 6, 8);
+    // Trilha de aventura em vez de linha de transporte.
+    g.fillStyle(0xffef9b, 1).fillRect(stations[0], y, stations[3] - stations[0], 2);
+    for (let x = stations[0] + 12; x < stations[3]; x += 18) {
+      g.fillStyle(0xffffff, 0.7).fillRect(x, y - 1, 4, 4);
     }
 
-    addPixelText(this, stations[0], 96, 'MERCADO', {
+    // Primeiro ponto ativo.
+    g.fillStyle(0x38502d, 1).fillRect(stations[0] - 8, y - 9, 16, 18);
+    g.fillStyle(0x77d95d, 1).fillRect(stations[0] - 5, y - 6, 10, 12);
+    g.fillStyle(0xffdf68, 1).fillRect(stations[0] - 2, y - 3, 4, 6);
+
+    // Pontos futuros.
+    for (let index = 1; index < stations.length; index += 1) {
+      const x = stations[index];
+      g.fillStyle(0x435d66, 1).fillRect(x - 6, y - 7, 12, 14);
+      g.fillStyle(0x8197a1, 1).fillRect(x - 3, y - 4, 6, 8);
+    }
+
+    addPixelText(this, stations[0], 98, 'VALE', {
       scale: 1,
       color: 0xffdf68,
       originX: 0.5,
       originY: 0.5,
     });
-    addPixelText(this, stations[1], 96, 'CANAIS', {
+    addPixelText(this, stations[1], 98, 'BOSQUE', {
       scale: 1,
-      color: 0x8192ab,
+      color: 0xc7d6d9,
       originX: 0.5,
       originY: 0.5,
     });
-    addPixelText(this, stations[2], 96, 'FERROVIA', {
+    addPixelText(this, stations[2], 98, 'CASCATA', {
       scale: 1,
-      color: 0x8192ab,
+      color: 0xc7d6d9,
       originX: 0.5,
       originY: 0.5,
     });
-    addPixelText(this, stations[3], 96, 'ALTA', {
+    addPixelText(this, stations[3], 98, 'ALTURAS', {
       scale: 1,
-      color: 0x8192ab,
+      color: 0xc7d6d9,
       originX: 0.5,
       originY: 0.5,
     });
 
-    addPixelText(this, GAME_WIDTH / 2, 113, 'OS OUTROS DISTRITOS ABREM DEPOIS', {
+    addPixelText(this, GAME_WIDTH / 2, 115, 'NOVAS ROTAS ABREM DEPOIS', {
       scale: 1,
-      color: 0x8297b4,
+      color: 0xd7e8ea,
       originX: 0.5,
       originY: 0.5,
     });
