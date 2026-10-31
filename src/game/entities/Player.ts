@@ -14,6 +14,10 @@ const MAX_CHARGE_MS = 1100;
 const LAND_POSE_MS = 90;
 const SHOOT_POSE_MS = 150;
 
+const RUN_FRAME_COUNT = 8;
+const RUN_DISTANCE_PER_CYCLE = 56;
+const RUN_ANIMATION_MIN_SPEED = 16;
+
 export class Player extends Phaser.Physics.Arcade.Sprite {
   private readonly cursors: Phaser.Types.Input.Keyboard.CursorKeys;
   private readonly keyW: Phaser.Input.Keyboard.Key;
@@ -38,11 +42,19 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private aimX = 1;
   private aimY = 0;
 
+  // O ciclo de pernas não é controlado por tempo. Ele avança somente pela
+  // distância real percorrida em X, eliminando o efeito de "deslize".
+  private gaitDistance = 0;
+  private gaitFrame = 0;
+  private previousX: number;
+
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, 'player-idle-0');
 
     scene.add.existing(this);
     scene.physics.add.existing(this);
+
+    this.previousX = x;
 
     this.setCollideWorldBounds(true);
     this.setMaxVelocity(RUN_SPEED, 520);
@@ -85,6 +97,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.updateMovement(input.horizontal, grounded);
     this.updateAttack(time, grounded, input.horizontal, input.vertical);
     this.updateJump(time, grounded);
+    this.updateGait(grounded);
     this.updateVisualState(time, grounded, input.horizontal, input.vertical);
   }
 
@@ -207,6 +220,22 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.aimY = vector.y;
   }
 
+  private updateGait(grounded: boolean): void {
+    const body = this.body as Phaser.Physics.Arcade.Body;
+    const deltaX = Math.abs(this.x - this.previousX);
+    this.previousX = this.x;
+
+    const actuallyRunning = grounded && Math.abs(body.velocity.x) > RUN_ANIMATION_MIN_SPEED;
+    if (!actuallyRunning || deltaX <= 0) {
+      return;
+    }
+
+    this.gaitDistance += deltaX;
+
+    const normalizedCycle = (this.gaitDistance % RUN_DISTANCE_PER_CYCLE) / RUN_DISTANCE_PER_CYCLE;
+    this.gaitFrame = Math.floor(normalizedCycle * RUN_FRAME_COUNT) % RUN_FRAME_COUNT;
+  }
+
   private fireProjectile(time: number, charged: boolean, grounded: boolean): void {
     if (time - this.lastShotAt < QUICK_SHOT_COOLDOWN_MS) return;
 
@@ -232,16 +261,26 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     vertical: number,
   ): void {
     const body = this.body as Phaser.Physics.Arcade.Body;
+    const movingOnGround = grounded && Math.abs(body.velocity.x) > RUN_ANIMATION_MIN_SPEED;
 
     if (this.charging) {
       const chargeTime = Phaser.Math.Clamp(time - this.chargeStartedAt, 0, MAX_CHARGE_MS);
       const chargeFrame = Math.min(3, Math.floor(chargeTime / 260));
       this.anims.stop();
-      this.setTexture(`player-charge-${chargeFrame}`);
+
+      if (movingOnGround) {
+        this.setTexture(`player-run-charge-${this.gaitFrame}-${chargeFrame}`);
+      } else {
+        this.setTexture(`player-charge-${chargeFrame}`);
+      }
       return;
     }
 
     if (time < this.shootPoseUntil) {
+      if (movingOnGround) {
+        this.anims.stop();
+        this.setTexture(`player-run-shoot-${this.gaitFrame}`);
+      }
       return;
     }
 
@@ -280,8 +319,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       return;
     }
 
-    if (Math.abs(body.velocity.x) > 16) {
-      this.play('player-run', true);
+    if (movingOnGround) {
+      // Corrida estritamente dirigida pela distância percorrida.
+      // Frame 0..3 = fase direita; frame 4..7 = fase esquerda (180 graus).
+      this.anims.stop();
+      this.setTexture(`player-run-${this.gaitFrame}`);
       return;
     }
 
