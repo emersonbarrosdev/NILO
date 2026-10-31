@@ -1,10 +1,21 @@
 import Phaser from 'phaser';
 import { Projectile } from './Projectile';
+import {
+  GAIT_MIN_SPEED,
+  advanceGaitPhase,
+  gaitFrameFromPhase,
+  resolveAimPose,
+  resolveGaitMode,
+  type AimPose,
+  type GaitMode,
+} from './playerAnimationModel';
 
-const RUN_SPEED = 132;
-const GROUND_ACCELERATION = 980;
-const AIR_ACCELERATION = 620;
-const GROUND_DRAG = 1050;
+const RUN_SPEED = 145;
+const GROUND_ACCELERATION = 260;
+const BRAKE_ACCELERATION = 900;
+const AIR_ACCELERATION = 420;
+const GROUND_DRAG = 700;
+const AIR_DRAG = 70;
 const JUMP_SPEED = 305;
 const COYOTE_TIME_MS = 90;
 const JUMP_BUFFER_MS = 110;
@@ -13,10 +24,7 @@ const CHARGED_SHOT_THRESHOLD_MS = 450;
 const MAX_CHARGE_MS = 1100;
 const LAND_POSE_MS = 90;
 const SHOOT_POSE_MS = 150;
-
-const RUN_FRAME_COUNT = 8;
-const RUN_DISTANCE_PER_CYCLE = 56;
-const RUN_ANIMATION_MIN_SPEED = 16;
+const SHOOT_FRAME_COUNT = 3;
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   private readonly cursors: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -34,6 +42,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private wasGrounded = false;
   private landPoseUntil = 0;
   private shootPoseUntil = 0;
+  private shotStartedAt = Number.NEGATIVE_INFINITY;
+  private shotGrounded = true;
+  private shotAimPose: AimPose = 'horizontal';
   private lastShotAt = Number.NEGATIVE_INFINITY;
 
   private charging = false;
@@ -42,10 +53,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private aimX = 1;
   private aimY = 0;
 
-  // O ciclo de pernas não é controlado por tempo. Ele avança somente pela
-  // distância real percorrida em X, eliminando o efeito de "deslize".
-  private gaitDistance = 0;
+  private gaitPhase = 0;
   private gaitFrame = 0;
+  private gaitMode: GaitMode = 'walk';
   private previousX: number;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
@@ -81,9 +91,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const body = this.body as Phaser.Physics.Arcade.Body;
     const grounded = body.blocked.down || body.touching.down;
 
-    if (grounded) {
-      this.lastGroundedAt = time;
-    }
+    if (grounded) this.lastGroundedAt = time;
 
     if (grounded && !this.wasGrounded && body.velocity.y >= 0) {
       this.landPoseUntil = time + LAND_POSE_MS;
@@ -115,26 +123,31 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   private updateFacing(horizontal: number): void {
     if (horizontal === 0) return;
-
     this.facing = horizontal > 0 ? 1 : -1;
     this.setFlipX(this.facing < 0);
   }
 
   private updateMovement(horizontal: number, grounded: boolean): void {
     const body = this.body as Phaser.Physics.Arcade.Body;
-    const acceleration = grounded ? GROUND_ACCELERATION : AIR_ACCELERATION;
-    const movementScale = this.charging ? 0.72 : 1;
+    const movementScale = this.charging ? 0.78 : 1;
 
     if (horizontal !== 0) {
+      const velocityDirection = Math.sign(body.velocity.x);
+      const reversing = grounded && Math.abs(body.velocity.x) > 28 && velocityDirection !== horizontal;
+      const acceleration = grounded
+        ? reversing
+          ? BRAKE_ACCELERATION
+          : GROUND_ACCELERATION
+        : AIR_ACCELERATION;
+
       this.setAccelerationX(horizontal * acceleration * movementScale);
       this.setDragX(0);
     } else {
       this.setAccelerationX(0);
-      this.setDragX(grounded ? GROUND_DRAG : 80);
+      this.setDragX(grounded ? GROUND_DRAG : AIR_DRAG);
     }
 
-    const maxSpeed = RUN_SPEED * movementScale;
-    body.setMaxVelocity(maxSpeed, 520);
+    body.setMaxVelocity(RUN_SPEED * movementScale, 520);
   }
 
   private updateJump(time: number, grounded: boolean): void {
@@ -148,9 +161,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         Phaser.Input.Keyboard.JustDown(this.cursors.up)
       ));
 
-    if (jumpPressed) {
-      this.jumpBufferedAt = time;
-    }
+    if (jumpPressed) this.jumpBufferedAt = time;
 
     const canUseCoyoteTime = grounded || time - this.lastGroundedAt <= COYOTE_TIME_MS;
     const jumpBuffered = time - this.jumpBufferedAt <= JUMP_BUFFER_MS;
@@ -166,9 +177,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.jumpKey.isDown ||
       (!aimingWithSlingshot && (this.keyW.isDown || this.cursors.up.isDown));
 
-    if (!jumpHeld && body.velocity.y < -135) {
-      this.setVelocityY(-135);
-    }
+    if (!jumpHeld && body.velocity.y < -135) this.setVelocityY(-135);
   }
 
   private updateAttack(
@@ -185,9 +194,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.updateAim(horizontal, vertical);
     }
 
-    if (attackDown && this.charging) {
-      this.updateAim(horizontal, vertical);
-    }
+    if (attackDown && this.charging) this.updateAim(horizontal, vertical);
 
     if (!attackDown && this.attackWasDown && this.charging) {
       const chargeTime = Phaser.Math.Clamp(time - this.chargeStartedAt, 0, MAX_CHARGE_MS);
@@ -203,9 +210,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     let x = horizontal;
     let y = vertical;
 
-    if (x === 0 && y === 0) {
-      x = this.facing;
-    }
+    if (x === 0 && y === 0) x = this.facing;
 
     if (x !== 0) {
       this.facing = x > 0 ? 1 : -1;
@@ -225,32 +230,31 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const deltaX = Math.abs(this.x - this.previousX);
     this.previousX = this.x;
 
-    const actuallyRunning = grounded && Math.abs(body.velocity.x) > RUN_ANIMATION_MIN_SPEED;
-    if (!actuallyRunning || deltaX <= 0) {
-      return;
-    }
+    const speed = Math.abs(body.velocity.x);
+    this.gaitMode = resolveGaitMode(this.gaitMode, speed);
 
-    this.gaitDistance += deltaX;
+    if (!grounded || speed <= GAIT_MIN_SPEED || deltaX <= 0.001) return;
 
-    const normalizedCycle = (this.gaitDistance % RUN_DISTANCE_PER_CYCLE) / RUN_DISTANCE_PER_CYCLE;
-    this.gaitFrame = Math.floor(normalizedCycle * RUN_FRAME_COUNT) % RUN_FRAME_COUNT;
+    this.gaitPhase = advanceGaitPhase(this.gaitPhase, deltaX, this.gaitMode);
+    this.gaitFrame = gaitFrameFromPhase(this.gaitPhase);
   }
 
   private fireProjectile(time: number, charged: boolean, grounded: boolean): void {
     if (time - this.lastShotAt < QUICK_SHOT_COOLDOWN_MS) return;
 
-    const projectileX = this.x + this.facing * 11;
-    const projectileY = this.y - 6 + this.aimY * 3;
+    const verticalAim = Math.abs(this.aimX) < 0.2;
+    const projectileX = this.x + this.aimX * 13 + (verticalAim ? this.facing * 3 : 0);
+    const projectileY = this.y - 6 + this.aimY * 13;
     const projectile = new Projectile(this.scene, projectileX, projectileY, charged);
     projectile.fire(this.aimX, this.aimY);
 
     this.lastShotAt = time;
+    this.shotStartedAt = time;
     this.shootPoseUntil = time + SHOOT_POSE_MS;
-    this.play(grounded ? 'player-shoot-ground' : 'player-shoot-air', true);
+    this.shotGrounded = grounded;
+    this.shotAimPose = resolveAimPose(this.aimX, this.aimY);
 
     this.scene.events.emit('player-shot', projectile);
-
-    // Recuo somente visual: o tiro não altera a trajetória física do salto.
     this.scene.cameras.main.shake(charged ? 45 : 22, charged ? 0.0015 : 0.0007);
   }
 
@@ -261,25 +265,41 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     vertical: number,
   ): void {
     const body = this.body as Phaser.Physics.Arcade.Body;
-    const movingOnGround = grounded && Math.abs(body.velocity.x) > RUN_ANIMATION_MIN_SPEED;
+    const speed = Math.abs(body.velocity.x);
+    const movingOnGround = grounded && speed > GAIT_MIN_SPEED;
 
     if (this.charging) {
       const chargeTime = Phaser.Math.Clamp(time - this.chargeStartedAt, 0, MAX_CHARGE_MS);
       const chargeFrame = Math.min(3, Math.floor(chargeTime / 260));
+      const aimPose = resolveAimPose(this.aimX, this.aimY);
       this.anims.stop();
 
       if (movingOnGround) {
-        this.setTexture(`player-run-charge-${this.gaitFrame}-${chargeFrame}`);
+        this.setTexture(`player-${this.gaitMode}-charge-${this.gaitFrame}-${aimPose}-${chargeFrame}`);
+      } else if (grounded) {
+        this.setTexture(`player-charge-ground-${aimPose}-${chargeFrame}`);
       } else {
-        this.setTexture(`player-charge-${chargeFrame}`);
+        this.setTexture(`player-charge-air-${aimPose}-${chargeFrame}`);
       }
       return;
     }
 
     if (time < this.shootPoseUntil) {
-      if (movingOnGround) {
-        this.anims.stop();
-        this.setTexture(`player-run-shoot-${this.gaitFrame}`);
+      const elapsed = Math.max(0, time - this.shotStartedAt);
+      const shootFrame = Math.min(
+        SHOOT_FRAME_COUNT - 1,
+        Math.floor(elapsed / (SHOOT_POSE_MS / SHOOT_FRAME_COUNT)),
+      );
+      this.anims.stop();
+
+      if (this.shotGrounded && movingOnGround) {
+        this.setTexture(
+          `player-${this.gaitMode}-shoot-${this.gaitFrame}-${this.shotAimPose}-${shootFrame}`,
+        );
+      } else if (this.shotGrounded) {
+        this.setTexture(`player-shoot-ground-${this.shotAimPose}-${shootFrame}`);
+      } else {
+        this.setTexture(`player-shoot-air-${this.shotAimPose}-${shootFrame}`);
       }
       return;
     }
@@ -300,9 +320,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       return;
     }
 
-    if (time < this.landPoseUntil) {
-      return;
-    }
+    if (time < this.landPoseUntil) return;
 
     if (vertical > 0) {
       this.anims.stop();
@@ -311,7 +329,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     const movingAgainstVelocity =
-      horizontal !== 0 && Math.abs(body.velocity.x) > 55 && Math.sign(body.velocity.x) !== horizontal;
+      horizontal !== 0 && speed > 45 && Math.sign(body.velocity.x) !== horizontal;
 
     if (movingAgainstVelocity) {
       this.anims.stop();
@@ -320,10 +338,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     if (movingOnGround) {
-      // Corrida estritamente dirigida pela distância percorrida.
-      // Frame 0..3 = fase direita; frame 4..7 = fase esquerda (180 graus).
       this.anims.stop();
-      this.setTexture(`player-run-${this.gaitFrame}`);
+      this.setTexture(`player-${this.gaitMode}-${this.gaitFrame}`);
       return;
     }
 
