@@ -2,43 +2,22 @@ import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '../config/constants';
 import { addPixelText } from '../ui/PixelText';
 
+const LOGO_GLYPHS: Record<string, string[]> = {
+  E: ['111111','110000','110000','111110','110000','110000','111111'],
+  S: ['011111','110000','110000','011110','000011','000011','111110'],
+  T: ['111111','001100','001100','001100','001100','001100','001100'],
+  A: ['011110','110011','110011','111111','110011','110011','110011'],
+  L: ['110000','110000','110000','110000','110000','110000','111111'],
+  O: ['011110','110011','110011','110011','110011','110011','011110'],
+};
+
 export class TitleScene extends Phaser.Scene {
   constructor() { super(SCENE_KEYS.title); }
 
   create(): void {
     this.drawPixelCity();
     this.drawLogo();
-
-    this.add.rectangle(GAME_WIDTH / 2, 112, 154, 42, 0x0b1730, 0.94);
-
-    addPixelText(this, GAME_WIDTH / 2, 104, 'NOVO JOGO', {
-      scale: 2,
-      color: 0xffdf68,
-      originX: 0.5,
-      originY: 0.5,
-    });
-
-    const prompt = addPixelText(this, GAME_WIDTH / 2, 126, 'ENTER / SPACE', {
-      scale: 1,
-      color: 0xffffff,
-      originX: 0.5,
-      originY: 0.5,
-    });
-
-    this.tweens.add({
-      targets: prompt,
-      alpha: 0.35,
-      duration: 600,
-      yoyo: true,
-      repeat: -1,
-    });
-
-    addPixelText(this, GAME_WIDTH / 2, GAME_HEIGHT - 8, 'ESTALO 88', {
-      scale: 1,
-      color: 0x9fd8f4,
-      originX: 0.5,
-      originY: 0.5,
-    });
+    this.drawMenuPanel();
 
     const startGame = () => this.scene.start(SCENE_KEYS.map);
     this.input.keyboard?.once('keydown-ENTER', startGame);
@@ -46,99 +25,157 @@ export class TitleScene extends Phaser.Scene {
   }
 
   private drawLogo(): void {
-    const graphics = this.add.graphics();
+    const shadow = this.add.graphics();
+    const logo = this.add.graphics();
 
-    // Ícone de estilingue em pixel art.
-    graphics.fillStyle(0x35174f, 1);
-    graphics.fillRect(45, 31, 5, 29);
-    graphics.fillRect(38, 27, 5, 13);
-    graphics.fillRect(52, 27, 5, 13);
-    graphics.fillRect(41, 25, 13, 3);
-    graphics.fillRect(60, 23, 6, 6);
+    this.drawLogoWord(shadow, 61, 23, 3, 0x301447, 2, 2);
+    this.drawLogoWord(logo, 61, 23, 3, 0xffef9b, 0, 0);
 
-    graphics.fillStyle(0xffd85c, 1);
-    graphics.fillRect(43, 29, 5, 29);
-    graphics.fillRect(36, 25, 5, 13);
-    graphics.fillRect(50, 25, 5, 13);
-    graphics.fillRect(39, 23, 13, 3);
-    graphics.fillStyle(0xff8a3d, 1);
-    graphics.fillRect(58, 21, 6, 6);
+    // O T recebe a cor de impacto e vira o detalhe visual do estilingue.
+    this.drawGlyph(logo, LOGO_GLYPHS.T, 103, 23, 3, 0xff8a3d);
+    this.drawGlyph(shadow, LOGO_GLYPHS.T, 105, 25, 3, 0x301447);
 
-    addPixelText(this, 147, 43, 'ESTALO', {
-      scale: 3,
-      color: 0x35174f,
-      originX: 0.5,
-      originY: 0.5,
-    }).setPosition(149, 45);
+    // Pequeno projétil e rastro saindo do T, sem transformar o logo num desenho gigante.
+    logo.fillStyle(0xffd05a, 1).fillRect(117, 17, 5, 5);
+    logo.fillStyle(0xff8a3d, 1).fillRect(122, 18, 3, 3);
+    logo.fillStyle(0x9ee8ff, 1).fillRect(126, 19, 14, 1);
+    logo.fillRect(132, 17, 8, 1);
 
-    addPixelText(this, 147, 43, 'ESTALO', {
-      scale: 3,
-      color: 0xfff0a6,
+    // 88 vira um selo secundário; o nome principal continua legível mesmo se ele mudar depois.
+    this.add.rectangle(237, 35, 38, 24, 0x16253e, 0.95)
+      .setStrokeStyle(2, 0xff8a3d, 1);
+    addPixelText(this, 237, 35, '88', {
+      scale: 2,
+      color: 0xff9f43,
       originX: 0.5,
       originY: 0.5,
     });
 
-    addPixelText(this, 246, 43, '88', {
-      scale: 3,
-      color: 0x35174f,
+    addPixelText(this, GAME_WIDTH / 2, 55, 'AÇÃO 8-BIT NOS TELHADOS', {
+      scale: 1,
+      color: 0xc7efff,
       originX: 0.5,
       originY: 0.5,
-    }).setPosition(248, 45);
+    });
+  }
 
-    addPixelText(this, 246, 43, '88', {
-      scale: 3,
-      color: 0xff9f43,
+  private drawLogoWord(
+    graphics: Phaser.GameObjects.Graphics,
+    startX: number,
+    startY: number,
+    pixel: number,
+    color: number,
+    offsetX: number,
+    offsetY: number,
+  ): void {
+    let x = startX + offsetX;
+    const word = 'ESTALO';
+
+    for (const char of word) {
+      this.drawGlyph(graphics, LOGO_GLYPHS[char], x, startY + offsetY, pixel, color);
+      x += 7 * pixel;
+    }
+  }
+
+  private drawGlyph(
+    graphics: Phaser.GameObjects.Graphics,
+    glyph: string[],
+    x: number,
+    y: number,
+    pixel: number,
+    color: number,
+  ): void {
+    graphics.fillStyle(color, 1);
+    glyph.forEach((row, rowIndex) => {
+      [...row].forEach((cell, columnIndex) => {
+        if (cell === '1') {
+          graphics.fillRect(x + columnIndex * pixel, y + rowIndex * pixel, pixel, pixel);
+        }
+      });
+    });
+  }
+
+  private drawMenuPanel(): void {
+    this.add.rectangle(GAME_WIDTH / 2, 112, 148, 42, 0x0a1830, 0.94)
+      .setStrokeStyle(1, 0x2f6d93, 1);
+
+    this.add.rectangle(GAME_WIDTH / 2, 105, 118, 18, 0x1d4964, 1)
+      .setStrokeStyle(1, 0xffd05a, 1);
+
+    addPixelText(this, GAME_WIDTH / 2, 105, 'NOVO JOGO', {
+      scale: 2,
+      color: 0xffdf68,
       originX: 0.5,
       originY: 0.5,
+    });
+
+    const prompt = addPixelText(this, GAME_WIDTH / 2, 127, 'ENTER / ESPAÇO', {
+      scale: 1,
+      color: 0xd9f2ff,
+      originX: 0.5,
+      originY: 0.5,
+    });
+
+    this.tweens.add({
+      targets: prompt,
+      alpha: 0.35,
+      duration: 650,
+      yoyo: true,
+      repeat: -1,
     });
   }
 
   private drawPixelCity(): void {
     const graphics = this.add.graphics();
 
-    graphics.fillStyle(0x226aa6, 1).fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    graphics.fillStyle(0x3294c9, 1).fillRect(0, 58, GAME_WIDTH, 88);
+    // Céu em faixas para dar profundidade sem perder o visual 8-bit.
+    graphics.fillStyle(0x1d4f88, 1).fillRect(0, 0, GAME_WIDTH, 48);
+    graphics.fillStyle(0x2779ae, 1).fillRect(0, 48, GAME_WIDTH, 42);
+    graphics.fillStyle(0x49afd0, 1).fillRect(0, 90, GAME_WIDTH, 58);
 
-    // Sol pixelado.
+    // Sol e nuvens.
     graphics.fillStyle(0xffc94d, 1);
-    graphics.fillRect(274, 18, 14, 22);
-    graphics.fillRect(270, 22, 22, 14);
+    graphics.fillRect(278, 17, 14, 24);
+    graphics.fillRect(273, 22, 24, 14);
 
-    // Nuvens em blocos.
-    graphics.fillStyle(0xc8ecf7, 1);
-    graphics.fillRect(18, 72, 30, 5);
-    graphics.fillRect(24, 67, 18, 5);
-    graphics.fillRect(217, 63, 34, 5);
-    graphics.fillRect(225, 58, 18, 5);
+    graphics.fillStyle(0xd8f4fb, 1);
+    graphics.fillRect(18, 76, 34, 5);
+    graphics.fillRect(25, 70, 20, 6);
+    graphics.fillRect(218, 69, 38, 5);
+    graphics.fillRect(226, 63, 20, 6);
 
-    const buildings = [
-      { x: 0, y: 103, w: 32, h: 43, color: 0x24415f },
-      { x: 29, y: 94, w: 39, h: 52, color: 0x2c5270 },
-      { x: 65, y: 108, w: 27, h: 38, color: 0x1e3a57 },
-      { x: 88, y: 89, w: 45, h: 57, color: 0x315d7b },
-      { x: 129, y: 101, w: 35, h: 45, color: 0x24415f },
-      { x: 160, y: 85, w: 48, h: 61, color: 0x2c5270 },
-      { x: 205, y: 100, w: 31, h: 46, color: 0x1e3a57 },
-      { x: 233, y: 91, w: 42, h: 55, color: 0x315d7b },
-      { x: 271, y: 106, w: 49, h: 40, color: 0x24415f },
+    // Skyline distante.
+    const farBuildings = [
+      { x: 0, y: 104, w: 35, h: 44, c: 0x315f7f },
+      { x: 30, y: 95, w: 42, h: 53, c: 0x2b5374 },
+      { x: 68, y: 109, w: 30, h: 39, c: 0x24445f },
+      { x: 94, y: 88, w: 48, h: 60, c: 0x356987 },
+      { x: 138, y: 102, w: 36, h: 46, c: 0x294e6c },
+      { x: 169, y: 84, w: 52, h: 64, c: 0x356987 },
+      { x: 216, y: 99, w: 34, h: 49, c: 0x24445f },
+      { x: 246, y: 92, w: 43, h: 56, c: 0x315f7f },
+      { x: 285, y: 108, w: 35, h: 40, c: 0x294e6c },
     ];
 
-    buildings.forEach((building, buildingIndex) => {
-      graphics.fillStyle(building.color, 1).fillRect(building.x, building.y, building.w, building.h);
-      graphics.fillStyle(buildingIndex % 2 === 0 ? 0xffdf68 : 0x86e4ff, 1);
-      for (let y = building.y + 8; y < building.y + building.h - 4; y += 10) {
-        for (let x = building.x + 6; x < building.x + building.w - 4; x += 11) {
-          graphics.fillRect(x, y, 3, 4);
+    farBuildings.forEach((building, index) => {
+      graphics.fillStyle(building.c, 1).fillRect(building.x, building.y, building.w, building.h);
+      graphics.fillStyle(index % 2 === 0 ? 0xffdf68 : 0x8ee9ff, 1);
+      for (let wy = building.y + 8; wy < building.y + building.h - 4; wy += 10) {
+        for (let wx = building.x + 6; wx < building.x + building.w - 4; wx += 11) {
+          graphics.fillRect(wx, wy, 3, 4);
         }
       }
     });
 
-    // Telhado em primeiro plano.
-    graphics.fillStyle(0x111b31, 1).fillRect(0, 146, GAME_WIDTH, 34);
-    graphics.fillStyle(0x1c2e49, 1).fillRect(0, 146, GAME_WIDTH, 5);
-    graphics.fillStyle(0x17243b, 1).fillRect(20, 137, 42, 9);
-    graphics.fillRect(263, 133, 28, 13);
-    graphics.fillStyle(0x243a56, 1).fillRect(278, 119, 3, 14);
-    graphics.fillRect(275, 117, 9, 3);
+    // Telhado frontal com caixa d'água e antenas para reforçar a identidade urbana.
+    graphics.fillStyle(0x101a2d, 1).fillRect(0, 148, GAME_WIDTH, 32);
+    graphics.fillStyle(0x203c58, 1).fillRect(0, 148, GAME_WIDTH, 5);
+    graphics.fillStyle(0x17263d, 1).fillRect(18, 138, 43, 10);
+    graphics.fillRect(267, 136, 30, 12);
+
+    graphics.fillStyle(0x273a50, 1).fillRect(279, 123, 8, 13);
+    graphics.fillStyle(0x4e7895, 1).fillRect(277, 121, 12, 3);
+    graphics.fillStyle(0x9ee8ff, 1).fillRect(31, 132, 2, 6);
+    graphics.fillRect(33, 130, 8, 2);
   }
 }
