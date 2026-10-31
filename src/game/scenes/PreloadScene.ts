@@ -7,24 +7,63 @@ import {
 } from '../assets/playerSpriteSheetData';
 
 export class PreloadScene extends Phaser.Scene {
+  private playerSheetObjectUrl?: string;
+
   constructor() {
     super(SCENE_KEYS.preload);
   }
 
   preload(): void {
-    this.load.spritesheet('player-sheet', PLAYER_SHEET_DATA_URL, {
+    this.playerSheetObjectUrl = this.createObjectUrlFromDataUrl(PLAYER_SHEET_DATA_URL);
+
+    this.load.spritesheet('player-sheet', this.playerSheetObjectUrl, {
       frameWidth: PLAYER_SHEET_FRAME_SIZE,
       frameHeight: PLAYER_SHEET_FRAME_SIZE,
+    });
+
+    this.load.once('complete', () => {
+      if (!this.playerSheetObjectUrl) return;
+      URL.revokeObjectURL(this.playerSheetObjectUrl);
+      this.playerSheetObjectUrl = undefined;
     });
   }
 
   create(): void {
     validatePlayerAnimationModel();
+
+    if (!this.textures.exists('player-sheet')) {
+      throw new Error('Falha ao carregar a spritesheet do player.');
+    }
+
     this.createProjectileTextures();
     this.createEnemyPlaceholder();
     this.createPlayerAnimations();
 
     this.scene.start(SCENE_KEYS.title);
+  }
+
+  private createObjectUrlFromDataUrl(dataUrl: string): string {
+    const separatorIndex = dataUrl.indexOf(',');
+    if (separatorIndex < 0) {
+      throw new Error('PLAYER_SHEET_DATA_URL inválida: base64 não encontrado.');
+    }
+
+    const metadata = dataUrl.slice(0, separatorIndex);
+    const base64 = dataUrl.slice(separatorIndex + 1);
+    const mimeMatch = metadata.match(/^data:([^;]+);base64$/);
+
+    if (!mimeMatch) {
+      throw new Error('PLAYER_SHEET_DATA_URL inválida: MIME/base64 incorreto.');
+    }
+
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+
+    for (let index = 0; index < binary.length; index += 1) {
+      bytes[index] = binary.charCodeAt(index);
+    }
+
+    return URL.createObjectURL(new Blob([bytes], { type: mimeMatch[1] }));
   }
 
   private createProjectileTextures(): void {
