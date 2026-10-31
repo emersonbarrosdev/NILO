@@ -1,14 +1,17 @@
 import Phaser from 'phaser';
 import { SCENE_KEYS } from '../config/constants';
 import { Player } from '../entities/Player';
+import { Projectile } from '../entities/Projectile';
 import { addPixelText } from '../ui/PixelText';
 
 export class GameScene extends Phaser.Scene {
   private player?: Player;
+  private readonly solidSurfaces: Phaser.GameObjects.Rectangle[] = [];
 
   constructor() { super(SCENE_KEYS.game); }
 
   create(): void {
+    this.solidSurfaces.length = 0;
     this.physics.world.setBounds(0, 0, 960, 180);
     this.cameras.main.setBounds(0, 0, 960, 180);
     this.cameras.main.setBackgroundColor('#49a9d5');
@@ -19,6 +22,7 @@ export class GameScene extends Phaser.Scene {
     const ground = this.add.rectangle(480, 168, 960, 24, 0x6f4932)
       .setDepth(2);
     this.physics.add.existing(ground, true);
+    this.solidSurfaces.push(ground);
 
     // Faixa de grama no topo do terreno, separada da colisão para manter leitura visual.
     this.add.rectangle(480, 157, 960, 5, 0x68c95a).setDepth(3);
@@ -35,6 +39,9 @@ export class GameScene extends Phaser.Scene {
     this.addGrassPlatform(610, 126, 68, 8);
     this.addGrassPlatform(746, 102, 50, 8);
     this.addGrassPlatform(850, 128, 58, 8);
+
+    this.events.off('player-shot', this.handlePlayerShot, this);
+    this.events.on('player-shot', this.handlePlayerShot, this);
 
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
 
@@ -90,12 +97,44 @@ export class GameScene extends Phaser.Scene {
     this.player?.update(time);
   }
 
+  private handlePlayerShot(projectile: Projectile): void {
+    for (const surface of this.solidSurfaces) {
+      this.physics.add.collider(projectile, surface, () => {
+        if (!projectile.active) return;
+        this.spawnStoneImpact(projectile.x, projectile.y, projectile.charged);
+        projectile.destroy();
+      });
+    }
+  }
+
+  private spawnStoneImpact(x: number, y: number, charged: boolean): void {
+    const impact = this.add.graphics().setDepth(14);
+    const size = charged ? 3 : 2;
+    const spread = charged ? 5 : 3;
+
+    impact.fillStyle(charged ? 0xffd06a : 0xd8c7a5, 1);
+    impact.fillRect(x - size / 2, y - size / 2, size, size);
+    impact.fillRect(x - spread, y, size, 1);
+    impact.fillRect(x + spread - size, y - 1, size, 1);
+    impact.fillRect(x, y - spread, 1, size);
+    impact.fillRect(x - 1, y + spread - size, 1, size);
+
+    this.tweens.add({
+      targets: impact,
+      alpha: 0,
+      duration: charged ? 150 : 100,
+      onComplete: () => impact.destroy(),
+    });
+  }
+
   private addGrassPlatform(x: number, y: number, width: number, height: number): void {
     const platform = this.add.rectangle(x, y, width, height, 0x7a5136)
       .setDepth(4)
       .setStrokeStyle(1, 0x4f3328, 1);
 
     this.physics.add.existing(platform, true);
+    this.solidSurfaces.push(platform);
+
     if (this.player) {
       this.physics.add.collider(this.player, platform);
     }
