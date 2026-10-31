@@ -15,7 +15,7 @@ export class TitleScene extends Phaser.Scene {
   constructor() { super(SCENE_KEYS.title); }
 
   create(): void {
-    this.drawPixelCity();
+    this.drawNatureBackdrop();
     this.drawLogo();
     this.drawMenuPanel();
 
@@ -31,17 +31,16 @@ export class TitleScene extends Phaser.Scene {
     this.drawLogoWord(shadow, 61, 23, 3, 0x301447, 2, 2);
     this.drawLogoWord(logo, 61, 23, 3, 0xffef9b, 0, 0);
 
-    // O T recebe a cor de impacto e vira o detalhe visual do estilingue.
+    // O T recebe a cor de impacto e funciona como detalhe visual do estilingue.
     this.drawGlyph(logo, LOGO_GLYPHS.T, 103, 23, 3, 0xff8a3d);
     this.drawGlyph(shadow, LOGO_GLYPHS.T, 105, 25, 3, 0x301447);
 
-    // Pequeno projétil e rastro saindo do T, sem transformar o logo num desenho gigante.
     logo.fillStyle(0xffd05a, 1).fillRect(117, 17, 5, 5);
     logo.fillStyle(0xff8a3d, 1).fillRect(122, 18, 3, 3);
     logo.fillStyle(0x9ee8ff, 1).fillRect(126, 19, 14, 1);
     logo.fillRect(132, 17, 8, 1);
 
-    // 88 vira um selo secundário; o nome principal continua legível mesmo se ele mudar depois.
+    // ESTALO 88 continua como codinome; o 88 fica secundário até o nome final ser aprovado.
     this.add.rectangle(237, 35, 38, 24, 0x16253e, 0.95)
       .setStrokeStyle(2, 0xff8a3d, 1);
     addPixelText(this, 237, 35, '88', {
@@ -51,9 +50,9 @@ export class TitleScene extends Phaser.Scene {
       originY: 0.5,
     });
 
-    addPixelText(this, GAME_WIDTH / 2, 55, 'AÇÃO 8-BIT NOS TELHADOS', {
+    addPixelText(this, GAME_WIDTH / 2, 55, 'AVENTURA 8-BIT EM MOVIMENTO', {
       scale: 1,
-      color: 0xc7efff,
+      color: 0xe5fbff,
       originX: 0.5,
       originY: 0.5,
     });
@@ -69,9 +68,7 @@ export class TitleScene extends Phaser.Scene {
     offsetY: number,
   ): void {
     let x = startX + offsetX;
-    const word = 'ESTALO';
-
-    for (const char of word) {
+    for (const char of 'ESTALO') {
       this.drawGlyph(graphics, LOGO_GLYPHS[char], x, startY + offsetY, pixel, color);
       x += 7 * pixel;
     }
@@ -96,22 +93,22 @@ export class TitleScene extends Phaser.Scene {
   }
 
   private drawMenuPanel(): void {
-    this.add.rectangle(GAME_WIDTH / 2, 112, 148, 42, 0x0a1830, 0.94)
-      .setStrokeStyle(1, 0x2f6d93, 1);
+    this.add.rectangle(GAME_WIDTH / 2, 112, 148, 42, 0x13314a, 0.9)
+      .setStrokeStyle(1, 0xf6c453, 1);
 
-    this.add.rectangle(GAME_WIDTH / 2, 105, 118, 18, 0x1d4964, 1)
-      .setStrokeStyle(1, 0xffd05a, 1);
+    this.add.rectangle(GAME_WIDTH / 2, 105, 118, 18, 0x286b67, 1)
+      .setStrokeStyle(1, 0xffe06b, 1);
 
     addPixelText(this, GAME_WIDTH / 2, 105, 'NOVO JOGO', {
       scale: 2,
-      color: 0xffdf68,
+      color: 0xffef9b,
       originX: 0.5,
       originY: 0.5,
     });
 
     const prompt = addPixelText(this, GAME_WIDTH / 2, 127, 'ENTER / ESPAÇO', {
       scale: 1,
-      color: 0xd9f2ff,
+      color: 0xe8fbff,
       originX: 0.5,
       originY: 0.5,
     });
@@ -125,57 +122,60 @@ export class TitleScene extends Phaser.Scene {
     });
   }
 
-  private drawPixelCity(): void {
-    const graphics = this.add.graphics();
+  private drawNatureBackdrop(): void {
+    const g = this.add.graphics();
 
-    // Céu em faixas para dar profundidade sem perder o visual 8-bit.
-    graphics.fillStyle(0x1d4f88, 1).fillRect(0, 0, GAME_WIDTH, 48);
-    graphics.fillStyle(0x2779ae, 1).fillRect(0, 48, GAME_WIDTH, 42);
-    graphics.fillStyle(0x49afd0, 1).fillRect(0, 90, GAME_WIDTH, 58);
+    // Céu aberto em três faixas, com contraste alto e leitura 8-bit.
+    g.fillStyle(0x247ac0, 1).fillRect(0, 0, GAME_WIDTH, 52);
+    g.fillStyle(0x39a7d8, 1).fillRect(0, 52, GAME_WIDTH, 56);
+    g.fillStyle(0x72cfe5, 1).fillRect(0, 108, GAME_WIDTH, 40);
 
-    // Sol e nuvens.
-    graphics.fillStyle(0xffc94d, 1);
-    graphics.fillRect(278, 17, 14, 24);
-    graphics.fillRect(273, 22, 24, 14);
+    // Sol pixelado.
+    g.fillStyle(0xffd45a, 1);
+    g.fillRect(278, 17, 14, 24);
+    g.fillRect(273, 22, 24, 14);
 
-    graphics.fillStyle(0xd8f4fb, 1);
-    graphics.fillRect(18, 76, 34, 5);
-    graphics.fillRect(25, 70, 20, 6);
-    graphics.fillRect(218, 69, 38, 5);
-    graphics.fillRect(226, 63, 20, 6);
+    // Nuvens largas e simples.
+    g.fillStyle(0xe8fbff, 1);
+    g.fillRect(18, 74, 38, 5);
+    g.fillRect(26, 68, 21, 6);
+    g.fillRect(218, 63, 42, 5);
+    g.fillRect(228, 57, 22, 6);
 
-    // Skyline distante.
-    const farBuildings = [
-      { x: 0, y: 104, w: 35, h: 44, c: 0x315f7f },
-      { x: 30, y: 95, w: 42, h: 53, c: 0x2b5374 },
-      { x: 68, y: 109, w: 30, h: 39, c: 0x24445f },
-      { x: 94, y: 88, w: 48, h: 60, c: 0x356987 },
-      { x: 138, y: 102, w: 36, h: 46, c: 0x294e6c },
-      { x: 169, y: 84, w: 52, h: 64, c: 0x356987 },
-      { x: 216, y: 99, w: 34, h: 49, c: 0x24445f },
-      { x: 246, y: 92, w: 43, h: 56, c: 0x315f7f },
-      { x: 285, y: 108, w: 35, h: 40, c: 0x294e6c },
-    ];
+    // Colinas distantes em blocos, sem prédios ou skyline urbano.
+    g.fillStyle(0x3d8b72, 1);
+    g.fillRect(0, 116, 52, 32);
+    g.fillRect(14, 108, 26, 8);
+    g.fillRect(46, 121, 65, 27);
+    g.fillRect(63, 111, 31, 10);
+    g.fillRect(105, 113, 69, 35);
+    g.fillRect(123, 103, 34, 10);
+    g.fillRect(168, 120, 58, 28);
+    g.fillRect(181, 110, 34, 10);
+    g.fillRect(220, 112, 62, 36);
+    g.fillRect(239, 101, 28, 11);
+    g.fillRect(276, 118, 44, 30);
 
-    farBuildings.forEach((building, index) => {
-      graphics.fillStyle(building.c, 1).fillRect(building.x, building.y, building.w, building.h);
-      graphics.fillStyle(index % 2 === 0 ? 0xffdf68 : 0x8ee9ff, 1);
-      for (let wy = building.y + 8; wy < building.y + building.h - 4; wy += 10) {
-        for (let wx = building.x + 6; wx < building.x + building.w - 4; wx += 11) {
-          graphics.fillRect(wx, wy, 3, 4);
-        }
-      }
+    // Segunda camada de vegetação mais próxima.
+    g.fillStyle(0x2f6f55, 1);
+    for (let x = 0; x < GAME_WIDTH; x += 28) {
+      const height = 8 + ((x / 28) % 3) * 4;
+      g.fillRect(x, 140 - height, 32, height + 8);
+    }
+
+    // Penhasco/gramado frontal para a tela ter base visual natural.
+    g.fillStyle(0x64bd55, 1).fillRect(0, 148, GAME_WIDTH, 7);
+    g.fillStyle(0x6f4932, 1).fillRect(0, 155, GAME_WIDTH, 25);
+    g.fillStyle(0x8e5a38, 1);
+    for (let x = 4; x < GAME_WIDTH; x += 16) {
+      g.fillRect(x, 160 + ((x / 16) % 2) * 5, 6, 3);
+    }
+
+    // Flores/bandeirinhas discretas dão cor sem transformar o cenário em cidade.
+    const flowerXs = [16, 38, 269, 298];
+    flowerXs.forEach((x, index) => {
+      g.fillStyle(0x2f6f55, 1).fillRect(x, 142, 2, 6);
+      g.fillStyle(index % 2 === 0 ? 0xff8a5b : 0xffdf68, 1).fillRect(x - 2, 140, 6, 3);
     });
-
-    // Telhado frontal com caixa d'água e antenas para reforçar a identidade urbana.
-    graphics.fillStyle(0x101a2d, 1).fillRect(0, 148, GAME_WIDTH, 32);
-    graphics.fillStyle(0x203c58, 1).fillRect(0, 148, GAME_WIDTH, 5);
-    graphics.fillStyle(0x17263d, 1).fillRect(18, 138, 43, 10);
-    graphics.fillRect(267, 136, 30, 12);
-
-    graphics.fillStyle(0x273a50, 1).fillRect(279, 123, 8, 13);
-    graphics.fillStyle(0x4e7895, 1).fillRect(277, 121, 12, 3);
-    graphics.fillStyle(0x9ee8ff, 1).fillRect(31, 132, 2, 6);
-    graphics.fillRect(33, 130, 8, 2);
   }
 }
