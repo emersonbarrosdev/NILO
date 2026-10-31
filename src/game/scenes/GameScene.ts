@@ -20,26 +20,43 @@ export class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.player, ground);
     this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
 
-    addPixelText(this, 8, 20, '1-1 TELHADOS DO MERCADO', {
+    const stageLabel = addPixelText(this, 8, 20, '1-1 TELHADOS DO MERCADO', {
       scale: 1,
       color: 0xffffff,
       paddingX: 4,
       paddingY: 3,
       backgroundColor: 0x17324a,
-      backgroundAlpha: 0.92,
+      backgroundAlpha: 0.94,
       scrollFactor: 0,
       depth: 900,
     });
 
-    addPixelText(this, 8, 36, 'SETAS MOVER  Z PULAR', {
+    const controlsHint = addPixelText(this, 8, 36, 'WASD / SETAS  MOVER\nSPACE  PULAR', {
       scale: 1,
       color: 0xffe082,
       paddingX: 4,
       paddingY: 2,
+      lineSpacing: 2,
       backgroundColor: 0x17324a,
-      backgroundAlpha: 0.92,
+      backgroundAlpha: 0.94,
       scrollFactor: 0,
       depth: 900,
+    });
+
+    this.tweens.add({
+      targets: stageLabel,
+      alpha: 0,
+      delay: 1800,
+      duration: 250,
+      onComplete: () => stageLabel.destroy(),
+    });
+
+    this.tweens.add({
+      targets: controlsHint,
+      alpha: 0,
+      delay: 4200,
+      duration: 300,
+      onComplete: () => controlsHint.destroy(),
     });
 
     this.scene.launch(SCENE_KEYS.ui);
