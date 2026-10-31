@@ -16,6 +16,20 @@ Fundação técnica e pré-produção do **vertical slice da Fase 1-1 — Telhad
 - campanha completa planejada para até ~3h em 100%;
 - nenhuma produção em massa dos demais mundos antes da Fase 1-1 ficar divertida e completa.
 
+## Controles atuais
+
+- **A / D** ou **← / →**: mover;
+- **W**, **↑** ou **SPACE**: pular;
+- **S** ou **↓**: direção para baixo / base para agachar e atravessar plataformas quando essas ações entrarem no vertical slice.
+
+## Fluxo atual
+
+As cenas `BootScene` e `PreloadScene` são técnicas e ficam invisíveis para o jogador. O fluxo visível do vertical slice é:
+
+**Tela inicial/menu → mapa → Fase 1-1**
+
+A `IntroScene` permanece no projeto para a introdução narrativa definitiva, mas não participa do fluxo enquanto for apenas placeholder.
+
 ## Stack
 
 - Phaser 4.2.1
