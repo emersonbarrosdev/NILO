@@ -1,11 +1,14 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, SCENE_KEYS } from '../config/constants';
+import { GAME_WIDTH, RENDER_SCALE, SCENE_KEYS } from '../config/constants';
 import { addPixelText } from '../ui/PixelText';
 
 export class MapScene extends Phaser.Scene {
   constructor() { super(SCENE_KEYS.map); }
 
   create(): void {
+    this.cameras.main.setZoom(RENDER_SCALE);
+    this.cameras.main.setScroll(0, 0);
+
     this.drawBackground();
     this.drawRoute();
 
