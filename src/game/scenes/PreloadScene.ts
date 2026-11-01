@@ -2,8 +2,9 @@ import Phaser from 'phaser';
 import { SCENE_KEYS } from '../config/constants';
 import { validatePlayerAnimationModel } from '../entities/playerAnimationModel';
 
-const PLAYER_SHEET_FRAME_SIZE = 181;
-const PLAYER_FRAME_COUNT = 48;
+const PLAYER_SHEET_COLUMNS = 8;
+const PLAYER_SHEET_ROWS = 6;
+const PLAYER_FRAME_COUNT = PLAYER_SHEET_COLUMNS * PLAYER_SHEET_ROWS;
 const PLAYER_SHEET_KEY = 'player-sheet';
 const PLAYER_SHEET_URL = new URL('../../assets/sprites/boy_sling_sheet.png', import.meta.url).href;
 
@@ -11,23 +12,24 @@ export class PreloadScene extends Phaser.Scene {
   constructor() { super(SCENE_KEYS.preload); }
 
   preload(): void {
-    this.load.spritesheet(PLAYER_SHEET_KEY, PLAYER_SHEET_URL, {
-      frameWidth: PLAYER_SHEET_FRAME_SIZE,
-      frameHeight: PLAYER_SHEET_FRAME_SIZE,
-    });
+    this.load.image(PLAYER_SHEET_KEY, PLAYER_SHEET_URL);
   }
 
   create(): void {
     validatePlayerAnimationModel();
 
     if (!this.textures.exists(PLAYER_SHEET_KEY)) {
-      throw new Error('Falha ao carregar a spritesheet do Nilo.');
+      throw new Error('Falha ao carregar a imagem da spritesheet do Nilo.');
     }
 
+    this.slicePlayerSheet();
+
     const playerTexture = this.textures.get(PLAYER_SHEET_KEY);
-    if (playerTexture.frameTotal < PLAYER_FRAME_COUNT) {
+    const loadedFrames = playerTexture.getFrameNames().length;
+
+    if (loadedFrames < PLAYER_FRAME_COUNT) {
       throw new Error(
-        `Spritesheet do Nilo incompleta: ${playerTexture.frameTotal}/${PLAYER_FRAME_COUNT} frames.`,
+        `Spritesheet do Nilo incompleta: ${loadedFrames}/${PLAYER_FRAME_COUNT} frames.`,
       );
     }
 
@@ -35,6 +37,37 @@ export class PreloadScene extends Phaser.Scene {
     this.createEnemyPlaceholder();
     this.createPlayerAnimations();
     this.scene.start(SCENE_KEYS.title);
+  }
+
+  private slicePlayerSheet(): void {
+    const texture = this.textures.get(PLAYER_SHEET_KEY);
+    const source = texture.getSourceImage() as HTMLImageElement | HTMLCanvasElement;
+    const width = source.width;
+    const height = source.height;
+
+    if (width % PLAYER_SHEET_COLUMNS !== 0 || height % PLAYER_SHEET_ROWS !== 0) {
+      throw new Error(
+        `Spritesheet do Nilo com dimensões inválidas: ${width}x${height}. ` +
+        `Esperado uma grade exata de ${PLAYER_SHEET_COLUMNS}x${PLAYER_SHEET_ROWS}.`,
+      );
+    }
+
+    const frameWidth = width / PLAYER_SHEET_COLUMNS;
+    const frameHeight = height / PLAYER_SHEET_ROWS;
+
+    for (let row = 0; row < PLAYER_SHEET_ROWS; row += 1) {
+      for (let column = 0; column < PLAYER_SHEET_COLUMNS; column += 1) {
+        const frame = row * PLAYER_SHEET_COLUMNS + column;
+        texture.add(
+          frame,
+          0,
+          column * frameWidth,
+          row * frameHeight,
+          frameWidth,
+          frameHeight,
+        );
+      }
+    }
   }
 
   private createProjectileTextures(): void {
