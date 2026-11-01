@@ -25,20 +25,20 @@ const MAX_CHARGE_MS = 1100;
 const LAND_POSE_MS = 90;
 const SHOOT_POSE_MS = 150;
 const SHOOT_FRAME_COUNT = 3;
-const PLAYER_SCALE = 0.42;
+const PLAYER_SCALE = 0.36;
 
 const STANDING_HITBOX = {
-  width: 42,
-  height: 78,
-  offsetX: 42,
-  offsetY: 26,
+  width: 38,
+  height: 82,
+  offsetX: 37,
+  offsetY: 28,
 } as const;
 
 const CROUCHING_HITBOX = {
   width: 42,
-  height: 50,
-  offsetX: 42,
-  offsetY: 54,
+  height: 57,
+  offsetX: 35,
+  offsetY: 53,
 } as const;
 
 const PLAYER_FRAMES = {
@@ -327,8 +327,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (time - this.lastShotAt < QUICK_SHOT_COOLDOWN_MS) return;
 
     const verticalAim = Math.abs(this.aimX) < 0.2;
-    const projectileX = this.x + this.aimX * 16 + (verticalAim ? this.facing * 4 : 0);
-    const projectileY = this.y - 7 + this.aimY * 16;
+    const projectileX = this.x + this.aimX * 14 + (verticalAim ? this.facing * 3 : 0);
+    const projectileY = this.y - 5 + this.aimY * 14;
     const projectile = new Projectile(this.scene, projectileX, projectileY, charged);
     projectile.fire(this.aimX, this.aimY);
 
