@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, SCENE_KEYS } from '../config/constants';
+import { GAME_WIDTH, RENDER_SCALE, SCENE_KEYS } from '../config/constants';
 import { addPixelText } from '../ui/PixelText';
 
 const LOGO_GLYPHS: Record<string, string[]> = {
@@ -13,6 +13,9 @@ export class TitleScene extends Phaser.Scene {
   constructor() { super(SCENE_KEYS.title); }
 
   create(): void {
+    this.cameras.main.setZoom(RENDER_SCALE);
+    this.cameras.main.setScroll(0, 0);
+
     this.drawNatureBackdrop();
     this.drawLogo();
     this.drawMenuPanel();
@@ -29,7 +32,6 @@ export class TitleScene extends Phaser.Scene {
     this.drawLogoWord(shadow, 118, 23, 3, 0x301447, 2, 2);
     this.drawLogoWord(logo, 118, 23, 3, 0xffef9b, 0, 0);
 
-    // Pequeno acento visual inspirado no estilingue, sem competir com o nome.
     logo.fillStyle(0xff8a3d, 1).fillRect(185, 16, 4, 5);
     logo.fillRect(191, 16, 4, 5);
     logo.fillRect(188, 20, 4, 6);
