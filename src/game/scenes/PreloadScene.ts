@@ -2,9 +2,7 @@ import Phaser from 'phaser';
 import { SCENE_KEYS } from '../config/constants';
 import { validatePlayerAnimationModel } from '../entities/playerAnimationModel';
 
-const PLAYER_SOURCE_FRAME_SIZE = 181;
-const PLAYER_LOGICAL_FRAME_SIZE = 48;
-const PLAYER_COLUMNS = 8;
+const PLAYER_SHEET_FRAME_SIZE = 181;
 const PLAYER_FRAME_COUNT = 48;
 const PLAYER_SHEET_KEY = 'player-sheet';
 const PLAYER_SHEET_URL = new URL('../../assets/sprites/boy_sling_sheet.png', import.meta.url).href;
@@ -13,7 +11,10 @@ export class PreloadScene extends Phaser.Scene {
   constructor() { super(SCENE_KEYS.preload); }
 
   preload(): void {
-    this.load.image(PLAYER_SHEET_KEY, PLAYER_SHEET_URL);
+    this.load.spritesheet(PLAYER_SHEET_KEY, PLAYER_SHEET_URL, {
+      frameWidth: PLAYER_SHEET_FRAME_SIZE,
+      frameHeight: PLAYER_SHEET_FRAME_SIZE,
+    });
   }
 
   create(): void {
@@ -23,49 +24,17 @@ export class PreloadScene extends Phaser.Scene {
       throw new Error('Falha ao carregar a spritesheet do Nilo.');
     }
 
-    this.createHiResPlayerFrames();
-
     const playerTexture = this.textures.get(PLAYER_SHEET_KEY);
-    if (playerTexture.getFrameNames().filter((frame) => frame !== '__BASE').length < PLAYER_FRAME_COUNT) {
-      throw new Error(`Spritesheet do Nilo incompleta: esperado ${PLAYER_FRAME_COUNT} frames.`);
+    if (playerTexture.frameTotal < PLAYER_FRAME_COUNT) {
+      throw new Error(
+        `Spritesheet do Nilo incompleta: ${playerTexture.frameTotal}/${PLAYER_FRAME_COUNT} frames.`,
+      );
     }
 
     this.createProjectileTextures();
     this.createEnemyPlaceholder();
     this.createPlayerAnimations();
     this.scene.start(SCENE_KEYS.title);
-  }
-
-  private createHiResPlayerFrames(): void {
-    const texture = this.textures.get(PLAYER_SHEET_KEY);
-
-    for (let frameIndex = 0; frameIndex < PLAYER_FRAME_COUNT; frameIndex += 1) {
-      const column = frameIndex % PLAYER_COLUMNS;
-      const row = Math.floor(frameIndex / PLAYER_COLUMNS);
-      const frame = texture.add(
-        frameIndex,
-        0,
-        column * PLAYER_SOURCE_FRAME_SIZE,
-        row * PLAYER_SOURCE_FRAME_SIZE,
-        PLAYER_SOURCE_FRAME_SIZE,
-        PLAYER_SOURCE_FRAME_SIZE,
-      );
-
-      if (!frame) {
-        throw new Error(`Falha ao preparar o frame ${frameIndex} do Nilo.`);
-      }
-
-      frame.setTrim(
-        PLAYER_LOGICAL_FRAME_SIZE,
-        PLAYER_LOGICAL_FRAME_SIZE,
-        0,
-        0,
-        PLAYER_LOGICAL_FRAME_SIZE,
-        PLAYER_LOGICAL_FRAME_SIZE,
-      );
-    }
-
-    texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
   }
 
   private createProjectileTextures(): void {
