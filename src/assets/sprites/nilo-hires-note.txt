@@ -1,1 +1,1 @@
-High-resolution Nilo sprites are being integrated as six transparent sprite rows. Each frame is 160x192 and the runtime maps global frame indices across the six rows.
+Nilo keeps the same source art and identity. At runtime, each original 48x48 frame is rebuilt into a 128x128 transparent frame with 2x pixel content centered inside the frame. The gameplay scale is reduced so Nilo appears slightly smaller on screen while preserving the existing animation frame mapping.
