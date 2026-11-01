@@ -1,0 +1,1 @@
+High-resolution Nilo sprites are being integrated as six transparent sprite rows. Each frame is 160x192 and the runtime maps global frame indices across the six rows.
