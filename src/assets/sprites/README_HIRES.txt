@@ -1,0 +1,1 @@
+NILO high-resolution sprite integration marker. The actual PNG asset is stored at src/assets/sprites/boy_sling_sheet.png. Frame size: 160x192. Grid: 8x6. Total frames: 48.
