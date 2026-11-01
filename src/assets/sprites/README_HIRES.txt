@@ -1,1 +1,3 @@
-NILO high-resolution sprite integration. Source PNG: src/assets/sprites/boy_sling_sheet.png. Runtime frame size: 128x128. Grid: 8x6. Total frames: 48. The original Nilo art is preserved and rebuilt at preload time into the 128x128 runtime sheet.
+NILO high-resolution sprite integration.
+Runtime spritesheet: 112x112 px per frame, 8 columns x 6 rows, 48 frames total.
+The runtime asset contains real detailed pixels derived from the approved high-detail Nilo artwork. No 48px-to-128px runtime upscale or Canvas redraw is used.
