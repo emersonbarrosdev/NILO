@@ -21,52 +21,10 @@ export class PreloadScene extends Phaser.Scene {
     const playerTexture = this.textures.get('player-sheet');
     if (playerTexture.frameTotal < 48) throw new Error(`Spritesheet do player incompleta: ${playerTexture.frameTotal}/48 frames.`);
 
-    this.createIdleSpecialFrames();
     this.createProjectileTextures();
     this.createEnemyPlaceholder();
     this.createPlayerAnimations();
     this.scene.start(SCENE_KEYS.title);
-  }
-
-  private createIdleSpecialFrames(): void {
-    for (let frame = 0; frame < 8; frame += 1) {
-      const g = this.add.graphics();
-      const seated = frame >= 2;
-      const throwing = frame >= 4;
-      const crouch = frame === 1;
-      const baseY = seated ? 7 : crouch ? 4 : 0;
-
-      g.fillStyle(0x3b211d, 1).fillRect(10, 4 + baseY, 12, 4);
-      g.fillRect(8, 7 + baseY, 15, 5);
-      g.fillStyle(0xf0b27a, 1).fillRect(11, 9 + baseY, 10, 7);
-      g.fillStyle(0x1d2538, 1).fillRect(18, 11 + baseY, 2, 2);
-
-      g.fillStyle(0xf2e4c8, 1).fillRect(11, 16 + baseY, 9, seated ? 5 : 7);
-      g.fillStyle(0xc84c35, 1).fillRect(9, 16 + baseY, 3, seated ? 5 : 8);
-      g.fillStyle(0x6d4331, 1).fillRect(7, 18 + baseY, 4, 5);
-
-      if (seated) {
-        g.fillStyle(0x294978, 1).fillRect(11, 22 + baseY, 9, 4);
-        g.fillRect(17, 25 + baseY, 7, 3);
-        g.fillStyle(0xf4e1c7, 1).fillRect(22, 27 + baseY, 5, 2);
-      } else {
-        g.fillStyle(0x294978, 1).fillRect(11, 23 + baseY, 4, 5);
-        g.fillRect(17, 23 + baseY, 4, 5);
-        g.fillStyle(0xf4e1c7, 1).fillRect(9, 28 + baseY, 6, 2);
-        g.fillRect(18, 28 + baseY, 6, 2);
-      }
-
-      if (throwing) {
-        const reach = frame - 4;
-        g.fillStyle(0xf0b27a, 1).fillRect(20, 18 + baseY - Math.min(2, reach), 5 + reach, 2);
-        if (frame >= 6) g.fillStyle(0x84756f, 1).fillRect(27, 16 + baseY - reach, 3, 3);
-      } else {
-        g.fillStyle(0xf0b27a, 1).fillRect(20, 18 + baseY, 3, 5);
-      }
-
-      g.generateTexture(`player-idle-special-${frame}`, 32, 32);
-      g.destroy();
-    }
   }
 
   private createProjectileTextures(): void {
