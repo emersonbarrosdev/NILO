@@ -88,8 +88,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.setDragX(GROUND_DRAG);
 
     const body = this.body as Phaser.Physics.Arcade.Body;
-    body.setSize(16, 34);
-    body.setOffset(10, 14);
+    body.setSize(14, 26);
+    body.setOffset(9, 3);
 
     const keyboard = scene.input.keyboard!;
     this.cursors = keyboard.createCursorKeys();
@@ -326,7 +326,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   private spriteGaitFrame(): number {
-    return this.gaitFrame;
+    return (8 - this.gaitFrame) % 8;
   }
 
   private updateVisualState(
