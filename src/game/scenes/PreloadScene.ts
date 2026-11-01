@@ -1,17 +1,19 @@
 import Phaser from 'phaser';
-import { NILO_FRAME_COUNT, NILO_FRAME_SIZE, NILO_SHEET_DATA_URI } from '../../assets/sprites/nilo-hires-data';
 import { SCENE_KEYS } from '../config/constants';
 import { validatePlayerAnimationModel } from '../entities/playerAnimationModel';
 
+const PLAYER_SHEET_FRAME_SIZE = 48;
+const PLAYER_FRAME_COUNT = 48;
 const PLAYER_SHEET_KEY = 'player-sheet';
+const PLAYER_SHEET_URL = new URL('../../assets/sprites/boy_sling_sheet.png', import.meta.url).href;
 
 export class PreloadScene extends Phaser.Scene {
   constructor() { super(SCENE_KEYS.preload); }
 
   preload(): void {
-    this.load.spritesheet(PLAYER_SHEET_KEY, NILO_SHEET_DATA_URI, {
-      frameWidth: NILO_FRAME_SIZE,
-      frameHeight: NILO_FRAME_SIZE,
+    this.load.spritesheet(PLAYER_SHEET_KEY, PLAYER_SHEET_URL, {
+      frameWidth: PLAYER_SHEET_FRAME_SIZE,
+      frameHeight: PLAYER_SHEET_FRAME_SIZE,
     });
   }
 
@@ -19,13 +21,13 @@ export class PreloadScene extends Phaser.Scene {
     validatePlayerAnimationModel();
 
     if (!this.textures.exists(PLAYER_SHEET_KEY)) {
-      throw new Error('Falha ao carregar a spritesheet detalhada do Nilo.');
+      throw new Error('Falha ao carregar a spritesheet do Nilo.');
     }
 
     const playerTexture = this.textures.get(PLAYER_SHEET_KEY);
-    if (playerTexture.frameTotal < NILO_FRAME_COUNT) {
+    if (playerTexture.frameTotal < PLAYER_FRAME_COUNT) {
       throw new Error(
-        `Spritesheet do Nilo incompleta: ${playerTexture.frameTotal}/${NILO_FRAME_COUNT} frames.`,
+        `Spritesheet do Nilo incompleta: ${playerTexture.frameTotal}/${PLAYER_FRAME_COUNT} frames.`,
       );
     }
 
