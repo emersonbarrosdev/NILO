@@ -25,10 +25,10 @@ const MAX_CHARGE_MS = 1100;
 const LAND_POSE_MS = 90;
 const SHOOT_POSE_MS = 150;
 const SHOOT_FRAME_COUNT = 3;
-const PLAYER_SCALE = 0.92;
+const PLAYER_SCALE = 0.244;
 
-const STAND_BODY = { width: 21, height: 39, offsetX: 13, offsetY: 5 } as const;
-const CROUCH_BODY = { width: 21, height: 25, offsetX: 13, offsetY: 19 } as const;
+const STAND_BODY = { width: 79, height: 147, offsetX: 49, offsetY: 19 } as const;
+const CROUCH_BODY = { width: 79, height: 94, offsetX: 49, offsetY: 72 } as const;
 
 const PLAYER_FRAMES = {
   crouch: 5,
