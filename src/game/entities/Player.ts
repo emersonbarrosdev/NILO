@@ -88,8 +88,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.setDragX(GROUND_DRAG);
 
     const body = this.body as Phaser.Physics.Arcade.Body;
-    body.setSize(14, 26);
-    body.setOffset(9, 3);
+    body.setSize(16, 34);
+    body.setOffset(10, 14);
 
     const keyboard = scene.input.keyboard!;
     this.cursors = keyboard.createCursorKeys();
@@ -279,8 +279,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       return;
     }
 
-    // O primeiro frame da passada aparece no mesmo instante do input.
-    // O ciclo só avança quando há deslocamento real, evitando foot sliding.
     if (horizontal !== 0 && speed <= GAIT_MIN_SPEED) {
       this.gaitPhase = 0;
       this.gaitFrame = 0;
@@ -328,7 +326,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   private spriteGaitFrame(): number {
-    return (8 - this.gaitFrame) % 8;
+    return this.gaitFrame;
   }
 
   private updateVisualState(
