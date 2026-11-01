@@ -25,21 +25,10 @@ const MAX_CHARGE_MS = 1100;
 const LAND_POSE_MS = 90;
 const SHOOT_POSE_MS = 150;
 const SHOOT_FRAME_COUNT = 3;
-const PLAYER_SCALE = 0.36;
+const PLAYER_SCALE = 0.32;
 
-const STANDING_HITBOX = {
-  width: 38,
-  height: 82,
-  offsetX: 37,
-  offsetY: 28,
-} as const;
-
-const CROUCHING_HITBOX = {
-  width: 42,
-  height: 57,
-  offsetX: 35,
-  offsetY: 53,
-} as const;
+const STAND_BODY = { width: 43, height: 92, offsetX: 35, offsetY: 18 } as const;
+const CROUCH_BODY = { width: 47, height: 64, offsetX: 33, offsetY: 46 } as const;
 
 const PLAYER_FRAMES = {
   crouch: 5,
@@ -102,8 +91,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.setDragX(GROUND_DRAG);
 
     const body = this.body as Phaser.Physics.Arcade.Body;
-    body.setSize(STANDING_HITBOX.width, STANDING_HITBOX.height);
-    body.setOffset(STANDING_HITBOX.offsetX, STANDING_HITBOX.offsetY);
+    body.setSize(STAND_BODY.width, STAND_BODY.height);
+    body.setOffset(STAND_BODY.offsetX, STAND_BODY.offsetY);
 
     const keyboard = scene.input.keyboard!;
     this.cursors = keyboard.createCursorKeys();
@@ -132,15 +121,15 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.wasGrounded = grounded;
 
     const input = this.readDirectionalInput();
-    const crouching = grounded && (this.keyS.isDown || this.cursors.down.isDown || input.vertical > 0);
+    const crouching = grounded && this.isCrouchHeld();
 
+    this.updateBodyShape(crouching);
     this.updateFacing(input.horizontal);
-    this.updateHitbox(crouching);
     this.updateMovement(input.horizontal, grounded, crouching);
     this.updateAttack(time, grounded, input.horizontal, input.vertical);
     this.updateJump(time, grounded, crouching);
     this.updateGait(grounded, input.horizontal, crouching);
-    this.updateVisualState(time, grounded, input.horizontal, input.vertical, crouching);
+    this.updateVisualState(time, grounded, input.horizontal, input.vertical);
   }
 
   private readDirectionalInput(): { horizontal: number; vertical: number } {
@@ -155,21 +144,24 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     };
   }
 
+  private isCrouchHeld(): boolean {
+    return this.keyS.isDown || this.cursors.down.isDown;
+  }
+
+  private updateBodyShape(crouching: boolean): void {
+    const body = this.body as Phaser.Physics.Arcade.Body;
+    const target = crouching ? CROUCH_BODY : STAND_BODY;
+
+    if (body.width !== target.width || body.height !== target.height) {
+      body.setSize(target.width, target.height);
+      body.setOffset(target.offsetX, target.offsetY);
+    }
+  }
+
   private updateFacing(horizontal: number): void {
     if (horizontal === 0) return;
     this.facing = horizontal > 0 ? 1 : -1;
     this.setFlipX(this.facing < 0);
-  }
-
-  private updateHitbox(crouching: boolean): void {
-    const body = this.body as Phaser.Physics.Arcade.Body;
-    if (crouching) {
-      body.setSize(CROUCHING_HITBOX.width, CROUCHING_HITBOX.height);
-      body.setOffset(CROUCHING_HITBOX.offsetX, CROUCHING_HITBOX.offsetY);
-      return;
-    }
-    body.setSize(STANDING_HITBOX.width, STANDING_HITBOX.height);
-    body.setOffset(STANDING_HITBOX.offsetX, STANDING_HITBOX.offsetY);
   }
 
   private updateMovement(horizontal: number, grounded: boolean, crouching: boolean): void {
@@ -352,7 +344,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   private spriteGaitFrame(): number {
-    return (8 - this.gaitFrame) % 8;
+    return this.gaitFrame;
   }
 
   private updateVisualState(
@@ -360,10 +352,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     grounded: boolean,
     horizontal: number,
     vertical: number,
-    crouching: boolean,
   ): void {
     const body = this.body as Phaser.Physics.Arcade.Body;
     const speed = Math.abs(body.velocity.x);
+    const crouching = grounded && this.isCrouchHeld();
     const movingOnGround =
       grounded && !crouching && (speed > GAIT_MIN_SPEED || horizontal !== 0);
 
@@ -412,12 +404,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       return;
     }
 
-    if (time < this.landPoseUntil) return;
-
     if (crouching) {
       this.setPlayerFrame(PLAYER_FRAMES.crouch);
       return;
     }
+
+    if (time < this.landPoseUntil) return;
 
     const movingAgainstVelocity =
       horizontal !== 0 && speed > 36 && Math.sign(body.velocity.x) !== horizontal;
