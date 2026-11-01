@@ -118,11 +118,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.wasGrounded = grounded;
 
     const input = this.readDirectionalInput();
+    const crouching = grounded && input.vertical > 0;
+
     this.updateFacing(input.horizontal);
-    this.updateMovement(input.horizontal, grounded);
+    this.updateMovement(input.horizontal, grounded, crouching);
     this.updateAttack(time, grounded, input.horizontal, input.vertical);
-    this.updateJump(time, grounded);
-    this.updateGait(grounded);
+    this.updateJump(time, grounded, crouching);
+    this.updateGait(grounded, input.horizontal, crouching);
     this.updateVisualState(time, grounded, input.horizontal, input.vertical);
   }
 
@@ -144,9 +146,17 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.setFlipX(this.facing < 0);
   }
 
-  private updateMovement(horizontal: number, grounded: boolean): void {
+  private updateMovement(horizontal: number, grounded: boolean, crouching: boolean): void {
     const body = this.body as Phaser.Physics.Arcade.Body;
     const movementScale = this.charging ? 0.78 : 1;
+
+    if (crouching) {
+      this.setAccelerationX(0);
+      this.setDragX(0);
+      this.setVelocityX(0);
+      body.setMaxVelocity(RUN_SPEED * movementScale, 520);
+      return;
+    }
 
     if (horizontal !== 0) {
       const velocityDirection = Math.sign(body.velocity.x);
@@ -167,16 +177,18 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     body.setMaxVelocity(RUN_SPEED * movementScale, 520);
   }
 
-  private updateJump(time: number, grounded: boolean): void {
+  private updateJump(time: number, grounded: boolean, crouching: boolean): void {
     const body = this.body as Phaser.Physics.Arcade.Body;
     const aimingWithSlingshot = this.charging || this.shootKeyJ.isDown || this.shootKeyX.isDown;
 
     const jumpPressed =
-      Phaser.Input.Keyboard.JustDown(this.jumpKey) ||
-      (!aimingWithSlingshot && (
-        Phaser.Input.Keyboard.JustDown(this.keyW) ||
-        Phaser.Input.Keyboard.JustDown(this.cursors.up)
-      ));
+      !crouching && (
+        Phaser.Input.Keyboard.JustDown(this.jumpKey) ||
+        (!aimingWithSlingshot && (
+          Phaser.Input.Keyboard.JustDown(this.keyW) ||
+          Phaser.Input.Keyboard.JustDown(this.cursors.up)
+        ))
+      );
 
     if (jumpPressed) this.jumpBufferedAt = time;
 
@@ -242,7 +254,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.aimY = vector.y;
   }
 
-  private updateGait(grounded: boolean): void {
+  private updateGait(grounded: boolean, horizontal: number, crouching: boolean): void {
     const body = this.body as Phaser.Physics.Arcade.Body;
     const deltaX = Math.abs(this.x - this.previousX);
     this.previousX = this.x;
@@ -251,13 +263,29 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.gaitMode = resolveGaitMode(this.gaitMode, speed);
 
     const velocityDirection = Math.sign(body.velocity.x);
-    if (velocityDirection !== 0 && velocityDirection !== this.gaitDirection) {
-      this.gaitDirection = velocityDirection;
+    const intendedDirection = horizontal !== 0 ? horizontal : velocityDirection;
+
+    if (intendedDirection !== 0 && intendedDirection !== this.gaitDirection) {
+      this.gaitDirection = intendedDirection;
       this.gaitPhase = 0;
       this.gaitFrame = 0;
     }
 
-    if (!grounded) return;
+    if (!grounded || crouching) {
+      if (crouching) {
+        this.gaitPhase = 0;
+        this.gaitFrame = 0;
+      }
+      return;
+    }
+
+    // O primeiro frame da passada aparece no mesmo instante do input.
+    // O ciclo só avança quando há deslocamento real, evitando foot sliding.
+    if (horizontal !== 0 && speed <= GAIT_MIN_SPEED) {
+      this.gaitPhase = 0;
+      this.gaitFrame = 0;
+      return;
+    }
 
     if (speed <= GAIT_MIN_SPEED || deltaX <= 0.001) {
       if (speed <= GAIT_MIN_SPEED) {
@@ -300,8 +328,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   private spriteGaitFrame(): number {
-    // O modelo antigo invertia a ordem para compensar a arte procedural.
-    // A nova spritesheet já foi desenhada no sentido correto de avanço.
     return (8 - this.gaitFrame) % 8;
   }
 
@@ -313,7 +339,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   ): void {
     const body = this.body as Phaser.Physics.Arcade.Body;
     const speed = Math.abs(body.velocity.x);
-    const movingOnGround = grounded && speed > GAIT_MIN_SPEED;
+    const crouching = grounded && vertical > 0;
+    const movingOnGround =
+      grounded && !crouching && (speed > GAIT_MIN_SPEED || horizontal !== 0);
 
     if (this.charging) {
       const chargeTime = Phaser.Math.Clamp(time - this.chargeStartedAt, 0, MAX_CHARGE_MS);
@@ -362,7 +390,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     if (time < this.landPoseUntil) return;
 
-    if (vertical > 0) {
+    if (crouching) {
       this.setPlayerFrame(PLAYER_FRAMES.crouch);
       return;
     }
