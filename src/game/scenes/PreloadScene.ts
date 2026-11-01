@@ -65,7 +65,7 @@ export class PreloadScene extends Phaser.Scene {
       );
     }
 
-    texture.setFilterMode(Phaser.Textures.FilterMode.LINEAR);
+    texture.setFilter(Phaser.Textures.FilterMode.LINEAR);
   }
 
   private createProjectileTextures(): void {
