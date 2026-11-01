@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { SCENE_KEYS } from '../config/constants';
 import { validatePlayerAnimationModel } from '../entities/playerAnimationModel';
 
-const PLAYER_SHEET_FRAME_SIZE = 32;
+const PLAYER_SHEET_FRAME_SIZE = 48;
 const PLAYER_SHEET_URL = new URL('../../assets/sprites/boy_sling_sheet.png', import.meta.url).href;
 
 export class PreloadScene extends Phaser.Scene {
@@ -17,15 +17,9 @@ export class PreloadScene extends Phaser.Scene {
 
   create(): void {
     validatePlayerAnimationModel();
-
-    if (!this.textures.exists('player-sheet')) {
-      throw new Error('Falha ao carregar a spritesheet PNG do Nilo.');
-    }
-
+    if (!this.textures.exists('player-sheet')) throw new Error('Falha ao carregar a spritesheet do player.');
     const playerTexture = this.textures.get('player-sheet');
-    if (playerTexture.frameTotal < 48) {
-      throw new Error(`Spritesheet PNG do Nilo incompleta: ${playerTexture.frameTotal}/48 frames.`);
-    }
+    if (playerTexture.frameTotal < 48) throw new Error(`Spritesheet do player incompleta: ${playerTexture.frameTotal}/48 frames.`);
 
     this.createProjectileTextures();
     this.createEnemyPlaceholder();
@@ -63,32 +57,9 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   private createPlayerAnimations(): void {
-    this.anims.create({
-      key: 'player-idle',
-      frames: [0, 1, 2, 3].map((frame) => ({ key: 'player-sheet', frame })),
-      frameRate: 4,
-      repeat: -1,
-    });
-
-    this.anims.create({
-      key: 'player-jump',
-      frames: [24, 25, 26].map((frame) => ({ key: 'player-sheet', frame })),
-      frameRate: 10,
-      repeat: 0,
-    });
-
-    this.anims.create({
-      key: 'player-fall',
-      frames: [{ key: 'player-sheet', frame: 28 }],
-      frameRate: 1,
-      repeat: -1,
-    });
-
-    this.anims.create({
-      key: 'player-land',
-      frames: [29, 30].map((frame) => ({ key: 'player-sheet', frame })),
-      frameRate: 12,
-      repeat: 0,
-    });
+    this.anims.create({ key: 'player-idle', frames: [0, 1, 2, 3].map((frame) => ({ key: 'player-sheet', frame })), frameRate: 4, repeat: -1 });
+    this.anims.create({ key: 'player-jump', frames: [24, 25, 26].map((frame) => ({ key: 'player-sheet', frame })), frameRate: 10, repeat: 0 });
+    this.anims.create({ key: 'player-fall', frames: [{ key: 'player-sheet', frame: 28 }], frameRate: 1, repeat: -1 });
+    this.anims.create({ key: 'player-land', frames: [29, 30].map((frame) => ({ key: 'player-sheet', frame })), frameRate: 12, repeat: 0 });
   }
 }
