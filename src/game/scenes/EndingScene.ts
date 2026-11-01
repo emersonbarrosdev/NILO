@@ -1,11 +1,14 @@
 import Phaser from 'phaser';
-import { GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '../config/constants';
+import { GAME_HEIGHT, GAME_WIDTH, RENDER_SCALE, SCENE_KEYS } from '../config/constants';
 import { addPixelText } from '../ui/PixelText';
 
 export class EndingScene extends Phaser.Scene {
   constructor() { super(SCENE_KEYS.ending); }
 
   create(): void {
+    this.cameras.main.setZoom(RENDER_SCALE);
+    this.cameras.main.setScroll(0, 0);
+
     addPixelText(this, GAME_WIDTH / 2, GAME_HEIGHT / 2, 'ENDING - FUTURA PRODUCAO', {
       scale: 1,
       color: 0xffffff,
