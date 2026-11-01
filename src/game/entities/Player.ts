@@ -25,7 +25,7 @@ const MAX_CHARGE_MS = 1100;
 const LAND_POSE_MS = 90;
 const SHOOT_POSE_MS = 150;
 const SHOOT_FRAME_COUNT = 3;
-const PLAYER_SCALE = 0.72;
+const PLAYER_SCALE = 0.92;
 
 const PLAYER_FRAMES = {
   crouch: 5,
@@ -88,8 +88,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.setDragX(GROUND_DRAG);
 
     const body = this.body as Phaser.Physics.Arcade.Body;
-    body.setSize(28, 52);
-    body.setOffset(18, 7);
+    body.setSize(21, 39);
+    body.setOffset(13, 5);
 
     const keyboard = scene.input.keyboard!;
     this.cursors = keyboard.createCursorKeys();
@@ -150,12 +150,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private updateHitbox(crouching: boolean): void {
     const body = this.body as Phaser.Physics.Arcade.Body;
     if (crouching) {
-      body.setSize(28, 34);
-      body.setOffset(18, 25);
+      body.setSize(21, 25);
+      body.setOffset(13, 19);
       return;
     }
-    body.setSize(28, 52);
-    body.setOffset(18, 7);
+    body.setSize(21, 39);
+    body.setOffset(13, 5);
   }
 
   private updateMovement(horizontal: number, grounded: boolean, crouching: boolean): void {
