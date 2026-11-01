@@ -1,97 +1,38 @@
 import Phaser from 'phaser';
+import { NILO_FRAME_COUNT, NILO_FRAME_SIZE, NILO_SHEET_DATA_URI } from '../../assets/sprites/nilo-hires-data';
 import { SCENE_KEYS } from '../config/constants';
 import { validatePlayerAnimationModel } from '../entities/playerAnimationModel';
 
-const PLAYER_SOURCE_FRAME_SIZE = 48;
-const PLAYER_FRAME_SIZE = 128;
-const PLAYER_FRAME_COUNT = 48;
-const PLAYER_FRAME_SCALE = 2;
-const PLAYER_FRAME_PADDING = (PLAYER_FRAME_SIZE - PLAYER_SOURCE_FRAME_SIZE * PLAYER_FRAME_SCALE) / 2;
-const PLAYER_SOURCE_KEY = 'player-sheet-source';
 const PLAYER_SHEET_KEY = 'player-sheet';
-const PLAYER_SHEET_URL = new URL('../../assets/sprites/boy_sling_sheet.png', import.meta.url).href;
 
 export class PreloadScene extends Phaser.Scene {
   constructor() { super(SCENE_KEYS.preload); }
 
   preload(): void {
-    this.load.spritesheet(PLAYER_SOURCE_KEY, PLAYER_SHEET_URL, {
-      frameWidth: PLAYER_SOURCE_FRAME_SIZE,
-      frameHeight: PLAYER_SOURCE_FRAME_SIZE,
+    this.load.spritesheet(PLAYER_SHEET_KEY, NILO_SHEET_DATA_URI, {
+      frameWidth: NILO_FRAME_SIZE,
+      frameHeight: NILO_FRAME_SIZE,
     });
   }
 
   create(): void {
     validatePlayerAnimationModel();
 
-    if (!this.textures.exists(PLAYER_SOURCE_KEY)) {
-      throw new Error('Falha ao carregar a spritesheet original do Nilo.');
+    if (!this.textures.exists(PLAYER_SHEET_KEY)) {
+      throw new Error('Falha ao carregar a spritesheet detalhada do Nilo.');
     }
 
-    const sourceTexture = this.textures.get(PLAYER_SOURCE_KEY);
-    if (sourceTexture.frameTotal < PLAYER_FRAME_COUNT) {
-      throw new Error(`Spritesheet do Nilo incompleta: ${sourceTexture.frameTotal}/${PLAYER_FRAME_COUNT} frames.`);
+    const playerTexture = this.textures.get(PLAYER_SHEET_KEY);
+    if (playerTexture.frameTotal < NILO_FRAME_COUNT) {
+      throw new Error(
+        `Spritesheet do Nilo incompleta: ${playerTexture.frameTotal}/${NILO_FRAME_COUNT} frames.`,
+      );
     }
 
-    this.createHiResPlayerSheet();
     this.createProjectileTextures();
     this.createEnemyPlaceholder();
     this.createPlayerAnimations();
     this.scene.start(SCENE_KEYS.title);
-  }
-
-  private createHiResPlayerSheet(): void {
-    const sourceTexture = this.textures.get(PLAYER_SOURCE_KEY);
-    const sourceImage = sourceTexture.getSourceImage() as HTMLImageElement;
-    const columns = Math.max(1, Math.floor(sourceImage.width / PLAYER_SOURCE_FRAME_SIZE));
-    const rows = Math.ceil(PLAYER_FRAME_COUNT / columns);
-
-    const canvas = document.createElement('canvas');
-    canvas.width = columns * PLAYER_FRAME_SIZE;
-    canvas.height = rows * PLAYER_FRAME_SIZE;
-
-    const context = canvas.getContext('2d');
-    if (!context) throw new Error('Falha ao preparar a spritesheet 128x128 do Nilo.');
-
-    context.imageSmoothingEnabled = false;
-
-    for (let frame = 0; frame < PLAYER_FRAME_COUNT; frame += 1) {
-      const sourceColumn = frame % columns;
-      const sourceRow = Math.floor(frame / columns);
-      const targetColumn = frame % columns;
-      const targetRow = Math.floor(frame / columns);
-
-      context.drawImage(
-        sourceImage,
-        sourceColumn * PLAYER_SOURCE_FRAME_SIZE,
-        sourceRow * PLAYER_SOURCE_FRAME_SIZE,
-        PLAYER_SOURCE_FRAME_SIZE,
-        PLAYER_SOURCE_FRAME_SIZE,
-        targetColumn * PLAYER_FRAME_SIZE + PLAYER_FRAME_PADDING,
-        targetRow * PLAYER_FRAME_SIZE + PLAYER_FRAME_PADDING,
-        PLAYER_SOURCE_FRAME_SIZE * PLAYER_FRAME_SCALE,
-        PLAYER_SOURCE_FRAME_SIZE * PLAYER_FRAME_SCALE,
-      );
-    }
-
-    const playerTexture = this.textures.addCanvas(PLAYER_SHEET_KEY, canvas);
-    if (!playerTexture) throw new Error('Falha ao registrar a spritesheet 128x128 do Nilo.');
-
-    for (let frame = 0; frame < PLAYER_FRAME_COUNT; frame += 1) {
-      const column = frame % columns;
-      const row = Math.floor(frame / columns);
-      playerTexture.add(
-        frame,
-        0,
-        column * PLAYER_FRAME_SIZE,
-        row * PLAYER_FRAME_SIZE,
-        PLAYER_FRAME_SIZE,
-        PLAYER_FRAME_SIZE,
-      );
-    }
-
-    playerTexture.refresh();
-    this.textures.remove(PLAYER_SOURCE_KEY);
   }
 
   private createProjectileTextures(): void {
@@ -124,9 +65,29 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   private createPlayerAnimations(): void {
-    this.anims.create({ key: 'player-idle', frames: [0, 1, 2, 3].map((frame) => ({ key: PLAYER_SHEET_KEY, frame })), frameRate: 4, repeat: -1 });
-    this.anims.create({ key: 'player-jump', frames: [24, 25, 26].map((frame) => ({ key: PLAYER_SHEET_KEY, frame })), frameRate: 10, repeat: 0 });
-    this.anims.create({ key: 'player-fall', frames: [{ key: PLAYER_SHEET_KEY, frame: 28 }], frameRate: 1, repeat: -1 });
-    this.anims.create({ key: 'player-land', frames: [29, 30].map((frame) => ({ key: PLAYER_SHEET_KEY, frame })), frameRate: 12, repeat: 0 });
+    this.anims.create({
+      key: 'player-idle',
+      frames: [0, 1, 2, 3].map((frame) => ({ key: PLAYER_SHEET_KEY, frame })),
+      frameRate: 4,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: 'player-jump',
+      frames: [24, 25, 26].map((frame) => ({ key: PLAYER_SHEET_KEY, frame })),
+      frameRate: 10,
+      repeat: 0,
+    });
+    this.anims.create({
+      key: 'player-fall',
+      frames: [{ key: PLAYER_SHEET_KEY, frame: 28 }],
+      frameRate: 1,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: 'player-land',
+      frames: [29, 30].map((frame) => ({ key: PLAYER_SHEET_KEY, frame })),
+      frameRate: 12,
+      repeat: 0,
+    });
   }
 }
