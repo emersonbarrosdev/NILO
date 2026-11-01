@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { SCENE_KEYS } from '../config/constants';
 import { validatePlayerAnimationModel } from '../entities/playerAnimationModel';
 
-const PLAYER_SHEET_FRAME_SIZE = 104;
+const PLAYER_SHEET_FRAME_SIZE = 112;
 const PLAYER_FRAME_COUNT = 48;
 const PLAYER_SHEET_KEY = 'player-sheet';
 const PLAYER_SHEET_URL = new URL('../../assets/sprites/boy_sling_sheet.png', import.meta.url).href;
