@@ -1,25 +1,59 @@
 import Phaser from 'phaser';
 import { SCENE_KEYS } from '../config/constants';
 import { validatePlayerAnimationModel } from '../entities/playerAnimationModel';
+import {
+  createNiloSpriteSheetSvg,
+  NILO_SPRITE_FRAME_HEIGHT,
+  NILO_SPRITE_FRAME_WIDTH,
+} from '../assets/niloSpriteSheet';
 
-const PLAYER_SHEET_FRAME_SIZE = 32;
-const PLAYER_SHEET_URL = new URL('../../assets/sprites/boy_sling_sheet.png', import.meta.url).href;
+const PLAYER_SHEET_COLUMNS = 8;
+const PLAYER_SHEET_ROWS = 6;
+const PLAYER_SHEET_RENDER_SCALE = 0.75;
+const PLAYER_SHEET_FRAME_WIDTH = Math.round(NILO_SPRITE_FRAME_WIDTH * PLAYER_SHEET_RENDER_SCALE);
+const PLAYER_SHEET_FRAME_HEIGHT = Math.round(NILO_SPRITE_FRAME_HEIGHT * PLAYER_SHEET_RENDER_SCALE);
 
 export class PreloadScene extends Phaser.Scene {
+  private playerSheetObjectUrl?: string;
+
   constructor() { super(SCENE_KEYS.preload); }
 
   preload(): void {
-    this.load.spritesheet('player-sheet', PLAYER_SHEET_URL, {
-      frameWidth: PLAYER_SHEET_FRAME_SIZE,
-      frameHeight: PLAYER_SHEET_FRAME_SIZE,
+    const sourceWidth = NILO_SPRITE_FRAME_WIDTH * PLAYER_SHEET_COLUMNS;
+    const sourceHeight = NILO_SPRITE_FRAME_HEIGHT * PLAYER_SHEET_ROWS;
+    const renderWidth = PLAYER_SHEET_FRAME_WIDTH * PLAYER_SHEET_COLUMNS;
+    const renderHeight = PLAYER_SHEET_FRAME_HEIGHT * PLAYER_SHEET_ROWS;
+
+    const svg = createNiloSpriteSheetSvg().replace(
+      `width="${sourceWidth}" height="${sourceHeight}"`,
+      `width="${renderWidth}" height="${renderHeight}"`,
+    );
+
+    const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+    this.playerSheetObjectUrl = URL.createObjectURL(blob);
+
+    this.load.spritesheet('player-sheet', this.playerSheetObjectUrl, {
+      frameWidth: PLAYER_SHEET_FRAME_WIDTH,
+      frameHeight: PLAYER_SHEET_FRAME_HEIGHT,
     });
   }
 
   create(): void {
+    if (this.playerSheetObjectUrl) {
+      URL.revokeObjectURL(this.playerSheetObjectUrl);
+      this.playerSheetObjectUrl = undefined;
+    }
+
     validatePlayerAnimationModel();
-    if (!this.textures.exists('player-sheet')) throw new Error('Falha ao carregar a spritesheet do player.');
+
+    if (!this.textures.exists('player-sheet')) {
+      throw new Error('Falha ao carregar a spritesheet V2 do Nilo.');
+    }
+
     const playerTexture = this.textures.get('player-sheet');
-    if (playerTexture.frameTotal < 48) throw new Error(`Spritesheet do player incompleta: ${playerTexture.frameTotal}/48 frames.`);
+    if (playerTexture.frameTotal < 48) {
+      throw new Error(`Spritesheet V2 do Nilo incompleta: ${playerTexture.frameTotal}/48 frames.`);
+    }
 
     this.createProjectileTextures();
     this.createEnemyPlaceholder();
@@ -57,9 +91,32 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   private createPlayerAnimations(): void {
-    this.anims.create({ key: 'player-idle', frames: [0, 1, 2, 3].map((frame) => ({ key: 'player-sheet', frame })), frameRate: 4, repeat: -1 });
-    this.anims.create({ key: 'player-jump', frames: [24, 25, 26].map((frame) => ({ key: 'player-sheet', frame })), frameRate: 10, repeat: 0 });
-    this.anims.create({ key: 'player-fall', frames: [{ key: 'player-sheet', frame: 28 }], frameRate: 1, repeat: -1 });
-    this.anims.create({ key: 'player-land', frames: [29, 30].map((frame) => ({ key: 'player-sheet', frame })), frameRate: 12, repeat: 0 });
+    this.anims.create({
+      key: 'player-idle',
+      frames: [0, 1, 2, 3].map((frame) => ({ key: 'player-sheet', frame })),
+      frameRate: 4,
+      repeat: -1,
+    });
+
+    this.anims.create({
+      key: 'player-jump',
+      frames: [24, 25, 26].map((frame) => ({ key: 'player-sheet', frame })),
+      frameRate: 10,
+      repeat: 0,
+    });
+
+    this.anims.create({
+      key: 'player-fall',
+      frames: [{ key: 'player-sheet', frame: 28 }],
+      frameRate: 1,
+      repeat: -1,
+    });
+
+    this.anims.create({
+      key: 'player-land',
+      frames: [29, 30].map((frame) => ({ key: 'player-sheet', frame })),
+      frameRate: 12,
+      repeat: 0,
+    });
   }
 }
