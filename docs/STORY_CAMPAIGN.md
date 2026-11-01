@@ -74,7 +74,5 @@ A roupa atual combina com a história porque pode ser lida como roupa escolar/ca
 ## Detalhes de personalidade em gameplay
 
 - idle normal curto e expressivo;
-- após 10 segundos sem qualquer ação, Nilo senta no chão;
-- enquanto estiver sentado, a cada 5 segundos ele joga uma pedrinha em direção à tela como brincadeira/easter egg;
-- qualquer input cancela imediatamente o idle especial;
+- animações extras de personalidade ficam fora do escopo atual e podem voltar depois do vertical slice;
 - o estilingue deve ter origem física coerente: toda pedra disparada nasce visualmente na boca do estilingue, respeitando a direção da mira.
