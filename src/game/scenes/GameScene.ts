@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { SCENE_KEYS } from '../config/constants';
+import { RENDER_SCALE, SCENE_KEYS } from '../config/constants';
 import { Player } from '../entities/Player';
 import { Projectile } from '../entities/Projectile';
 import { addPixelText } from '../ui/PixelText';
@@ -11,6 +11,10 @@ export class GameScene extends Phaser.Scene {
   constructor() { super(SCENE_KEYS.game); }
 
   create(): void {
+    this.cameras.main.setZoom(RENDER_SCALE);
+    this.cameras.main.setScroll(0, 0);
+
+    this.solidSurfaces.length = 0;
     this.physics.world.setBounds(0, 0, 960, 180);
     this.cameras.main.setBounds(0, 0, 960, 180);
     this.cameras.main.setBackgroundColor('#49a9d5');
@@ -118,14 +122,14 @@ export class GameScene extends Phaser.Scene {
     const absX = Math.abs(direction.x);
     const absY = Math.abs(direction.y);
     let offsetX = 14 * facing;
-    let offsetY = -2;
+    let offsetY = -3;
 
     if (absY > absX * 1.5) {
-      offsetX = 8 * facing;
-      offsetY = direction.y < 0 ? -14 : 14;
+      offsetX = 6 * facing;
+      offsetY = direction.y < 0 ? -15 : 12;
     } else if (absY > 0.35) {
       offsetX = 11 * facing;
-      offsetY = direction.y < 0 ? -11 : 11;
+      offsetY = direction.y < 0 ? -11 : 8;
     }
 
     projectile.setPosition(this.player.x + offsetX, this.player.y + offsetY);
