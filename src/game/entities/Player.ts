@@ -25,7 +25,7 @@ const MAX_CHARGE_MS = 1100;
 const LAND_POSE_MS = 90;
 const SHOOT_POSE_MS = 150;
 const SHOOT_FRAME_COUNT = 3;
-const PLAYER_SCALE = 1;
+const PLAYER_SCALE = 0.72;
 
 const PLAYER_FRAMES = {
   crouch: 5,
@@ -88,8 +88,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.setDragX(GROUND_DRAG);
 
     const body = this.body as Phaser.Physics.Arcade.Body;
-    body.setSize(21, 39);
-    body.setOffset(13, 5);
+    body.setSize(28, 52);
+    body.setOffset(18, 7);
 
     const keyboard = scene.input.keyboard!;
     this.cursors = keyboard.createCursorKeys();
@@ -150,12 +150,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private updateHitbox(crouching: boolean): void {
     const body = this.body as Phaser.Physics.Arcade.Body;
     if (crouching) {
-      body.setSize(21, 25);
-      body.setOffset(13, 19);
+      body.setSize(28, 34);
+      body.setOffset(18, 25);
       return;
     }
-    body.setSize(21, 39);
-    body.setOffset(13, 5);
+    body.setSize(28, 52);
+    body.setOffset(18, 7);
   }
 
   private updateMovement(horizontal: number, grounded: boolean, crouching: boolean): void {
@@ -313,8 +313,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (time - this.lastShotAt < QUICK_SHOT_COOLDOWN_MS) return;
 
     const verticalAim = Math.abs(this.aimX) < 0.2;
-    const projectileX = this.x + this.aimX * 18 + (verticalAim ? this.facing * 4 : 0);
-    const projectileY = this.y - 9 + this.aimY * 18;
+    const projectileX = this.x + this.aimX * 16 + (verticalAim ? this.facing * 4 : 0);
+    const projectileY = this.y - 7 + this.aimY * 16;
     const projectile = new Projectile(this.scene, projectileX, projectileY, charged);
     projectile.fire(this.aimX, this.aimY);
 
