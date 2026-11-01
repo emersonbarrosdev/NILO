@@ -34,6 +34,5 @@ canvas {
   display: block;
   max-width: none;
   max-height: none;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
+  image-rendering: auto;
 }
