@@ -11,7 +11,6 @@ export class GameScene extends Phaser.Scene {
   constructor() { super(SCENE_KEYS.game); }
 
   create(): void {
-    this.solidSurfaces.length = 0;
     this.physics.world.setBounds(0, 0, 960, 180);
     this.cameras.main.setBounds(0, 0, 960, 180);
     this.cameras.main.setBackgroundColor('#49a9d5');
@@ -56,7 +55,7 @@ export class GameScene extends Phaser.Scene {
       this,
       8,
       36,
-      'A D / SETAS  MOVER\nW / CIMA / SPACE  PULAR\nJ / X  ESTILINGUE  SEGURE CARREGAR',
+      'A D / SETAS  MOVER\nS / BAIXO  AGACHAR\nW / CIMA / SPACE  PULAR\nJ / X  ESTILINGUE  SEGURE CARREGAR',
       {
         scale: 1,
         color: 0xffe082,
@@ -118,15 +117,15 @@ export class GameScene extends Phaser.Scene {
       : (this.player.flipX ? -1 : 1);
     const absX = Math.abs(direction.x);
     const absY = Math.abs(direction.y);
-    let offsetX = 9 * facing;
-    let offsetY = 0;
+    let offsetX = 14 * facing;
+    let offsetY = -2;
 
     if (absY > absX * 1.5) {
-      offsetX = 5 * facing;
-      offsetY = direction.y < 0 ? -9 : 9;
+      offsetX = 8 * facing;
+      offsetY = direction.y < 0 ? -14 : 14;
     } else if (absY > 0.35) {
-      offsetX = 7 * facing;
-      offsetY = direction.y < 0 ? -7 : 7;
+      offsetX = 11 * facing;
+      offsetY = direction.y < 0 ? -11 : 11;
     }
 
     projectile.setPosition(this.player.x + offsetX, this.player.y + offsetY);
