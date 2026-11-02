@@ -41,8 +41,8 @@ export class GameState extends Phaser.Events.EventEmitter {
 
   public startStage(stageId: string, startX = 40, startY = 130): void {
     this.currentStage = stageId;
-    this.hp = Math.max(3, this.hp);
-    this.lives = this.hp;
+    this.lives = Math.max(3, this.lives);
+    this.hp = 3;
     this.maxHp = Math.max(this.maxHp, this.hp);
     this.stamps = 0;
     this.postcards.clear();
@@ -63,7 +63,7 @@ export class GameState extends Phaser.Events.EventEmitter {
   public addHp(amount = 1): void {
     // Vidas e Corações 100% cumulativos: 3 -> 4 -> 5 -> 6... sem teto artificial!
     this.hp += amount;
-    this.lives = this.hp;
+    this.lives += amount;
     this.maxHp = Math.max(this.maxHp, this.hp);
     SaveSystem.get().save({ lives: this.lives });
     this.emit('hp-changed', this.hp, this.maxHp);
@@ -72,10 +72,7 @@ export class GameState extends Phaser.Events.EventEmitter {
 
   public takeDamage(amount = 1): boolean {
     this.hp = Math.max(0, this.hp - amount);
-    this.lives = this.hp;
-    SaveSystem.get().save({ lives: this.lives });
     this.emit('hp-changed', this.hp, this.maxHp);
-    this.emit('lives-changed', this.lives);
     return this.hp <= 0;
   }
 
@@ -98,7 +95,7 @@ export class GameState extends Phaser.Events.EventEmitter {
   public addLife(amount = 1): void {
     // Vidas acumulativas infinitas
     this.lives += amount;
-    this.hp = this.lives;
+    this.hp += amount;
     this.maxHp = Math.max(this.maxHp, this.hp);
     SaveSystem.get().save({ lives: this.lives });
     this.emit('lives-changed', this.lives);
@@ -107,7 +104,7 @@ export class GameState extends Phaser.Events.EventEmitter {
 
   public loseLife(): boolean {
     this.lives = Math.max(0, this.lives - 1);
-    this.hp = this.lives;
+    this.hp = 3; // Restaura HP para o respawn
     SaveSystem.get().save({ lives: this.lives });
     this.emit('lives-changed', this.lives);
     this.emit('hp-changed', this.hp, this.maxHp);
@@ -127,12 +124,9 @@ export class GameState extends Phaser.Events.EventEmitter {
     this.checkpointId = id;
     this.checkpointX = x;
     this.checkpointY = y;
-    // Se estiver com menos de 3 vidas, restaura para 3; se tiver 4, 5, 6 ou mais, preserva todas!
     if (this.hp < 3) {
       this.hp = 3;
-      this.lives = 3;
       this.emit('hp-changed', this.hp, this.maxHp);
-      this.emit('lives-changed', this.lives);
     }
     this.emit('checkpoint-activated', id);
   }

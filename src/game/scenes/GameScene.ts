@@ -9,6 +9,7 @@ import { Checkpoint } from '../entities/environment/Checkpoint';
 import { PuzzleTarget } from '../entities/environment/PuzzleTarget';
 import { MovingPlatform } from '../entities/environment/MovingPlatform';
 import { BounceFlower } from '../entities/environment/BounceFlower';
+import { FallingPlatform } from '../entities/environment/FallingPlatform';
 import { SpikeHazard } from '../entities/environment/SpikeHazard';
 import { GoalGate } from '../entities/environment/GoalGate';
 import { Stamp } from '../entities/items/Stamp';
@@ -27,6 +28,7 @@ export class GameScene extends Phaser.Scene {
   private readonly groundSegments: { startX: number; endX: number; surfaceY: number }[] = [];
   private readonly enemies: (BeetleEnemy | HopperEnemy | DragonflyEnemy)[] = [];
   private readonly movingPlatforms: MovingPlatform[] = [];
+  private readonly fallingPlatforms: FallingPlatform[] = [];
   private isPaused = false;
   private pauseMenuContainer?: Phaser.GameObjects.Container;
   private pauseSelectedIndex = 0;
@@ -52,13 +54,14 @@ export class GameScene extends Phaser.Scene {
   }
 
   create(): void {
-    const worldWidth = 4800;
+    const worldWidth = 6000;
     const worldHeight = 200;
 
     this.solidSurfaces.length = 0;
     this.groundSegments.length = 0;
     this.enemies.length = 0;
     this.movingPlatforms.length = 0;
+    this.fallingPlatforms.length = 0;
     this.isPaused = false;
 
     // Configuração de Mundo e Câmera
@@ -91,6 +94,11 @@ export class GameScene extends Phaser.Scene {
     // Colisões com plataformas móveis
     for (const mp of this.movingPlatforms) {
       this.physics.add.collider(this.player, mp);
+    }
+
+    // Colisões com plataformas que despencam ao pisar
+    for (const fp of this.fallingPlatforms) {
+      this.physics.add.collider(this.player, fp);
     }
 
     // Escuta disparos de estilingue
@@ -162,15 +170,22 @@ export class GameScene extends Phaser.Scene {
     for (const mp of this.movingPlatforms) {
       if (mp.active) mp.update();
     }
+
+    // Atualiza plataformas que despencam ao pisar
+    for (const fp of this.fallingPlatforms) {
+      if (fp.active && this.player) {
+        fp.checkPlayerStep(this.player);
+      }
+    }
   }
 
   // --- CONSTRUÇÃO DO LEVEL DESIGN (5 ATOS DO VALE DA BRISA - MUNDO EXTENSO 4800PX) ---
   private buildLevelTerrain(worldWidth: number): void {
     const GROUND_Y = 154;
 
-    // === ATO 1: ABERTURA SEGURA E PRIMEIRO SALTO (X: 0 -> 900) ===
-    // Segmento 1 de solo plano: 0 a 480 (Área segura para acostumar com a física, velocidade e pulo)
-    this.addGroundSegment(0, 480, GROUND_Y);
+    // === ATO 1: ABERTURA SEGURA, TUTORIAL DE PULO E PRIMEIRO VÃO LIVRE (X: 0 -> 920) ===
+    // Segmento 1 de solo plano: 0 a 520 (Área segura para treinar corrida e estilingue)
+    this.addGroundSegment(0, 520, GROUND_Y);
 
     // Selos em arco suave ensinando a cadência do pulo único
     [120, 140, 160].forEach((x, i) => {
@@ -181,82 +196,83 @@ export class GameScene extends Phaser.Scene {
     this.addWoodPlatform(240, 124, 48, true, GROUND_Y);
     this.spawnStamp(240, 108);
 
-    // Colina suave de terra (480 a 680, Y: 142) - conectado perfeitamente ao segmento 1 sem degraus invisíveis
-    this.addGroundSegment(480, 680, 142);
-    this.spawnStamp(520, 126);
-    this.spawnStamp(560, 126);
-    this.spawnStamp(600, 126);
+    [340, 380, 420, 460].forEach((x) => this.spawnStamp(x, 136));
 
-    // Primeiro fosso curto (680 -> 760, vão de 80px) com degrau de pedra firme no centro
-    this.addStonePlatform(720, 142, 28);
-    this.spawnStamp(720, 124);
+    // VÃO LIVRE #1 (X: 520 -> 566, vão de 46px - SEM NENHUMA PLATAFORMA! Pulo puro e justo com alcance de 75px)
+    // 3 Moedas de Ouro em parábola perfeita mostrando a trajetória do salto seguro
+    this.spawnStamp(530, 136);
+    this.spawnStamp(543, 122);
+    this.spawnStamp(556, 136);
 
-    // Segmento 3 de solo seguro: 760 a 1060
-    this.addGroundSegment(760, 1060, GROUND_Y);
-    [840, 860, 880].forEach((x, i) => {
-      this.spawnStamp(x, 136 - (i === 1 ? 12 : 6));
-    });
+    // Segmento 2 de solo: 566 a 920 com colina suave
+    this.addGroundSegment(566, 920, GROUND_Y);
+    this.addGroundSegment(660, 820, 142); // Elevação sutil do morro
+    this.spawnStamp(700, 124);
+    this.spawnStamp(740, 124);
+    this.spawnStamp(780, 124);
 
-    // === ATO 2: PRIMEIRO INIMIGO, ROTAS ALTERNATIVAS E FOSSO DE ESPINHOS (X: 900 -> 2000) ===
-    // Segmento 4 de solo: 1060 a 1520
-    this.addGroundSegment(1060, 1520, GROUND_Y);
+    // === ATO 2: PRIMEIRO INIMIGO, ROTAS ALTERNATIVAS, VÃO LIVRE #2 E QUEDA DE PLATAFORMA (X: 920 -> 2040) ===
+    // VÃO LIVRE #2 (X: 920 -> 968, vão de 48px - SEM PLATAFORMA! Salto direto no pé)
+    this.spawnStamp(932, 136);
+    this.spawnStamp(944, 122);
+    this.spawnStamp(956, 136);
 
-    // Cascuva 1 patrulha de forma segura no solo (1080 a 1480) sem jamais cair no fosso de espinhos
-    const beetle1 = new BeetleEnemy(this, 1140, GROUND_Y - 8, 1080, 1480);
+    // Segmento 3 de solo: 968 a 1500
+    this.addGroundSegment(968, 1500, GROUND_Y);
+
+    // Cascuva 1 patrulha no solo seguro sem jamais cair em buracos
+    const beetle1 = new BeetleEnemy(this, 1140, GROUND_Y - 8, 1020, 1460);
     this.enemies.push(beetle1);
     this.setupEnemyCollisions(beetle1);
 
-    // ROTA ALTA: Passarelas de madeira nas copas das árvores (semissólidas)
+    // ROTA ALTA: Passarelas de madeira nas copas das árvores
     this.addWoodPlatform(1180, 124, 48, true, GROUND_Y);
     this.spawnStamp(1180, 108);
 
     this.addWoodPlatform(1260, 98, 48, true, GROUND_Y);
     this.spawnStamp(1260, 82);
 
-    // Plataforma alta da copa (hasStilts: false) com Coração de Recompensa
+    // Recompensa da copa alta: Coração Lapidado (+1 Vida Cumulativa!)
     this.addWoodPlatform(1350, 74, 56, false);
-    this.spawnHeart(1350, 58); // Recompensa por dominar a rota alta
+    this.spawnHeart(1350, 58);
 
-    // Plataforma alta que cruza com segurança por cima do fosso de espinhos
     this.addWoodPlatform(1450, 74, 56, false);
     this.spawnStamp(1450, 58);
 
-    this.addWoodPlatform(1550, 98, 48, false);
-    this.spawnStamp(1550, 82);
+    // FOSSO DE ESPINHOS COM PLATAFORMA QUE DESPENCA (X: 1500 -> 1600, vão de 100px)
+    this.spawnSpike(1530, 172);
+    this.spawnSpike(1550, 172);
+    this.spawnSpike(1570, 172);
 
-    this.addWoodPlatform(1630, 124, 48, true, GROUND_Y);
-    this.spawnStamp(1630, 108);
+    // PLATAFORMA QUE DESPENCA #1: Ao saltar nela, treme com serragem por 320ms e despenca!
+    this.addFallingPlatform(1550, 100);
+    this.spawnStamp(1550, 84);
 
-    // ROTA BAIXA: Fosso de espinhos aberto e limpo (X: 1520 -> 1600, vão de 80px)
-    // Os espinhos estão NO FUNDO do fosso (Y: 172), sem nenhuma plataforma sobreposta!
-    this.spawnSpike(1545, 172);
-    this.spawnSpike(1560, 172);
-    this.spawnSpike(1575, 172);
+    this.addWoodPlatform(1640, 124, 48, true, GROUND_Y);
+    this.spawnStamp(1640, 108);
 
-    // Segmento 5 de solo após os espinhos: 1600 a 2020
-    this.addGroundSegment(1600, 2020, GROUND_Y);
+    // Segmento 4 de solo após os espinhos: 1600 a 2040
+    this.addGroundSegment(1600, 2040, GROUND_Y);
 
-    // Segundo Cascuva patrulhando após os espinhos com limites seguros
     const beetle2 = new BeetleEnemy(this, 1720, GROUND_Y - 8, 1630, 1960);
     this.enemies.push(beetle2);
     this.setupEnemyCollisions(beetle2);
 
     this.spawnStamp(1750, 136);
-    this.spawnStamp(1770, 136);
-    this.spawnStamp(1790, 136);
+    this.spawnStamp(1780, 136);
+    this.spawnStamp(1810, 136);
 
     // CHECKPOINT 1 (Totem do Vale 1)
-    this.spawnCheckpoint(1880, GROUND_Y - 14, 'cp-1');
+    this.spawnCheckpoint(1940, GROUND_Y - 14, 'cp-1');
 
-    // === ATO 3: VERTICALIDADE, COPAS DAS ÁRVORES E INIMIGO AÉREO (X: 2000 -> 3050) ===
-    // Segmento 6 de solo: 2020 a 2460
-    this.addGroundSegment(2020, 2460, GROUND_Y);
+    // === ATO 3: VERTICALIDADE, O GRANDE DESFILADEIRO E JANGADA MÓVEL (X: 2040 -> 3080) ===
+    // Segmento 5 de solo: 2040 a 2420
+    this.addGroundSegment(2040, 2420, GROUND_Y);
 
-    const beetle3 = new BeetleEnemy(this, 2100, GROUND_Y - 8, 2040, 2420);
+    const beetle3 = new BeetleEnemy(this, 2100, GROUND_Y - 8, 2050, 2380);
     this.enemies.push(beetle3);
     this.setupEnemyCollisions(beetle3);
 
-    // Escalada vertical nas árvores antigas
     this.addWoodPlatform(2120, 124, 48, true, GROUND_Y);
     this.spawnStamp(2120, 108);
 
@@ -268,69 +284,50 @@ export class GameScene extends Phaser.Scene {
     this.enemies.push(flyer1);
     this.setupEnemyCollisions(flyer1);
 
-    // Mirante da copa alta
+    // Mirante da copa: Cartão-Postal #1
     this.addWoodPlatform(2290, 72, 56, false);
-    // SEGREDO 1 (Tarefa 30 - Fácil/Visível): Cartão-Postal #1 na copa alta
     this.spawnPostcard(2290, 56, '1-1-1');
 
-    this.addWoodPlatform(2380, 96, 48, false);
-    this.addWoodPlatform(2440, 124, 48, true, GROUND_Y);
+    // PLATAFORMA QUE DESPENCA #2: Atalho aéreo emocionante
+    this.addFallingPlatform(2360, 88);
+    this.spawnStamp(2360, 72);
 
-    // Fosso do riacho: 2460 -> 2590 (vão de 130px com lajes de pedra)
-    this.addStonePlatform(2500, 142, 28);
-    this.spawnStamp(2500, 124);
+    // O GRANDE FOSSO DO RIACHO (X: 2420 a 2620, vão imenso de 200px - SÓ PASSA COM A PLATAFORMA MÓVEL!)
+    // Jangada de pedra que navega horizontalmente entre X: 2470 e 2570
+    this.addMovingPlatform(2470, 132, 100, 0, 34);
+    this.spawnStamp(2520, 116);
 
-    this.addStonePlatform(2550, 142, 28);
-    this.spawnStamp(2550, 124);
+    // Segmento 6 de solo: 2620 a 3080
+    this.addGroundSegment(2620, 3080, GROUND_Y);
 
-    // Segmento 7 de solo: 2590 a 3080
-    this.addGroundSegment(2590, 3080, GROUND_Y);
-
-    // Inimigo Aéreo 2 sobrevoando a clareira aberta
-    const flyer2 = new DragonflyEnemy(this, 2750, 92, 60);
+    const flyer2 = new DragonflyEnemy(this, 2760, 92, 60);
     this.enemies.push(flyer2);
     this.setupEnemyCollisions(flyer2);
 
-    // Colina intermediária elevada (2800 a 2980, Y: 142)
-    this.addGroundSegment(2800, 2980, 142);
-    const beetle4 = new BeetleEnemy(this, 2880, 134, 2820, 2960);
+    this.addGroundSegment(2820, 2980, 142);
+    const beetle4 = new BeetleEnemy(this, 2890, 134, 2830, 2970);
     this.enemies.push(beetle4);
     this.setupEnemyCollisions(beetle4);
 
     this.spawnStamp(2860, 126);
-    this.spawnStamp(2880, 126);
-    this.spawnStamp(2900, 126);
+    this.spawnStamp(2890, 126);
+    this.spawnStamp(2920, 126);
 
-    // === ATO 4: PUZZLES DO ESTILINGUE, TIRO CARREGADO E 1-UP OCULTO (X: 3050 -> 4050) ===
-    // Segmento 9 de solo: 3080 a 3420
-    this.addGroundSegment(3080, 3420, GROUND_Y);
+    // === ATO 4: SINO DE OURO BÔNUS, TRAVESSIA CONTÍNUA E CHECKPOINT 2 (X: 3080 -> 4050) ===
+    // Segmento 7 de solo: 3080 a 3400
+    this.addGroundSegment(3080, 3400, GROUND_Y);
 
-    // Degrau de apoio para disparar nos alvos confortavelmente
     this.addWoodPlatform(3140, 126, 40, true, GROUND_Y);
     this.spawnStamp(3140, 110);
 
-    // ROTA PRINCIPAL DO DESFILADEIRO (X: 3420 a 3600):
-    // Sempre acessível e fluida com plataformas rústicas e jangada móvel (sem bloqueios invisíveis)
-    // 1. Cais de madeira inicial
-    this.addWoodPlatform(3450, 126, 44, true, GROUND_Y);
-    this.spawnStamp(3450, 110);
-
-    // 2. Jangada móvel de madeira (oscila suavemente entre X: 3495 e 3535, Y: 114)
-    this.addMovingPlatform(3495, 114, 40, 0, 34);
-
-    // 3. Posto de desembarque com estacas firmes
-    this.addWoodPlatform(3575, 126, 44, true, GROUND_Y);
-    this.spawnStamp(3575, 110);
-
-    // SINO DE OURO (ALVO DE BÔNUS & SEGREDO EM X: 3260, Y: 94):
-    // Ao disparar o estilingue no sino, ele badala, solta uma chuva de moedas e revela rota secreta!
+    // SINO DE OURO (ALVO DE BÔNUS E SEGREDO 100% OPCIONAL EM X: 3260, Y: 94):
+    // Nunca bloqueia a passagem! Disparar nele toca o sino, libera chuva de moedas e 1-UP!
     const secretHighPlatform = this.addWoodPlatform(3510, 56, 48, false, GROUND_Y, true);
 
     const puzzleTarget = new PuzzleTarget(this, 3260, 94, () => {
-      GameState.get().recordDefeatEnemy(200); // Bônus de pontuação
+      GameState.get().recordDefeatEnemy(200);
       secretHighPlatform.reveal();
 
-      // Chuva festiva de Selos de Ouro liberada pelo sino
       [3230, 3250, 3270, 3290].forEach((sx, i) => {
         this.spawnStamp(sx, 76 - (i % 2 === 0 ? 6 : 0));
       });
@@ -353,74 +350,134 @@ export class GameScene extends Phaser.Scene {
       this.tweens.add({ targets: alert, alpha: 0, delay: 1600, duration: 400, onComplete: () => alert.destroy() });
     });
 
-    // SEGREDO 2 (Tarefa 30 - Exploração): Cartão-Postal #2 no alto
+    // ROTA PRINCIPAL DO DESFILADEIRO (X: 3400 a 3600): Fluida e 100% contínua!
+    // 1. Cais de madeira
+    this.addWoodPlatform(3430, 126, 44, true, GROUND_Y);
+    this.spawnStamp(3430, 110);
+
+    // 2. PLATAFORMA QUE DESPENCA #3: Ponte instável no meio do desfiladeiro
+    this.addFallingPlatform(3500, 120);
+    this.spawnStamp(3500, 104);
+
+    // 3. Posto de desembarque firme
+    this.addWoodPlatform(3570, 126, 44, true, GROUND_Y);
+    this.spawnStamp(3570, 110);
+
+    // Mirante com Cartão-Postal #2
     this.addWoodPlatform(3620, 78, 48, false);
     this.spawnPostcard(3620, 62, '1-1-2');
 
-    // Segmento 10 de solo: 3600 a 4050
+    // Segmento 8 de solo: 3600 a 4050
     this.addGroundSegment(3600, 4050, GROUND_Y);
 
-    // No chão: Saltador (HopperEnemy) com limites de patrulha seguros
     const hopper1 = new HopperEnemy(this, 3750, GROUND_Y - 8, this.player, 3630, 3950);
     this.enemies.push(hopper1);
     this.setupEnemyCollisions(hopper1);
 
     this.spawnStamp(3820, 136);
-    this.spawnStamp(3840, 136);
-    this.spawnStamp(3860, 136);
+    this.spawnStamp(3850, 136);
+    this.spawnStamp(3880, 136);
 
     // CHECKPOINT 2 (Totem do Vale 2)
     this.spawnCheckpoint(3980, GROUND_Y - 14, 'cp-2');
 
-    // === ATO 5: TRAMPOLIM FLORAL, PLATAFORMAS MÓVEIS (H+V) E CHEGADA (X: 4050 -> 4800) ===
-    // Segmento 11 de solo: 4050 a 4260
-    this.addGroundSegment(4050, 4260, GROUND_Y);
+    // === ATO 5: FLOR TRAMPOLIM, PLATAFORMAS MÓVEIS TANDEM E VÃO LIVRE #3 (X: 4050 -> 5050) ===
+    // Segmento 9 de solo: 4050 a 4300
+    this.addGroundSegment(4050, 4300, GROUND_Y);
 
-    // Flor Trampolim (estilo Mario Note-block / DKC bouncy mushroom) plantada firmemente no solo
+    // Flor Trampolim que impulsiona para a copa
     this.spawnBounceFlower(4210, GROUND_Y - 6, -400);
 
-    // ROTA ALTA (SECRETA NAS COPAS): Acessada pelo super salto da flor
+    // ROTA ALTA DA COPA
     this.addWoodPlatform(4265, 82, 48, false);
     this.spawnStamp(4265, 66);
-
     this.addWoodPlatform(4360, 68, 48, false);
     this.spawnStamp(4360, 52);
-
-    // Mirante Alto do Desfiladeiro: Cartão-Postal #3 nas copas seguras
     this.addWoodPlatform(4460, 68, 48, false);
-    this.spawnPostcard(4460, 52, '1-1-3');
-    this.spawnStamp(4480, 52);
+    this.spawnLife(4460, 52); // Boné 1-UP secreto no alto
 
-    // ROTA PRINCIPAL DO DESFILADEIRO (Ritmo calibrado estilo Donkey Kong Country / Mario World):
-    // Todos os vãos calibrados entre 30px e 45px (100% transponíveis pelo pulo único de 75px de alcance)
-    // 1. Cais de estacas de madeira inicial
-    this.addWoodPlatform(4295, 130, 44, true, GROUND_Y);
-    this.spawnStamp(4295, 114);
+    // DESFILADEIRO DAS BRUMAS (X: 4300 a 4540, vão de 240px com plataformas móveis combinadas!)
+    // 1. Cais inicial
+    this.addWoodPlatform(4310, 130, 36, true, GROUND_Y);
 
-    // 2. Plataforma Móvel Horizontal (oscila suavemente entre X: 4345 e 4395, Y: 116)
-    this.addMovingPlatform(4345, 116, 50, 0, 32);
+    // 2. Jangada Móvel Horizontal (oscila suavemente entre 4350 e 4410, Y: 122)
+    this.addMovingPlatform(4350, 122, 60, 0, 32);
 
-    // 3. Ilhota de pedra sólida no meio do desfiladeiro (pouso seguro e firme)
+    // 3. Ilhota de pedra sólida no centro
     this.addStonePlatform(4435, 122, 38);
     this.spawnStamp(4435, 104);
 
-    // 4. Plataforma Móvel Vertical (elevador oscila entre Y: 80 e Y: 125 em X: 4495)
-    this.addMovingPlatform(4495, 80, 0, 45, 30);
+    // 4. Elevador Móvel Vertical (oscila entre Y: 85 e Y: 125 em X: 4495)
+    this.addMovingPlatform(4495, 85, 0, 40, 30);
 
-    // 5. Posto avançado de madeira firme antes do platô final
-    this.addWoodPlatform(4555, 126, 42, true, GROUND_Y);
-    this.spawnStamp(4555, 110);
+    // Segmento 10 de solo: 4540 a 5050
+    this.addGroundSegment(4540, 5050, GROUND_Y);
 
-    // Platô final da montanha: 4595 a 4800 (sem abismos invisíveis)
-    this.addGroundSegment(4595, worldWidth, GROUND_Y);
+    // VÃO LIVRE #3 (X: 4720 -> 4766, vão de 46px - SEM PLATAFORMA! Salto direto no pé)
+    this.spawnStamp(4732, 136);
+    this.spawnStamp(4743, 122);
+    this.spawnStamp(4754, 136);
 
-    // Guardião final: Saltador
-    const hopper2 = new HopperEnemy(this, 4670, GROUND_Y - 8, this.player, 4620, 4730);
+    const hopper2 = new HopperEnemy(this, 4820, GROUND_Y - 8, this.player, 4770, 4950);
     this.enemies.push(hopper2);
     this.setupEnemyCollisions(hopper2);
 
-    // PORTAL DE VITÓRIA (Goal Gate / Chegada Festiva da Fase)
-    this.spawnGoalGate(4750, GROUND_Y - 18);
+    // CHECKPOINT 3 (Totem do Vale 3 - Entrada do Cume)
+    this.spawnCheckpoint(4980, GROUND_Y - 14, 'cp-3');
+
+    // === ATO 6: O DESFILADEIRO DO VENTO E PLATÔ DO CUME (X: 5050 -> 6000) ===
+    // Segmento 11 de solo: 5050 a 5260
+    this.addGroundSegment(5050, 5260, GROUND_Y);
+
+    const beetle5 = new BeetleEnemy(this, 5140, GROUND_Y - 8, 5060, 5240);
+    this.enemies.push(beetle5);
+    this.setupEnemyCollisions(beetle5);
+
+    this.spawnStamp(5100, 136);
+    this.spawnStamp(5140, 136);
+    this.spawnStamp(5180, 136);
+
+    // A ESCADARIA DE PLATAFORMAS QUE DESPENCAM (X: 5260 a 5520, vão de 260px com 3 degraus sucessivos!)
+    // O jogador precisa dar saltos rápidos e confiantes, pois cada degrau treme e cai 320ms após ser pisado!
+    this.addFallingPlatform(5310, 130);
+    this.spawnStamp(5310, 114);
+
+    this.addFallingPlatform(5380, 112);
+    this.spawnStamp(5380, 96);
+
+    this.addFallingPlatform(5450, 94);
+    this.spawnStamp(5450, 78);
+
+    // Segmento 12: Cume da Montanha (5520 a 5740, Y: 142)
+    this.addGroundSegment(5520, 5740, 142);
+
+    const flyer3 = new DragonflyEnemy(this, 5600, 80, 55);
+    this.enemies.push(flyer3);
+    this.setupEnemyCollisions(flyer3);
+
+    // Mirante mais alto da cordilheira com o Cartão-Postal #3
+    this.addWoodPlatform(5660, 70, 48, false);
+    this.spawnPostcard(5660, 54, '1-1-3');
+
+    this.addWoodPlatform(5710, 114, 44, true, 142);
+    this.spawnStamp(5710, 98);
+
+    // DESFILADEIRO FINAL DO CUME (X: 5740 a 5880, vão de 140px - Jangada do Cume)
+    this.addMovingPlatform(5770, 118, 70, 0, 32);
+    this.spawnStamp(5805, 102);
+
+    // PLATÔ FINAL DA VITÓRIA (5880 a 6000, Y: 154): Chegada épica e festiva
+    this.addGroundSegment(5880, worldWidth, GROUND_Y);
+
+    // Arco de 5 Moedas Douradas festivas
+    this.spawnStamp(5900, 134);
+    this.spawnStamp(5920, 120);
+    this.spawnStamp(5940, 110);
+    this.spawnStamp(5960, 120);
+    this.spawnStamp(5980, 134);
+
+    // PORTAL DE VITÓRIA (Goal Gate) no cume da montanha!
+    this.spawnGoalGate(5950, GROUND_Y - 18);
 
     // Escuta impacto de tiro no Sino de Ouro
     this.events.on('check-target-hit', (projectile: Projectile) => {
@@ -601,6 +658,15 @@ export class GameScene extends Phaser.Scene {
     const mp = new MovingPlatform(this, x, y, distX, distY, speed);
     this.movingPlatforms.push(mp);
     return mp;
+  }
+
+  private addFallingPlatform(x: number, y: number): FallingPlatform {
+    const fp = new FallingPlatform(this, x, y);
+    this.fallingPlatforms.push(fp);
+    if (this.player) {
+      this.physics.add.collider(this.player, fp);
+    }
+    return fp;
   }
 
   // --- TRATAMENTO DE DISPAROS DO ESTILINGUE ---
@@ -1011,11 +1077,15 @@ export class GameScene extends Phaser.Scene {
 
     // 2. Névoa atmosférica nos grandes abismos e fossos para preencher os vazios
     const chasmMists = [
-      { x: 720, y: 168 },
-      { x: 1560, y: 172 },
-      { x: 2500, y: 166 }, { x: 2550, y: 166 },
-      { x: 3480, y: 168 }, { x: 3540, y: 168 },
-      { x: 4320, y: 170 }, { x: 4400, y: 166 }, { x: 4480, y: 172 }, { x: 4560, y: 168 },
+      { x: 543, y: 168 },
+      { x: 944, y: 168 },
+      { x: 1550, y: 172 },
+      { x: 2520, y: 166 },
+      { x: 3500, y: 168 },
+      { x: 4350, y: 170 }, { x: 4440, y: 166 }, { x: 4500, y: 172 },
+      { x: 4743, y: 168 },
+      { x: 5380, y: 168 },
+      { x: 5810, y: 168 },
     ];
     chasmMists.forEach((m, idx) => {
       const mist = this.add.image(m.x, m.y, 'decor-mist').setDepth(1).setAlpha(0.65);

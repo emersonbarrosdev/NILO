@@ -116,16 +116,69 @@ export class PreloadScene extends Phaser.Scene {
 
   private createProjectileTextures(): void {
     const g = this.add.graphics();
-    g.fillStyle(0x3c3440, 1).fillRect(0, 1, 4, 3);
-    g.fillStyle(0x8e817e, 1).fillRect(1, 0, 2, 1);
-    g.fillStyle(0xd9c9a7, 1).fillRect(1, 1, 1, 1);
-    g.generateTexture('stone-normal', 4, 4);
+
+    // 1. PEDRA NORMAL DO ESTILINGUE: Seixo de Rio 16-bit Polido (8x8)
+    // Contorno cinza ardósia suave
+    g.fillStyle(0x292524, 1);
+    g.fillRoundedRect(0, 0, 8, 8, 3);
+    // Base sombreada
+    g.fillStyle(0x57534e, 1);
+    g.fillRoundedRect(1, 1, 6, 6, 2);
+    // Corpo de pedra natural
+    g.fillStyle(0x78716c, 1);
+    g.fillRect(2, 2, 4, 3);
+    // Luz superior facetada
+    g.fillStyle(0xa8a29e, 1);
+    g.fillRect(2, 1, 3, 2);
+    // Brilho especular de quartzo/água
+    g.fillStyle(0xffffff, 0.95);
+    g.fillRect(2, 2, 2, 1);
+    g.fillRect(3, 3, 1, 1);
+    g.generateTexture('stone-normal', 8, 8);
+
     g.clear();
-    g.fillStyle(0x342c39, 1).fillRect(0, 1, 6, 4);
-    g.fillRect(1, 0, 4, 6);
-    g.fillStyle(0xd98749, 1).fillRect(1, 1, 4, 4);
-    g.fillStyle(0xffe49b, 1).fillRect(2, 1, 2, 2);
-    g.generateTexture('stone-charged', 6, 6);
+
+    // 2. PEDRA CARREGADA DO ESTILINGUE: Cristal Solar Incandescente (10x10)
+    g.fillStyle(0x78350f, 1);
+    g.fillRoundedRect(0, 0, 10, 10, 4);
+    // Halo de fogo
+    g.fillStyle(0xd97706, 1);
+    g.fillRoundedRect(1, 1, 8, 8, 3);
+    // Plasma dourado
+    g.fillStyle(0xf59e0b, 1);
+    g.fillRoundedRect(2, 2, 6, 6, 2);
+    // Coroa solar
+    g.fillStyle(0xfde047, 1);
+    g.fillRect(3, 2, 4, 3);
+    // Núcleo branco brillante
+    g.fillStyle(0xffffff, 1);
+    g.fillRect(3, 3, 3, 2);
+    g.fillRect(4, 2, 1, 1);
+    g.generateTexture('stone-charged', 10, 10);
+
+    g.clear();
+
+    // 3. PLATAFORMA QUE DESPENCA (44x10): Tábua rústica rachada e instável
+    g.fillStyle(0x241408, 1);
+    g.fillRoundedRect(0, 0, 44, 10, 2);
+    g.fillStyle(0x4a2a12, 1);
+    g.fillRect(1, 1, 42, 7);
+    g.fillStyle(0x73431d, 1);
+    g.fillRect(1, 1, 42, 4);
+    g.fillStyle(0x945727, 1);
+    g.fillRect(2, 1, 40, 2);
+    // Fendas profundas de madeira rachada (aviso claro ao jogador)
+    g.fillStyle(0x1a0d05, 1);
+    g.fillRect(14, 0, 2, 8);
+    g.fillRect(15, 3, 3, 2);
+    g.fillRect(29, 2, 2, 7);
+    g.fillRect(28, 4, 2, 3);
+    // Pregos frouxos
+    g.fillStyle(0xa1a1aa, 1);
+    g.fillRect(4, 3, 2, 2);
+    g.fillRect(38, 3, 2, 2);
+    g.generateTexture('platform-crumble', 44, 10);
+
     g.destroy();
   }
 
