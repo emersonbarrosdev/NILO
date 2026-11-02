@@ -633,7 +633,15 @@ export class AudioSystem {
   }
 
   public startBgm(track: 'title' | 'stage' | 'continue' = 'stage'): void {
+    // Se transitar entre 'title' e 'stage', ambos compartilham o tema principal do Vale:
+    // Mantém a música tocando continuamente sem cortes bruscos, sem reiniciar do zero e SEM sobreposição!
+    const isValley = (t: string) => t === 'title' || t === 'stage';
+    if (isValley(this.currentTrack) && isValley(track) && this.bgmPlaying) {
+      this.currentTrack = track;
+      return;
+    }
     if (this.currentTrack === track && this.bgmPlaying) return;
+
     this.stopBgm();
     this.currentTrack = track;
 
@@ -646,11 +654,17 @@ export class AudioSystem {
       return;
     }
 
+    if (this.bgmGain) {
+      const now = ctx.currentTime;
+      this.bgmGain.gain.cancelScheduledValues(now);
+      this.bgmGain.gain.setValueAtTime(this.bgmVolume, now);
+    }
+
     this.bgmPlaying = true;
     this.currentStep = 0;
     this.nextNoteTime = ctx.currentTime + 0.04;
 
-    // Scheduler com lookahead de 100ms para precisão rítmica absoluta (sem jitter de framerate)
+    // Scheduler com lookahead de 100ms para precisão rítmica absoluta
     this.schedulerInterval = window.setInterval(() => {
       this.scheduleBgmTicks();
     }, 25);
@@ -662,6 +676,12 @@ export class AudioSystem {
     if (this.schedulerInterval !== null) {
       clearInterval(this.schedulerInterval);
       this.schedulerInterval = null;
+    }
+    // Zera instantaneamente qualquer nota agendada no Web Audio para eliminar sobreposição de áudio
+    if (this.ctx && this.bgmGain) {
+      const now = this.ctx.currentTime;
+      this.bgmGain.gain.cancelScheduledValues(now);
+      this.bgmGain.gain.setValueAtTime(0, now);
     }
   }
 
@@ -695,39 +715,36 @@ export class AudioSystem {
   private scheduleBgmTicks(): void {
     if (!this.ctx || !this.bgmPlaying || this.isMuted || this.ctx.state === 'suspended') return;
 
-    const isStage = this.currentTrack === 'stage';
     const isContinue = this.currentTrack === 'continue';
-    // Tempo refinado
-    const bpm = isStage ? 114 : isContinue ? 80 : 92;
+    const bpm = isContinue ? 80 : 92;
     const stepDuration = 60 / bpm / 4; // Semicolcheia (16th note)
     const lookahead = 0.12;
 
-    const melody = isStage ? STAGE_MELODY : isContinue ? CONTINUE_MELODY : TITLE_MELODY;
-    const harmony = isStage ? STAGE_HARMONY : isContinue ? CONTINUE_HARMONY : TITLE_HARMONY;
-    const bass = isStage ? STAGE_BASS : isContinue ? CONTINUE_BASS : TITLE_BASS;
-    const drums = isStage ? STAGE_DRUMS : isContinue ? CONTINUE_DRUMS : TITLE_DRUMS;
+    const melody = isContinue ? CONTINUE_MELODY : VALLEY_MELODY;
+    const harmony = isContinue ? CONTINUE_HARMONY : VALLEY_HARMONY;
+    const bass = isContinue ? CONTINUE_BASS : VALLEY_BASS;
+    const drums = isContinue ? CONTINUE_DRUMS : VALLEY_DRUMS;
     const patternLen = melody.length;
 
     while (this.nextNoteTime < this.ctx.currentTime + lookahead) {
       const step = this.currentStep;
       const time = this.nextNoteTime;
 
-      // 1. CANAL 1: MELODIA PRINCIPAL (Onda quadrada quente, suave e cantabile)
+      // 1. CANAL 1: MELODIA PRINCIPAL (Onda quadrada quente, aveludada e pura)
       const leadFreq = melody[step];
       if (leadFreq > 0) {
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         const filter = this.ctx.createBiquadFilter();
         filter.type = 'lowpass';
-        // Filtro mais aveludado e orgânico (elimina aspereza e estalo)
-        filter.frequency.setValueAtTime(isStage ? 1900 : 1600, time);
+        filter.frequency.setValueAtTime(1700, time);
         filter.Q.setValueAtTime(1.0, time);
 
         osc.type = 'square';
         osc.frequency.setValueAtTime(leadFreq, time);
 
         const noteLen = stepDuration * 1.8;
-        const targetVol = isStage ? 0.082 : 0.065;
+        const targetVol = isContinue ? 0.065 : 0.075;
         // Ataque sutil de 14ms: nota surge suavemente sem estalo no início
         gain.gain.setValueAtTime(0.0001, time);
         gain.gain.linearRampToValueAtTime(targetVol, time + 0.014);
@@ -742,20 +759,20 @@ export class AudioSystem {
         osc.stop(time + noteLen + 0.02);
       }
 
-      // 2. CANAL 2: HARMONIA & CONTRACANTO (Almofada harmônica aveludada)
+      // 2. CANAL 2: HARMONIA SUAVE DE FUNDO (Almofada harmônica aveludada sem competir com a melodia)
       const harmFreq = harmony[step];
       if (harmFreq > 0) {
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         const filter = this.ctx.createBiquadFilter();
         filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(isStage ? 1400 : 1200, time);
+        filter.frequency.setValueAtTime(900, time); // Muito macio, apenas sustentação
 
         osc.type = 'square';
         osc.frequency.setValueAtTime(harmFreq, time);
 
         const noteLen = stepDuration * 1.7;
-        const targetVol = isStage ? 0.038 : 0.028;
+        const targetVol = 0.018; // Volume discreto, nunca soa como uma segunda música
         gain.gain.setValueAtTime(0.0001, time);
         gain.gain.linearRampToValueAtTime(targetVol, time + 0.018);
         gain.gain.exponentialRampToValueAtTime(targetVol * 0.45, time + noteLen * 0.7);
@@ -769,20 +786,20 @@ export class AudioSystem {
         osc.stop(time + noteLen + 0.02);
       }
 
-      // 3. CANAL 3: BAIXO GROOVY AVELUDADO (Triangle Wave encorpada e profunda)
+      // 3. CANAL 3: BAIXO GROOVY AVELUDADO (Triangle Wave encorpada e redonda)
       const bassFreq = bass[step];
       if (bassFreq > 0) {
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         const filter = this.ctx.createBiquadFilter();
         filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(650, time); // Redondo, sem zumbido agudo
+        filter.frequency.setValueAtTime(600, time);
 
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(bassFreq, time);
 
         const noteLen = stepDuration * 1.6;
-        const targetVol = isStage ? 0.12 : 0.095;
+        const targetVol = 0.095;
         gain.gain.setValueAtTime(0.0001, time);
         gain.gain.linearRampToValueAtTime(targetVol, time + 0.012);
         gain.gain.exponentialRampToValueAtTime(targetVol * 0.5, time + noteLen * 0.75);
@@ -796,10 +813,9 @@ export class AudioSystem {
         osc.stop(time + noteLen + 0.02);
       }
 
-      // 4. CANAL 4: BATERIA RETRÔ SUAVE & ORGÂNICA (Toques acústicos 8-bit)
+      // 4. CANAL 4: BATERIA RETRÔ SUAVE & ORGÂNICA (Toques acústicos 8-bit com vassourinha)
       const drum = drums[step];
       if (drum === 'K' || drum === 'B') {
-        // Bumbo macio e quente
         const kickOsc = this.ctx.createOscillator();
         const kickGain = this.ctx.createGain();
         kickOsc.type = 'sine';
@@ -817,12 +833,10 @@ export class AudioSystem {
       }
 
       if (drum === 'S') {
-        // Caixa suave tipo pincel / estalo doce vintage
         this.playNoise(time, 0.055, 0.042, 1600);
       }
 
       if (drum === 'H' || drum === 'K' || drum === 'S') {
-        // Chimbal discreto como brisa rítmica
         this.playNoise(time, 0.02, 0.018, 6500);
       }
 
@@ -845,182 +859,77 @@ const N = {
   _: 0,
 };
 
-// --- TEMA DA FASE 1-1 "VALE DA BRISA" (114 BPM - Aventura, Ensolarado & Leitmotif da Intro) ---
-// Traz a melodia apaixonante da intro adaptada com swing, ritmo ágil e ricas nuances de aventura
-const STAGE_MELODY: number[] = [
-  // Compasso 1 (G Major): O tema icônico da intro com ritmo alegre e dançante
-  N.D4, N._,  N.G4, N._,  N.B4, N._,  N._,  N.D5,
-  N.D5, N.B4, N._,  N.G4, N.A4, N.B4, N.G4, N._,
-
-  // Compasso 2 (Em7 / C Major): Voo suave sobre o vale
-  N.G4, N._,  N.A4, N._,  N.B4, N._,  N.D5, N._,
-  N.B4, N._,  N.A4, N.G4, N.A4, N._,  N._,  N._,
-
-  // Compasso 3 (Bm7 / Em): Pergunta melódica da intro
-  N.D5, N._,  N.B4, N._,  N.G4, N.A4, N.B4, N._,
-  N.B4, N._,  N.G4, N._,  N.E4, N._,  N._,  N._,
-
-  // Compasso 4 (G Major): Resolução calorosa da primeira estrofe
-  N.D4, N._,  N.E4, N._,  N.G4, N._,  N.A4, N._,
-  N.G4, N._,  N.G4, N._,  N.G4, N._,  N._,  N._,
-
-  // Compasso 5 (C Major -> D): Nuance lírica subindo para os agudos com ar fresco
-  N.B4, N._,  N.D5, N._,  N.E5, N._,  N.G5, N._,
-  N.E5, N._,  N.D5, N._,  N.B4, N._,  N._,  N._,
-
-  // Compasso 6 (Bm7 -> Em7): Queda graciosa nos ventos do vale
-  N.D5, N._,  N.B4, N._,  N.G4, N._,  N.A4, N.B4,
-  N.G4, N._,  N.E4, N._,  N.D4, N._,  N._,  N._,
-
-  // Compasso 7 (Am7 -> D7): Crescendo rítmico saltitante
-  N.E4, N.Fs4, N.G4, N.A4, N.B4, N._,  N.C5, N._,
-  N.D5, N._,  N.E5, N._,  N.D5, N.B4, N.A4, N._,
-
-  // Compasso 8 (G Major): Resolução triunfante de volta pra casa
-  N.G4, N._,  N.B4, N._,  N.D5, N._,  N.B4, N._,
-  N.G4, N._,  N.G4, N.A4, N.G4, N._,  N._,  N._,
-];
-
-const STAGE_HARMONY: number[] = [
-  // Compasso 1: Terças e sextas harmônicas aveludadas
-  N.B3, N._,  N.D4, N._,  N.G4, N._,  N._,  N.B4,
-  N.B4, N.G4, N._,  N.D4, N.E4, N.G4, N.D4, N._,
-
-  // Compasso 2
-  N.E4, N._,  N.Fs4, N._, N.G4, N._,  N.B4, N._,
-  N.G4, N._,  N.Fs4, N.E4, N.Fs4, N._, N._,  N._,
-
-  // Compasso 3
-  N.B4, N._,  N.G4, N._,  N.D4, N.Fs4, N.G4, N._,
-  N.G4, N._,  N.E4, N._,  N.C4, N._,  N._,  N._,
-
-  // Compasso 4
-  N.B3, N._,  N.C4, N._,  N.D4, N._,  N.Fs4, N._,
-  N.D4, N._,  N.D4, N._,  N.D4, N._,  N._,  N._,
-
-  // Compasso 5
-  N.G4, N._,  N.B4, N._,  N.C5, N._,  N.E5, N._,
-  N.C5, N._,  N.B4, N._,  N.G4, N._,  N._,  N._,
-
-  // Compasso 6
-  N.B4, N._,  N.G4, N._,  N.D4, N._,  N.Fs4, N.G4,
-  N.E4, N._,  N.C4, N._,  N.B3, N._,  N._,  N._,
-
-  // Compasso 7
-  N.C4, N.D4, N.E4, N.Fs4, N.G4, N._,  N.A4, N._,
-  N.B4, N._,  N.C5, N._,  N.B4, N.G4, N.Fs4, N._,
-
-  // Compasso 8
-  N.D4, N._,  N.G4, N._,  N.B4, N._,  N.G4, N._,
-  N.D4, N._,  N.D4, N.Fs4, N.D4, N._,  N._,  N._,
-];
-
-const STAGE_BASS: number[] = [
-  // Compasso 1 (G Major)
-  N.G2, N._,  N.D3, N._,  N.G3, N._,  N.D3, N._,
-  N.B2, N._,  N.D3, N._,  N.G2, N._,  N.D3, N._,
-
-  // Compasso 2 (Em7 -> C Major)
-  N.E2, N._,  N.B2, N._,  N.E3, N._,  N.B2, N._,
-  N.C3, N._,  N.G3, N._,  N.C4, N._,  N.G3, N._,
-
-  // Compasso 3 (Am7 -> D7)
-  N.A2, N._,  N.E3, N._,  N.A3, N._,  N.E3, N._,
-  N.D3, N._,  N.A3, N._,  N.D4, N._,  N.A3, N._,
-
-  // Compasso 4 (G Major)
-  N.G2, N._,  N.D3, N._,  N.G3, N._,  N.Fs3, N._,
-  N.E3, N._,  N.D3, N._,  N.G2, N._,  N.D3, N._,
-
-  // Compasso 5 (C Major)
-  N.C3, N._,  N.G3, N._,  N.C4, N._,  N.G3, N._,
-  N.E3, N._,  N.G3, N._,  N.C3, N._,  N.G3, N._,
-
-  // Compasso 6 (Bm7 -> Em7)
-  N.B2, N._,  N.Fs3, N._, N.B3, N._,  N.Fs3, N._,
-  N.E2, N._,  N.B2, N._,  N.E3, N._,  N.B2, N._,
-
-  // Compasso 7 (Am7 -> D7)
-  N.A2, N._,  N.E3, N._,  N.A3, N._,  N.C4, N._,
-  N.D3, N._,  N.A3, N._,  N.D4, N._,  N.Fs3, N._,
-
-  // Compasso 8 (G Major)
-  N.G2, N._,  N.D3, N._,  N.G3, N._,  N.D3, N._,
-  N.B2, N._,  N.D3, N._,  N.G2, N._,  N._,  N._,
-];
-
-const STAGE_DRUMS: string[] = [
-  // Compasso 1: Levada suave e arejada
-  'K', '_', 'H', '_',  'S', '_', 'H', '_',
-  'K', '_', 'H', '_',  'S', '_', 'H', '_',
-
-  // Compasso 2
-  'K', '_', 'H', '_',  'S', '_', 'H', '_',
-  'K', '_', 'H', '_',  'S', '_', 'H', '_',
-
-  // Compasso 3
-  'K', '_', 'H', '_',  'S', '_', 'H', '_',
-  'K', '_', 'H', '_',  'S', '_', 'H', 'H',
-
-  // Compasso 4
-  'K', '_', 'H', '_',  'S', '_', 'H', '_',
-  'K', 'H', 'S', 'H',  'S', '_', 'H', '_',
-
-  // Compasso 5
-  'K', '_', 'H', '_',  'S', '_', 'H', '_',
-  'K', '_', 'H', '_',  'S', '_', 'H', '_',
-
-  // Compasso 6
-  'K', '_', 'H', '_',  'S', '_', 'H', '_',
-  'K', '_', 'H', '_',  'S', '_', 'H', '_',
-
-  // Compasso 7
-  'K', '_', 'H', '_',  'S', '_', 'H', '_',
-  'K', '_', 'H', '_',  'S', '_', 'H', 'H',
-
-  // Compasso 8: Viradinha sutil e elegante
-  'K', '_', 'H', '_',  'S', '_', 'H', '_',
-  'K', 'H', 'S', 'H',  'S', 'S', 'H', '_',
-];
-
-// --- TEMA DA TELA INICIAL "O MIRANTE DO VALE" (92 BPM - Contemplativo, Doce e Nostálgico) ---
-const TITLE_MELODY: number[] = [
-  // Compasso 1
+// --- TEMA UNIFICADO "O MIRANTE DO VALE" (92 BPM - Doce, Contemplativo, Acolhedor & Aventureiro) ---
+// Tocado tanto na tela inicial quanto durante toda a gameplay da fase, exatamente como o usuário pediu!
+const VALLEY_MELODY: number[] = [
+  // Compasso 1 (G Maior - O tema icônico original da intro exatamente como o usuário amou):
   N.D4, N._, N.G4, N._, N.B4, N._, N._,  N._,
   N.A4, N._, N.G4, N._, N.E4, N._, N._,  N._,
 
-  // Compasso 2
+  // Compasso 2 (Em7 / D - Continuação original da intro):
   N.G4, N._, N.A4, N._, N.B4, N._, N.D5, N._,
   N.B4, N._, N._,  N._, N.A4, N._, N._,  N._,
 
-  // Compasso 3
+  // Compasso 3 (Bm / C - Pergunta original da intro):
   N.D5, N._, N.B4, N._, N.G4, N._, N.A4, N._,
   N.B4, N._, N.G4, N._, N.E4, N._, N._,  N._,
 
-  // Compasso 4
+  // Compasso 4 (D / G - Resolução original da estrofe):
   N.D4, N._, N.E4, N._, N.G4, N._, N.A4, N._,
   N.G4, N._, N._,  N._, N._,  N._, N._,  N._,
+
+  // Compasso 5 (C Maior - Novas nuances líricas: subida suave e luminosa aos agudos):
+  N.B4, N._, N.D5, N._, N.E5, N._, N.G5, N._,
+  N.E5, N._, N.D5, N._, N.B4, N._, N._,  N._,
+
+  // Compasso 6 (Em7 - Voo gracioso sobre as árvores do vale):
+  N.A4, N._, N.B4, N._, N.D5, N._, N.B4, N._,
+  N.A4, N._, N.G4, N._, N.E4, N._, N._,  N._,
+
+  // Compasso 7 (Am7 -> D7 - Crescendo comovente e acolhedor):
+  N.E4, N._, N.G4, N._, N.A4, N._, N.B4, N._,
+  N.C5, N._, N.B4, N._, N.A4, N._, N._,  N._,
+
+  // Compasso 8 (G Maior - Resolução calorosa que retorna suavemente ao compasso 1):
+  N.B4, N._, N.A4, N._, N.G4, N._, N.E4, N._,
+  N.D4, N._, N.E4, N._, N.G4, N._, N._,  N._,
 ];
 
-const TITLE_HARMONY: number[] = [
-  // Compasso 1
-  N.B3, N._, N.D4, N._, N.G4, N._, N._,  N._,
-  N.Fs4, N._, N.E4, N._, N.C4, N._, N._,  N._,
+const VALLEY_HARMONY: number[] = [
+  // Compasso 1 (G -> C): Camas harmônicas longas e aveludadas
+  N.B3, N._, N._,  N._, N.D4, N._, N._,  N._,
+  N.G3, N._, N._,  N._, N.C4, N._, N._,  N._,
 
-  // Compasso 2
-  N.D4, N._, N.Fs4, N._, N.G4, N._, N.B4, N._,
-  N.G4, N._, N._,  N._, N.Fs4, N._, N._,  N._,
+  // Compasso 2 (Em -> D)
+  N.G3, N._, N._,  N._, N.B3, N._, N._,  N._,
+  N.Fs3, N._, N._, N._, N.A3, N._, N._,  N._,
 
-  // Compasso 3
-  N.B4, N._, N.G4, N._, N.D4, N._, N.Fs4, N._,
-  N.G4, N._, N.E4, N._, N.C4, N._, N._,  N._,
+  // Compasso 3 (Bm -> C)
+  N.Fs3, N._, N._, N._, N.B3, N._, N._,  N._,
+  N.G3, N._, N._,  N._, N.C4, N._, N._,  N._,
 
-  // Compasso 4
-  N.B3, N._, N.C4, N._, N.D4, N._, N.Fs4, N._,
-  N.D4, N._, N._,  N._, N._,  N._, N._,  N._,
+  // Compasso 4 (D -> G)
+  N.Fs3, N._, N._, N._, N.A3, N._, N._,  N._,
+  N.D3, N._, N._,  N._, N.G3, N._, N._,  N._,
+
+  // Compasso 5 (C)
+  N.G3, N._, N._,  N._, N.C4, N._, N._,  N._,
+  N.E3, N._, N._,  N._, N.G3, N._, N._,  N._,
+
+  // Compasso 6 (Em)
+  N.G3, N._, N._,  N._, N.B3, N._, N._,  N._,
+  N.E3, N._, N._,  N._, N.G3, N._, N._,  N._,
+
+  // Compasso 7 (Am -> D)
+  N.C3, N._, N._,  N._, N.E3, N._, N._,  N._,
+  N.Fs3, N._, N._, N._, N.A3, N._, N._,  N._,
+
+  // Compasso 8 (G)
+  N.G3, N._, N._,  N._, N.B3, N._, N._,  N._,
+  N.D3, N._, N._,  N._, N.G3, N._, N._,  N._,
 ];
 
-const TITLE_BASS: number[] = [
+const VALLEY_BASS: number[] = [
   // Compasso 1: G - C
   N.G2, N._, N.D3, N._, N.G3, N._, N.D3, N._,
   N.C3, N._, N.G3, N._, N.C4, N._, N.G3, N._,
@@ -1036,9 +945,25 @@ const TITLE_BASS: number[] = [
   // Compasso 4: D - G
   N.D3, N._, N.A3, N._, N.D4, N._, N.A3, N._,
   N.G2, N._, N.D3, N._, N.G3, N._, N._,  N._,
+
+  // Compasso 5: C
+  N.C3, N._, N.G3, N._, N.C4, N._, N.G3, N._,
+  N.C3, N._, N.G3, N._, N.E3, N._, N.G3, N._,
+
+  // Compasso 6: Em
+  N.E3, N._, N.B3, N._, N.E4, N._, N.B3, N._,
+  N.E3, N._, N.B3, N._, N.G2, N._, N.B2, N._,
+
+  // Compasso 7: Am - D
+  N.A2, N._, N.E3, N._, N.A3, N._, N.E3, N._,
+  N.D3, N._, N.A3, N._, N.D4, N._, N.A3, N._,
+
+  // Compasso 8: G
+  N.G2, N._, N.D3, N._, N.G3, N._, N.D3, N._,
+  N.G2, N._, N.D3, N._, N.G3, N._, N._,  N._,
 ];
 
-const TITLE_DRUMS: string[] = [
+const VALLEY_DRUMS: string[] = [
   // Compasso 1
   'H', '_', 'H', '_',  'S', '_', 'H', '_',
   'H', '_', 'H', '_',  'S', '_', 'H', '_',
@@ -1054,6 +979,22 @@ const TITLE_DRUMS: string[] = [
   // Compasso 4
   'H', '_', 'H', '_',  'S', '_', 'H', '_',
   'H', '_', 'H', '_',  'S', '_', 'H', '_',
+
+  // Compasso 5
+  'H', '_', 'H', '_',  'S', '_', 'H', '_',
+  'H', '_', 'H', '_',  'S', '_', 'H', '_',
+
+  // Compasso 6
+  'H', '_', 'H', '_',  'S', '_', 'H', '_',
+  'H', '_', 'H', '_',  'S', '_', 'H', '_',
+
+  // Compasso 7
+  'H', '_', 'H', '_',  'S', '_', 'H', '_',
+  'H', '_', 'H', '_',  'S', '_', 'H', '_',
+
+  // Compasso 8
+  'H', '_', 'H', '_',  'S', '_', 'H', '_',
+  'K', '_', 'H', '_',  'S', '_', 'H', '_',
 ];
 
 // --- TEMA DO CONTINUE SCREEN (80 BPM - Melancólico, Acolhedor & Determinado) ---
