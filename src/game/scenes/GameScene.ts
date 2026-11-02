@@ -309,55 +309,49 @@ export class GameScene extends Phaser.Scene {
     this.addWoodPlatform(3140, 126, 40, true, GROUND_Y);
     this.spawnStamp(3140, 110);
 
-    // PUZZLE PRINCIPAL (Tarefa 26): Chasm de 3420 a 3600
-    // Plataforma móvel de engrenagem que se ativa com tiro de estilingue
-    const secretPlatform = this.addMovingPlatform(3440, 108, 90, 0, 38);
-    secretPlatform.setVisible(false);
-    (secretPlatform.body as Phaser.Physics.Arcade.Body).enable = false;
+    // ROTA PRINCIPAL DO DESFILADEIRO (X: 3420 a 3600):
+    // Sempre acessível e fluida com plataformas rústicas e jangada móvel (sem bloqueios invisíveis)
+    // 1. Cais de madeira inicial
+    this.addWoodPlatform(3450, 126, 44, true, GROUND_Y);
+    this.spawnStamp(3450, 110);
 
-    // Alvo do Puzzle Comum (Sino de bronze em X: 3230)
-    const puzzleTarget = new PuzzleTarget(this, 3230, 94, () => {
-      secretPlatform.setVisible(true);
-      (secretPlatform.body as Phaser.Physics.Arcade.Body).enable = true;
-      const alert = addPixelText(this, 3230, 72, 'CAMINHO ABERTO!', {
+    // 2. Jangada móvel de madeira (oscila suavemente entre X: 3495 e 3535, Y: 114)
+    this.addMovingPlatform(3495, 114, 40, 0, 34);
+
+    // 3. Posto de desembarque com estacas firmes
+    this.addWoodPlatform(3575, 126, 44, true, GROUND_Y);
+    this.spawnStamp(3575, 110);
+
+    // SINO DE OURO (ALVO DE BÔNUS & SEGREDO EM X: 3260, Y: 94):
+    // Ao disparar o estilingue no sino, ele badala, solta uma chuva de moedas e revela rota secreta!
+    const secretHighPlatform = this.addWoodPlatform(3510, 56, 48, false, GROUND_Y, true);
+
+    const puzzleTarget = new PuzzleTarget(this, 3260, 94, () => {
+      GameState.get().recordDefeatEnemy(200); // Bônus de pontuação
+      secretHighPlatform.reveal();
+
+      // Chuva festiva de Selos de Ouro liberada pelo sino
+      [3230, 3250, 3270, 3290].forEach((sx, i) => {
+        this.spawnStamp(sx, 76 - (i % 2 === 0 ? 6 : 0));
+      });
+
+      const lifeItem = this.spawnLife(3510, 40);
+      this.tweens.add({
+        targets: lifeItem,
+        y: 36,
+        duration: 350,
+        yoyo: true,
+        repeat: 2,
+      });
+
+      const alert = addPixelText(this, 3260, 68, 'SINO DE OURO! +200 PTS & 1-UP!', {
         scale: 1,
-        color: 0xffef9b,
+        color: 0xfef08a,
         originX: 0.5,
         originY: 0.5,
       });
-      this.tweens.add({ targets: alert, alpha: 0, delay: 1200, duration: 400, onComplete: () => alert.destroy() });
+      this.tweens.add({ targets: alert, alpha: 0, delay: 1600, duration: 400, onComplete: () => alert.destroy() });
     });
-
-    // SEGREDO COM TIRO CARREGADO (Tarefa 27) & 1-UP ESCONDIDO (Tarefa 32)
-    // Plataforma secreta na copa alta (inicialmente oculta)
-    const secretHighPlatform = this.addWoodPlatform(3510, 56, 48, false, GROUND_Y, true);
-
-    // Alvo de Cristal Azul Reforçado colocado alto em X: 3320, Y: 62 (exige tiro carregado!)
-    const chargedTarget = new PuzzleTarget(
-      this,
-      3320,
-      62,
-      () => {
-        secretHighPlatform.reveal();
-        const lifeItem = this.spawnLife(3510, 40);
-        this.tweens.add({
-          targets: lifeItem,
-          y: 36,
-          duration: 350,
-          yoyo: true,
-          repeat: 2,
-        });
-
-        const alert = addPixelText(this, 3320, 42, 'SEGREDO! 1-UP DESBLOQUEADO!', {
-          scale: 1,
-          color: 0x93c5fd,
-          originX: 0.5,
-          originY: 0.5,
-        });
-        this.tweens.add({ targets: alert, alpha: 0, delay: 1600, duration: 400, onComplete: () => alert.destroy() });
-      },
-      true, // requireCharged = true!
-    );
 
     // SEGREDO 2 (Tarefa 30 - Exploração): Cartão-Postal #2 no alto
     this.addWoodPlatform(3620, 78, 48, false);
@@ -428,22 +422,11 @@ export class GameScene extends Phaser.Scene {
     // PORTAL DE VITÓRIA (Goal Gate / Chegada Festiva da Fase)
     this.spawnGoalGate(4750, GROUND_Y - 18);
 
-    // Escuta impacto de tiro nos alvos (comum e tiro carregado)
+    // Escuta impacto de tiro no Sino de Ouro
     this.events.on('check-target-hit', (projectile: Projectile) => {
       if (puzzleTarget.active && !puzzleTarget.isHit && Phaser.Geom.Intersects.RectangleToRectangle(projectile.getBounds(), puzzleTarget.getBounds())) {
         const wasTriggered = puzzleTarget.hit(projectile.charged);
         if (wasTriggered) projectile.destroy();
-      }
-
-      if (chargedTarget.active && !chargedTarget.isHit && Phaser.Geom.Intersects.RectangleToRectangle(projectile.getBounds(), chargedTarget.getBounds())) {
-        const wasTriggered = chargedTarget.hit(projectile.charged);
-        if (wasTriggered) {
-          projectile.destroy();
-        } else {
-          // Ricochete do tiro normal em alvo reforçado
-          this.spawnStoneImpact(projectile.x, projectile.y, false);
-          projectile.destroy();
-        }
       }
     });
   }
@@ -705,7 +688,7 @@ export class GameScene extends Phaser.Scene {
   private handlePlayerDied(): void {
     const isGameOver = GameState.get().loseLife();
 
-    this.time.delayedCall(800, () => {
+    this.time.delayedCall(1000, () => {
       if (isGameOver) {
         this.scene.stop(SCENE_KEYS.ui);
         this.scene.start(SCENE_KEYS.gameOver);

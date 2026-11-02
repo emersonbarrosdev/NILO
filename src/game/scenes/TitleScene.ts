@@ -526,45 +526,63 @@ export class TitleScene extends Phaser.Scene {
     this.controlsModal = this.add.container(0, 0).setDepth(2000);
 
     const backdrop = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x050b14, 0.92);
-    const box = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 250, 146, 0x112238, 1)
+    const box = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 260, 150, 0x0c1c2e, 1)
       .setStrokeStyle(1, 0x38bdf8, 1);
 
-    this.controlsModal.add([backdrop, box]);
+    const inner = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 254, 144, 0x000000, 0)
+      .setStrokeStyle(1, 0xf59e0b, 0.35);
 
-    const title = addPixelText(this, GAME_WIDTH / 2, 28, 'GUIA DE CONTROLES', {
+    this.controlsModal.add([backdrop, box, inner]);
+
+    const title = addPixelText(this, GAME_WIDTH / 2, 27, 'GUIA DE CONTROLES', {
       scale: 1,
       color: 0xfde047,
       originX: 0.5,
       originY: 0.5,
     });
+    this.controlsModal.add(title);
 
-    const info = addPixelText(
-      this,
-      GAME_WIDTH / 2,
-      74,
-      'TECLADO: A D/SETAS (MOVER)  W/ESPACO (PULO)  J/X (TIRO)\nMOUSE: APONTE E CLIQUE NOS MENUS\nCONTROLE PS5: D-PAD/STICK (MOVER)  [X] (PULO/ENTRAR)\n[O]/[] (ESTILINGUE/VOLTAR)  OPTIONS (PAUSA)',
-      {
+    // Linhas diretas, limpas e perfeitamente enquadradas dentro da moldura
+    const controls = [
+      { action: 'MOVER', keys: 'A, D / SETAS / D-PAD' },
+      { action: 'PULO', keys: 'ESPACO / W / [X] PS5' },
+      { action: 'ESTILINGUE', keys: 'J / X / [QUADRADO]' },
+      { action: 'PAUSA', keys: 'ESC / P / OPTIONS' },
+      { action: 'MENUS', keys: 'MOUSE / ENTER / [X]' },
+    ];
+
+    controls.forEach((ctrl, i) => {
+      const y = 46 + i * 15;
+      const actText = addPixelText(this, 40, y, ctrl.action, {
         scale: 1,
-        color: 0xe0f2fe,
-        originX: 0.5,
+        color: 0x93c5fd,
+        originX: 0,
         originY: 0.5,
-        lineSpacing: 3,
-      },
-    );
+      });
 
-    const closeBtnBg = this.add.rectangle(GAME_WIDTH / 2, 134, 160, 18, 0x1d4ed8, 0.8)
+      const keyText = addPixelText(this, 280, y, ctrl.keys, {
+        scale: 1,
+        color: 0xfffbeb,
+        originX: 1,
+        originY: 0.5,
+      });
+
+      this.controlsModal?.add([actText, keyText]);
+    });
+
+    const closeBtnBg = this.add.rectangle(GAME_WIDTH / 2, 134, 140, 16, 0x1d4ed8, 0.85)
       .setStrokeStyle(1, 0xfde047, 1)
       .setInteractive({ useHandCursor: true });
     closeBtnBg.on('pointerdown', () => this.closeControlsModal());
 
-    const closePrompt = addPixelText(this, GAME_WIDTH / 2, 134, 'CLIQUE OU ENTER - FECHAR', {
+    const closePrompt = addPixelText(this, GAME_WIDTH / 2, 134, 'ENTER / ESC - FECHAR', {
       scale: 1,
       color: 0xffffff,
       originX: 0.5,
       originY: 0.5,
     });
 
-    this.controlsModal.add([title, info, closeBtnBg, closePrompt]);
+    this.controlsModal.add([closeBtnBg, closePrompt]);
   }
 
   private closeControlsModal(): void {

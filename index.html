@@ -7,14 +7,28 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23286bb5'/><circle cx='8' cy='8' r='4' fill='%23ffd740'/></svg>" />
     <title>NILO</title>
     <script>
-      // Suprime ruído espúrio de extensões de terceiros do Chrome (ex: tradutores, adblock, antivírus, senhas)
-      // que deixam canais de mensagens abertos ao recarregar a página (erro clássico "message channel closed").
-      window.addEventListener('unhandledrejection', function (event) {
-        var msg = event.reason && (event.reason.message || String(event.reason));
-        if (typeof msg === 'string' && msg.indexOf('message channel closed before a response was received') !== -1) {
-          event.preventDefault();
+      // Suprime ruído espúrio de extensões de navegador injetadas na página (ex: tradutores, adblock, antivírus, carteiras)
+      // que deixam canais de mensagens abertos (erro clássico "A listener indicated an asynchronous response...").
+      function isExtensionChannelError(err) {
+        var msg = (err && (err.message || (err.reason && (err.reason.message || String(err.reason))) || String(err))) || '';
+        return typeof msg === 'string' && (
+          msg.indexOf('message channel closed') !== -1 ||
+          msg.indexOf('listener indicated an asynchronous response') !== -1
+        );
+      }
+      window.addEventListener('unhandledrejection', function (e) {
+        if (isExtensionChannelError(e.reason || e)) {
+          e.preventDefault();
+          if (e.stopImmediatePropagation) e.stopImmediatePropagation();
         }
-      });
+      }, true);
+      window.addEventListener('error', function (e) {
+        if (isExtensionChannelError(e.error || e.message || e)) {
+          e.preventDefault();
+          if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+          return true;
+        }
+      }, true);
     </script>
   </head>
   <body>

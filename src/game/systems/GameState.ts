@@ -59,7 +59,12 @@ export class GameState extends Phaser.Events.EventEmitter {
   }
 
   public addHp(amount = 1): void {
-    this.hp = Math.min(this.maxHp, this.hp + amount);
+    if (this.hp < this.maxHp) {
+      this.hp = Math.min(this.maxHp, this.hp + amount);
+    } else {
+      // Quando a saúde já estiver completa, corações extras acumulam diretamente como Vidas (+1-UP cumulativo!)
+      this.addLife(1);
+    }
     this.emit('hp-changed', this.hp, this.maxHp);
   }
 

@@ -309,6 +309,35 @@ export class AudioSystem {
     osc.stop(now + 0.26);
   }
 
+  public playPlayerDeath(): void {
+    if (this.isMuted) return;
+    const ctx = this.initCtx();
+    if (!ctx || ctx.state === 'suspended') return;
+    const now = ctx.currentTime;
+
+    const notes = [
+      { f: 329.63, d: 0.12 }, // E4
+      { f: 261.63, d: 0.12 }, // C4
+      { f: 196.00, d: 0.14 }, // G3
+      { f: 130.81, d: 0.35 }, // C3 (queda final)
+    ];
+
+    let t = now;
+    notes.forEach((note) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(note.f, t);
+      gain.gain.setValueAtTime(0.22, t);
+      gain.gain.linearRampToValueAtTime(0.001, t + note.d);
+      osc.connect(gain);
+      this.connectSfx(gain, ctx);
+      osc.start(t);
+      osc.stop(t + note.d);
+      t += note.d * 0.85;
+    });
+  }
+
   public playStamp(): void {
     if (this.isMuted) return;
     const ctx = this.initCtx();
@@ -816,74 +845,74 @@ const N = {
   _: 0,
 };
 
-// --- TEMA DA FASE 1-1 "VALE DA BRISA" (114 BPM - Suave, Melódico, Nostálgico & Ensolarado) ---
-// Suíte lírica de 8 compassos com respiração cantabile e harmonia rica em terças e sextas
+// --- TEMA DA FASE 1-1 "VALE DA BRISA" (114 BPM - Aventura, Ensolarado & Leitmotif da Intro) ---
+// Traz a melodia apaixonante da intro adaptada com swing, ritmo ágil e ricas nuances de aventura
 const STAGE_MELODY: number[] = [
-  // Compasso 1 (G Major): Frase inicial acolhedora e doce
+  // Compasso 1 (G Major): O tema icônico da intro com ritmo alegre e dançante
   N.D4, N._,  N.G4, N._,  N.B4, N._,  N._,  N.D5,
-  N._,  N.B4, N._,  N.G4, N.A4, N.B4, N.G4, N._,
+  N.D5, N.B4, N._,  N.G4, N.A4, N.B4, N.G4, N._,
 
   // Compasso 2 (Em7 / C Major): Voo suave sobre o vale
-  N.E4, N._,  N.G4, N._,  N.C5, N._,  N._,  N.B4,
-  N._,  N.A4, N._,  N.G4, N._,  N.E4, N._,  N._,
+  N.G4, N._,  N.A4, N._,  N.B4, N._,  N.D5, N._,
+  N.B4, N._,  N.A4, N.G4, N.A4, N._,  N._,  N._,
 
-  // Compasso 3 (Am7 -> D7): Pergunta expressiva com arabesco melódico
-  N.A4, N._,  N.C5, N._,  N.E5, N._,  N.D5, N._,
-  N.B4, N._,  N.A4, N._,  N.Fs4, N.G4, N.A4, N._,
+  // Compasso 3 (Bm7 / Em): Pergunta melódica da intro
+  N.D5, N._,  N.B4, N._,  N.G4, N.A4, N.B4, N._,
+  N.B4, N._,  N.G4, N._,  N.E4, N._,  N._,  N._,
 
-  // Compasso 4 (G Major): Resolução calorosa da estrofe
-  N.B4, N._,  N.D5, N._,  N.G4, N._,  N._,  N.A4,
-  N._,  N.B4, N._,  N.G4, N._,  N._,  N._,  N._,
+  // Compasso 4 (G Major): Resolução calorosa da primeira estrofe
+  N.D4, N._,  N.E4, N._,  N.G4, N._,  N.A4, N._,
+  N.G4, N._,  N.G4, N._,  N.G4, N._,  N._,  N._,
 
-  // Compasso 5 (C Major -> D/C): Abertura luminosa nos agudos (o sopro da brisa)
-  N.C5, N._,  N.E5, N._,  N.G5, N._,  N._,  N.E5,
-  N._,  N.D5, N._,  N.C5, N._,  N.D5, N._,  N._,
+  // Compasso 5 (C Major -> D): Nuance lírica subindo para os agudos com ar fresco
+  N.B4, N._,  N.D5, N._,  N.E5, N._,  N.G5, N._,
+  N.E5, N._,  N.D5, N._,  N.B4, N._,  N._,  N._,
 
-  // Compasso 6 (Bm7 -> Em7): Momento contemplativo e nostálgico
-  N.D5, N._,  N.Fs5, N._, N.B4, N._,  N._,  N.D5,
-  N._,  N.B4, N._,  N.G4, N._,  N.E4, N._,  N._,
+  // Compasso 6 (Bm7 -> Em7): Queda graciosa nos ventos do vale
+  N.D5, N._,  N.B4, N._,  N.G4, N._,  N.A4, N.B4,
+  N.G4, N._,  N.E4, N._,  N.D4, N._,  N._,  N._,
 
-  // Compasso 7 (Am7 -> D7): Crescendo melódico poético subindo com graça
+  // Compasso 7 (Am7 -> D7): Crescendo rítmico saltitante
   N.E4, N.Fs4, N.G4, N.A4, N.B4, N._,  N.C5, N._,
-  N.D5, N._,  N.E5, N._,  N.Fs5, N._, N.D5, N._,
+  N.D5, N._,  N.E5, N._,  N.D5, N.B4, N.A4, N._,
 
-  // Compasso 8 (G Major): Resolução triunfante e suave de volta pra casa
-  N.G5, N._,  N.D5, N._,  N.B4, N._,  N._,  N.C5,
-  N.B4, N.A4, N.G4, N.G4, N.G4, N._,  N._,  N._,
+  // Compasso 8 (G Major): Resolução triunfante de volta pra casa
+  N.G4, N._,  N.B4, N._,  N.D5, N._,  N.B4, N._,
+  N.G4, N._,  N.G4, N.A4, N.G4, N._,  N._,  N._,
 ];
 
 const STAGE_HARMONY: number[] = [
-  // Compasso 1: Terças aveludadas
+  // Compasso 1: Terças e sextas harmônicas aveludadas
   N.B3, N._,  N.D4, N._,  N.G4, N._,  N._,  N.B4,
-  N._,  N.G4, N._,  N.D4, N.E4, N.G4, N.D4, N._,
+  N.B4, N.G4, N._,  N.D4, N.E4, N.G4, N.D4, N._,
 
   // Compasso 2
-  N.C4, N._,  N.E4, N._,  N.G4, N._,  N._,  N.G4,
-  N._,  N.Fs4, N._, N.E4, N._,  N.C4, N._,  N._,
+  N.E4, N._,  N.Fs4, N._, N.G4, N._,  N.B4, N._,
+  N.G4, N._,  N.Fs4, N.E4, N.Fs4, N._, N._,  N._,
 
   // Compasso 3
-  N.Fs4, N._, N.A4, N._,  N.C5, N._,  N.B4, N._,
-  N.G4, N._,  N.Fs4, N._, N.D4, N.E4, N.Fs4, N._,
+  N.B4, N._,  N.G4, N._,  N.D4, N.Fs4, N.G4, N._,
+  N.G4, N._,  N.E4, N._,  N.C4, N._,  N._,  N._,
 
   // Compasso 4
-  N.G4, N._,  N.B4, N._,  N.D4, N._,  N._,  N.Fs4,
-  N._,  N.G4, N._,  N.D4, N._,  N._,  N._,  N._,
+  N.B3, N._,  N.C4, N._,  N.D4, N._,  N.Fs4, N._,
+  N.D4, N._,  N.D4, N._,  N.D4, N._,  N._,  N._,
 
   // Compasso 5
-  N.E4, N._,  N.G4, N._,  N.C5, N._,  N._,  N.C5,
-  N._,  N.B4, N._,  N.A4, N._,  N.B4, N._,  N._,
+  N.G4, N._,  N.B4, N._,  N.C5, N._,  N.E5, N._,
+  N.C5, N._,  N.B4, N._,  N.G4, N._,  N._,  N._,
 
   // Compasso 6
-  N.B4, N._,  N.D5, N._,  N.G4, N._,  N._,  N.B4,
-  N._,  N.G4, N._,  N.E4, N._,  N.C4, N._,  N._,
+  N.B4, N._,  N.G4, N._,  N.D4, N._,  N.Fs4, N.G4,
+  N.E4, N._,  N.C4, N._,  N.B3, N._,  N._,  N._,
 
   // Compasso 7
   N.C4, N.D4, N.E4, N.Fs4, N.G4, N._,  N.A4, N._,
-  N.B4, N._,  N.C5, N._,  N.D5, N._,  N.A4, N._,
+  N.B4, N._,  N.C5, N._,  N.B4, N.G4, N.Fs4, N._,
 
   // Compasso 8
-  N.B4, N._,  N.G4, N._,  N.D4, N._,  N._,  N.E4,
-  N.D4, N.C4, N.B3, N.B3, N.B3, N._,  N._,  N._,
+  N.D4, N._,  N.G4, N._,  N.B4, N._,  N.G4, N._,
+  N.D4, N._,  N.D4, N.Fs4, N.D4, N._,  N._,  N._,
 ];
 
 const STAGE_BASS: number[] = [

@@ -160,23 +160,51 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.scene.events.once('shutdown', () => blinkTween.stop());
   }
 
-  public handleDeath(isFall: boolean): void {
+  public handleDeath(_isFall: boolean): void {
     if (this.isDead) return;
     this.isDead = true;
 
-    AudioSystem.get().playPlayerHurt();
-    this.setVelocity(0, isFall ? 0 : -180);
+    const body = this.body as Phaser.Physics.Arcade.Body;
+    if (body) {
+      body.checkCollision.none = true;
+    }
 
-    this.scene.cameras.main.shake(200, 0.005);
+    AudioSystem.get().playPlayerDeath();
+    this.anims.stop();
+    this.setFrame(24); // Pose de choque / salto dramático
+    this.setVelocity(0, 0);
+
+    this.scene.cameras.main.shake(180, 0.004);
+
+    // Salto dramático para o alto com rotação no ar (estilo clássico Mario / Mega Man / DKC)
+    this.scene.time.delayedCall(80, () => {
+      if (body) {
+        body.setVelocityY(-260);
+        body.setVelocityX(this.facing * -20);
+      }
+      this.scene.tweens.add({
+        targets: this,
+        angle: this.facing * 360,
+        duration: 700,
+        ease: 'Linear',
+      });
+    });
+
     this.scene.events.emit('player-died');
   }
 
   public respawn(x: number, y: number): void {
     this.isDead = false;
     this.hasJumpedInAir = false;
+    this.setAngle(0);
     this.setPosition(x, y);
     this.setVelocity(0, 0);
     this.setAlpha(1);
+
+    const body = this.body as Phaser.Physics.Arcade.Body;
+    if (body) {
+      body.checkCollision.none = false;
+    }
 
     // Breve invulnerabilidade ao renascer
     this.isInvulnerable = true;

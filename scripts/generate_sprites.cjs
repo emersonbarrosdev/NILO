@@ -986,9 +986,10 @@ function save(filepath, canvas) {
 
 {
   const c = new PixelCanvas(7, 7);
-  c.circle(3, 3, 3, 0xf59e0b);
-  c.circle(3, 3, 2, 0x0284c7);
-  c.set(2, 2, 0xffffff);
+  c.circle(3, 3, 3, 0xb45309);
+  c.circle(3, 3, 2, 0xfbbf24);
+  c.set(3, 3, 0xffffff);
+  c.set(2, 2, 0xfef08a);
   save('src/assets/ui/ui-stamp-mini.png', c);
 }
 

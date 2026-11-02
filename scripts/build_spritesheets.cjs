@@ -311,49 +311,89 @@ class Canvas {
 }
 
 // --------------------------------------------------------------------------
-// 4. STAMP SPRITESHEET: 16x16 frames, 6 frames -> 96x16
-// Full 3D rotating gold postal coin seal with blue sapphire & star gleam
+// 4. STAMP SPRITESHEET (Selo Dourado do Vale - Estilo Mario Coin & DKC Banana Coin)
+// 16x16 frames, 6 frames -> 96x16
+// Moeda/Medalha redonda de ouro reluzente com estrela esculpida em relevo 3D
 // --------------------------------------------------------------------------
 {
   const c = new Canvas(96, 16);
-  const widths = [12, 10, 6, 3, 6, 10]; // Horizontal width across rotation
+  const widths = [14, 11, 7, 3, 7, 11]; // Larguras horizontais na rotação 3D
   for (let f = 0; f < 6; f++) {
     const fx = f * 16;
     const w = widths[f];
     const offX = Math.floor((16 - w) / 2);
 
-    // Gold rim
-    c.rect(fx + offX, 2, w, 12, 0x92400e);
-    c.rect(fx + offX + 1, 2, Math.max(1, w - 2), 12, 0xd97706);
-    c.rect(fx + offX + 1, 3, Math.max(1, w - 2), 10, 0xf59e0b);
-    c.rect(fx + offX + 1, 3, Math.max(1, w - 2), 2, 0xfef08a); // Top rim highlight
+    if (w >= 11) {
+      // Moeda de ouro ampla com bordas arredondadas
+      // Contorno bronze/cobre profundo
+      c.rect(fx + offX + 1, 1, w - 2, 14, 0x78350f);
+      c.rect(fx + offX, 2, w, 12, 0x78350f);
 
-    // Sapphire gem center
-    if (w >= 6) {
-      const gemW = Math.max(2, w - 4);
-      const gemOffX = Math.floor((16 - gemW) / 2);
-      c.rect(fx + gemOffX, 5, gemW, 6, 0x0369a1);
-      c.rect(fx + gemOffX, 6, gemW, 4, 0x0284c7);
-      c.rect(fx + gemOffX, 6, Math.max(1, gemW - 1), 2, 0x38bdf8);
-      // Star flare glint on frames 0 and 5
-      if (f === 0 || f === 5) {
-        c.set(fx + 8, 7, 0xffffff);
-        c.set(fx + 7, 7, 0xfffbeb);
-        c.set(fx + 9, 7, 0xfffbeb);
-        c.set(fx + 8, 6, 0xfffbeb);
-        c.set(fx + 8, 8, 0xfffbeb);
+      // Anel chanfrado dourado
+      c.rect(fx + offX + 1, 2, w - 2, 12, 0xb45309);
+      c.rect(fx + offX + 2, 2, w - 4, 1, 0xfef08a); // Brilho de sol no topo
+      c.rect(fx + offX + 2, 13, w - 4, 1, 0x92400e);
+
+      // Miolo dourado ensolarado
+      c.rect(fx + offX + 2, 3, w - 4, 10, 0xf59e0b);
+      c.rect(fx + offX + 2, 3, Math.max(1, w - 5), 8, 0xfbbf24);
+
+      // Estrela dourada de 4 pontas esculpida em relevo no miolo
+      const starCx = fx + 8;
+      const starCy = 8;
+      if (f === 0) {
+        // Face frontal total: estrela perfeita com relevo
+        c.rect(starCx - 1, starCy - 3, 2, 7, 0xfef9c3);
+        c.rect(starCx - 3, starCy - 1, 7, 2, 0xfef9c3);
+        c.set(starCx, starCy, 0xffffff); // Ponto de luz máxima
+        c.set(starCx - 1, starCy - 1, 0xffffff);
+        // Cantos chanfrados da estrela
+        c.set(starCx + 1, starCy + 1, 0xd97706);
+        c.set(starCx - 1, starCy + 1, 0xd97706);
+        c.set(starCx + 1, starCy - 1, 0xd97706);
+      } else {
+        // Perspectiva inclinada
+        const sW = Math.max(1, Math.floor(w * 0.4));
+        c.rect(starCx - Math.floor(sW / 2), starCy - 3, sW, 7, 0xfef9c3);
+        c.set(starCx, starCy, 0xffffff);
+        if (f === 5) {
+          // Flare de estrela cintilante
+          c.set(fx + offX + 2, 3, 0xffffff);
+          c.set(fx + offX + 3, 2, 0xffffff);
+          c.set(fx + offX + 3, 4, 0xffffff);
+        }
       }
+    } else if (w >= 7) {
+      // Rotação intermediária
+      c.rect(fx + offX, 2, w, 12, 0x78350f);
+      c.rect(fx + offX + 1, 2, w - 2, 12, 0xb45309);
+      c.rect(fx + offX + 1, 3, w - 2, 10, 0xfbbf24);
+      c.rect(fx + offX + 2, 3, Math.max(1, w - 4), 8, 0xfef08a);
+      c.rect(fx + offX + 1, 2, w - 2, 1, 0xffffff);
     } else {
-      // Thin edge shine
-      c.rect(fx + offX, 4, w, 8, 0xfffbeb);
+      // Perfil de borda fina (ingot lateral de ouro com brilho vertical)
+      c.rect(fx + offX, 1, w, 14, 0x78350f);
+      c.rect(fx + offX + 1, 2, 1, 12, 0xfef08a);
+      c.rect(fx + offX + 1, 4, 1, 8, 0xffffff);
     }
   }
   c.save('src/assets/sprites/item-stamp-sheet.png');
+
+  // Salva também o sprite estático correspondente ao Frame 0
+  const staticC = new Canvas(16, 16);
+  for (let y = 0; y < 16; y++) {
+    for (let x = 0; x < 16; x++) {
+      const idx = (y * 96 + x) * 4;
+      staticC.set(x, y, (c.buf[idx] << 16) | (c.buf[idx + 1] << 8) | c.buf[idx + 2], c.buf[idx + 3]);
+    }
+  }
+  staticC.save('src/assets/sprites/item-stamp.png');
 }
 
 // --------------------------------------------------------------------------
-// 5. HEART SPRITESHEET: 14x14 frames, 4 frames -> 56x14
-// Pulsing & gleaming ruby heart
+// 5. HEART SPRITESHEET (Rubi Escarlate Lapidado - Estilo Zelda / Mario)
+// 14x14 frames, 4 frames -> 56x14
+// Rubi suculento, arredondado e pulsante com reflexo de gota d'água
 // --------------------------------------------------------------------------
 {
   const c = new Canvas(56, 14);
@@ -362,30 +402,41 @@ class Canvas {
     const fx = f * 14;
     const p = pulses[f];
 
-    // Dark contour
-    c.rect(fx + 2 - p, 1 - p, 4 + p, 2 + p, 0x450a0a);
-    c.rect(fx + 8, 1 - p, 4 + p, 2 + p, 0x450a0a);
-    c.rect(fx + 1 - p, 2 - p, 12 + p * 2, 5 + p, 0x450a0a);
-    c.rect(fx + 2 - p, 7, 10 + p * 2, 3, 0x450a0a);
-    c.rect(fx + 4 - p, 10, 6 + p * 2, 2, 0x450a0a);
-    c.rect(fx + 6, 12, 2, 1 + p, 0x450a0a);
+    // Contorno carmim profundo
+    c.rect(fx + 2 - p, 1 - p, 4 + p, 2 + p, 0x4c0519);
+    c.rect(fx + 8, 1 - p, 4 + p, 2 + p, 0x4c0519);
+    c.rect(fx + 1 - p, 2 - p, 12 + p * 2, 5 + p, 0x4c0519);
+    c.rect(fx + 2 - p, 7, 10 + p * 2, 3, 0x4c0519);
+    c.rect(fx + 4 - p, 10, 6 + p * 2, 2, 0x4c0519);
+    c.rect(fx + 6, 12, 2, 1 + p, 0x4c0519);
 
-    // Heart interior
-    c.rect(fx + 2 - p, 2 - p, 4 + p, 3 + p, 0xf87171);
-    c.rect(fx + 8, 2 - p, 4 + p, 3 + p, 0xef4444);
-    c.rect(fx + 2 - p, 5, 10 + p * 2, 3, 0xdc2626);
-    c.rect(fx + 3 - p, 8, 8 + p * 2, 2, 0xb91c1c);
-    c.rect(fx + 5, 10, 4, 2, 0x991b1b);
+    // Coração rubi vibrante
+    c.rect(fx + 2 - p, 2 - p, 4 + p, 3 + p, 0xf43f5e);
+    c.rect(fx + 8, 2 - p, 4 + p, 3 + p, 0xe11d48);
+    c.rect(fx + 2 - p, 5, 10 + p * 2, 3, 0xe11d48);
+    c.rect(fx + 3 - p, 8, 8 + p * 2, 2, 0xbe123c);
+    c.rect(fx + 5, 10, 4, 2, 0x9f1239);
 
-    // Specular glint
+    // Destaque de luz branca e reflexo sedoso
     c.set(fx + 3 - p, 2 - p, 0xffffff);
     c.set(fx + 4 - p, 2 - p, 0xffffff);
     c.set(fx + 3 - p, 3 - p, 0xffffff);
+    c.set(fx + 4 - p, 3 - p, 0xfecdd3);
     if (f === 1 || f === 2) {
       c.set(fx + 9, 3, 0xffffff);
     }
   }
   c.save('src/assets/sprites/item-heart-sheet.png');
+
+  // Salva também o sprite estático correspondente
+  const staticHeart = new Canvas(14, 14);
+  for (let y = 0; y < 14; y++) {
+    for (let x = 0; x < 14; x++) {
+      const idx = (y * 56 + x) * 4;
+      staticHeart.set(x, y, (c.buf[idx] << 16) | (c.buf[idx + 1] << 8) | c.buf[idx + 2], c.buf[idx + 3]);
+    }
+  }
+  staticHeart.save('src/assets/sprites/item-heart.png');
 }
 
 // --------------------------------------------------------------------------

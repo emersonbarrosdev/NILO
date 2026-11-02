@@ -82,7 +82,7 @@ export class AudioSettingsModal {
     this.renderRows();
 
     // Botão interativo de Fechar e Salvar (Mouse / Teclado / Controle)
-    const closeBtnBg = this.scene.add.rectangle(GAME_WIDTH / 2, 136, 170, 18, 0x1d4ed8, 0.8)
+    const closeBtnBg = this.scene.add.rectangle(GAME_WIDTH / 2, 134, 150, 16, 0x1d4ed8, 0.85)
       .setStrokeStyle(1, 0xfde047, 1)
       .setInteractive({ useHandCursor: true })
       .setDepth(8004);
@@ -92,8 +92,8 @@ export class AudioSettingsModal {
     const footer = addPixelText(
       this.scene,
       GAME_WIDTH / 2,
-      136,
-      'CLIQUE OU [O]/ESC : FECHAR E SALVAR',
+      134,
+      'ENTER / ESC / [O] - FECHAR',
       {
         scale: 1,
         color: 0xffffff,
@@ -143,23 +143,23 @@ export class AudioSettingsModal {
 
     const items = [
       {
-        label: 'VOLUME GERAL',
+        label: 'GERAL',
         value: Math.round(audio.getMasterVolume() * 100),
         isBar: true,
       },
       {
-        label: 'MUSICA (BGM)',
+        label: 'MUSICA',
         value: Math.round(audio.getBgmVolume() * 100),
         isBar: true,
       },
       {
-        label: 'EFEITOS (SFX)',
+        label: 'EFEITOS',
         value: Math.round(audio.getSfxVolume() * 100),
         isBar: true,
       },
       {
-        label: 'SILENCIAR',
-        valueText: audio.getMuted() ? '[ SIM - MUDO ]' : '[ NAO ]',
+        label: 'MUDO',
+        valueText: audio.getMuted() ? '[ SIM ]' : '[ NAO ]',
         isBar: false,
       },
     ];
