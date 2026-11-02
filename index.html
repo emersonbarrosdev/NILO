@@ -16,6 +16,19 @@
           msg.indexOf('listener indicated an asynchronous response') !== -1
         );
       }
+
+      // Intercepta console.error para suprimir mensagens de extensões no DevTools
+      var origError = console.error;
+      console.error = function () {
+        var text = Array.prototype.slice.call(arguments).map(function (a) {
+          return (a && (a.message || a.stack || String(a))) || '';
+        }).join(' ');
+        if (text.indexOf('message channel closed') !== -1 || text.indexOf('listener indicated an asynchronous response') !== -1) {
+          return;
+        }
+        return origError.apply(console, arguments);
+      };
+
       window.addEventListener('unhandledrejection', function (e) {
         if (isExtensionChannelError(e.reason || e)) {
           e.preventDefault();
