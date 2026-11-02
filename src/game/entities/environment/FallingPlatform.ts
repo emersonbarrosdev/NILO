@@ -124,3 +124,4 @@ export class FallingPlatform extends Phaser.Physics.Arcade.Sprite {
     });
   }
 }
+

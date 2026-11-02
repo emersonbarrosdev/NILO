@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GameState } from '../../systems/GameState';
 import { AudioSystem } from '../../systems/AudioSystem';
+import { addPixelText } from '../../ui/PixelText';
 
 export class Postcard extends Phaser.Physics.Arcade.Sprite {
   public id: string;
@@ -35,6 +36,23 @@ export class Postcard extends Phaser.Physics.Arcade.Sprite {
 
     AudioSystem.get().playPostcard();
     GameState.get().collectPostcard(this.id);
+
+    // Feedback flutuante em pixel art
+    const notice = addPixelText(this.scene, Math.round(this.x), Math.round(this.y - 14), 'POSTAL SECRETO! +500', {
+      scale: 1,
+      color: 0x38bdf8,
+      originX: 0.5,
+      originY: 0.5,
+      depth: 25,
+    });
+    this.scene.tweens.add({
+      targets: notice,
+      y: notice.y - 18,
+      alpha: 0,
+      duration: 800,
+      ease: 'Cubic.easeOut',
+      onComplete: () => notice.destroy(),
+    });
 
     // Efeito de brilho de segredo descoberto
     const shine = this.scene.add.graphics().setDepth(15);

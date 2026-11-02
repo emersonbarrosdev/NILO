@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { GameState } from '../../systems/GameState';
 import { AudioSystem } from '../../systems/AudioSystem';
 import { Player } from '../Player';
+import { addPixelText } from '../../ui/PixelText';
 
 export abstract class EnemyBase extends Phaser.Physics.Arcade.Sprite {
   public hp = 1;
@@ -159,19 +160,19 @@ export abstract class EnemyBase extends Phaser.Physics.Arcade.Sprite {
   }
 
   public showFloatingNotice(text: string, color: number): void {
-    const notice = this.scene.add.text(this.x, this.y - 14, text, {
-      fontFamily: 'monospace',
-      fontSize: '8px',
-      color: '#' + color.toString(16).padStart(6, '0'),
-      stroke: '#000000',
-      strokeThickness: 2,
-    }).setOrigin(0.5).setDepth(25);
+    const notice = addPixelText(this.scene, Math.round(this.x), Math.round(this.y - 14), text, {
+      scale: 1,
+      color,
+      originX: 0.5,
+      originY: 0.5,
+      depth: 25,
+    });
 
     this.scene.tweens.add({
       targets: notice,
       y: notice.y - 16,
       alpha: 0,
-      duration: 600,
+      duration: 650,
       ease: 'Cubic.easeOut',
       onComplete: () => notice.destroy(),
     });

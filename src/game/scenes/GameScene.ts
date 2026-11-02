@@ -29,6 +29,7 @@ export class GameScene extends Phaser.Scene {
   private readonly enemies: (BeetleEnemy | HopperEnemy | DragonflyEnemy)[] = [];
   private readonly movingPlatforms: MovingPlatform[] = [];
   private readonly fallingPlatforms: FallingPlatform[] = [];
+  private readonly windLeaves: { g: Phaser.GameObjects.Graphics; x: number; y: number; speedX: number; speedY: number; wobble: number }[] = [];
   private isPaused = false;
   private pauseMenuContainer?: Phaser.GameObjects.Container;
   private pauseSelectedIndex = 0;
@@ -85,6 +86,7 @@ export class GameScene extends Phaser.Scene {
     // Cenários de Fundo com Parallax e Decorações Firmadas no Solo
     this.drawParallaxBackdrop(worldWidth);
     this.drawWorldDecor();
+    this.createWindBreeze();
 
     // Colisões do Player com superfícies sólidas
     for (const surface of this.solidSurfaces) {
@@ -124,6 +126,8 @@ export class GameScene extends Phaser.Scene {
     this.events.once('shutdown', () => {
       this.input.keyboard?.off('keydown-ESC', this.onPauseKey);
       this.input.keyboard?.off('keydown-P', this.onPauseKey);
+      this.windLeaves.forEach((l) => l.g.destroy());
+      this.windLeaves.length = 0;
       this.scene.stop(SCENE_KEYS.ui);
       AudioSystem.get().stopBgm();
     });
@@ -176,6 +180,18 @@ export class GameScene extends Phaser.Scene {
       if (fp.active && this.player) {
         fp.checkPlayerStep(this.player);
       }
+    }
+
+    // Atualiza folhas flutuando suavemente com a brisa alpina
+    for (const leaf of this.windLeaves) {
+      leaf.x -= leaf.speedX * (delta / 1000);
+      leaf.y += Math.sin(leaf.wobble) * 0.4 + leaf.speedY * (delta / 1000);
+      if (this.player && leaf.x < this.player.x - 200) {
+        leaf.x = this.player.x + 220;
+        leaf.y = Phaser.Math.Between(20, 140);
+      }
+      leaf.g.setPosition(leaf.x, leaf.y);
+      leaf.g.setAngle(Math.sin(leaf.wobble) * 25);
     }
   }
 
@@ -323,6 +339,33 @@ export class GameScene extends Phaser.Scene {
     // SINO DE OURO (ALVO DE BÔNUS E SEGREDO 100% OPCIONAL EM X: 3260, Y: 94):
     // Nunca bloqueia a passagem! Disparar nele toca o sino, libera chuva de moedas e 1-UP!
     const secretHighPlatform = this.addWoodPlatform(3510, 56, 48, false, GROUND_Y, true);
+
+    // Armação rústica do Campanário do Sino
+    for (let py = GROUND_Y - 16; py >= 78; py -= 32) {
+      this.add.image(3248, py, 'platform-stilt').setDepth(2);
+    }
+    this.add.image(3256, 76, 'tile-wood-plank').setDepth(3);
+    this.add.image(3248, 82, 'platform-bracket').setDepth(2);
+    const chainGfx = this.add.graphics().setDepth(3);
+    chainGfx.fillStyle(0x475569, 1).fillRect(3260 - 1, 78, 2, 8);
+
+    // Plaquinha informativa na base do campanário
+    this.add.image(3260, 138, 'decor-signpost').setDepth(2);
+    const signText = addPixelText(this, 3260, 120, 'ATIRE AQUI!', {
+      scale: 1,
+      color: 0xfef08a,
+      originX: 0.5,
+      originY: 0.5,
+      depth: 4,
+    });
+    this.tweens.add({
+      targets: signText,
+      y: 118,
+      duration: 600,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
 
     const puzzleTarget = new PuzzleTarget(this, 3260, 94, () => {
       GameState.get().recordDefeatEnemy(200);
@@ -1145,6 +1188,36 @@ export class GameScene extends Phaser.Scene {
           this.add.image(postX + 16, seg.surfaceY - 14, 'decor-bunting').setDepth(2);
         }
       }
+    }
+  }
+
+  private createWindBreeze(): void {
+    const colors = [0x74c69d, 0x52b788, 0xfde047, 0xfbbf24];
+    for (let i = 0; i < 14; i++) {
+      const g = this.add.graphics().setDepth(14);
+      g.fillStyle(Phaser.Utils.Array.GetRandom(colors), 0.85);
+      g.fillRect(-2, -1, 4, 2);
+
+      const leaf = {
+        g,
+        x: Phaser.Math.Between(0, 6000),
+        y: Phaser.Math.Between(20, 150),
+        speedX: Phaser.Math.FloatBetween(22, 45),
+        speedY: Phaser.Math.FloatBetween(8, 20),
+        wobble: Phaser.Math.FloatBetween(0, Math.PI * 2),
+      };
+
+      g.setPosition(leaf.x, leaf.y);
+
+      this.tweens.add({
+        targets: leaf,
+        wobble: leaf.wobble + Math.PI * 4,
+        duration: Phaser.Math.Between(1800, 3200),
+        repeat: -1,
+        yoyo: true,
+      });
+
+      this.windLeaves.push(leaf);
     }
   }
 }

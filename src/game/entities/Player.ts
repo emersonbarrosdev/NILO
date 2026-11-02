@@ -109,6 +109,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (grounded && !this.wasGrounded && body.velocity.y >= 0) {
       this.landPoseUntil = time + LAND_POSE_MS;
       this.play('player-land', true);
+      this.spawnDustParticle(this.x - 5, this.y + 12, -1, -0.4);
+      this.spawnDustParticle(this.x + 5, this.y + 12, 1, -0.4);
     }
 
     this.wasGrounded = grounded;
@@ -305,6 +307,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.lastGroundedAt = Number.NEGATIVE_INFINITY;
       this.play('player-jump', true);
       AudioSystem.get().playJump();
+      this.spawnDustParticle(this.x - 4, this.y + 12, -0.8, 0.2);
+      this.spawnDustParticle(this.x + 4, this.y + 12, 0.8, 0.2);
     }
 
     const jumpHeld =
@@ -460,6 +464,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     if (movingAgainstVelocity) {
       this.play('player-skid', true);
+      if (Phaser.Math.Between(0, 10) > 6) {
+        this.spawnDustParticle(this.x - this.facing * 7, this.y + 12, -this.facing * 1.2, -0.3);
+      }
       return;
     }
 
@@ -479,5 +486,27 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     this.play('player-idle', true);
+  }
+
+  private spawnDustParticle(x: number, y: number, velX: number, velY: number): void {
+    if (!this.scene) return;
+    const dust = this.scene.add.graphics().setDepth(8);
+    dust.fillStyle(0xfef9c3, 0.85);
+    dust.fillRect(-1, -1, 3, 3);
+    dust.fillStyle(0xffffff, 0.95);
+    dust.fillRect(0, 0, 1, 1);
+    dust.setPosition(x, y);
+
+    this.scene.tweens.add({
+      targets: dust,
+      x: x + velX * 10,
+      y: y + velY * 5,
+      scaleX: 0.3,
+      scaleY: 0.3,
+      alpha: 0,
+      duration: 220,
+      ease: 'Cubic.easeOut',
+      onComplete: () => dust.destroy(),
+    });
   }
 }
