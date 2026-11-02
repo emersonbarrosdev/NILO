@@ -27,7 +27,7 @@ export class PuzzleTarget extends Phaser.Physics.Arcade.Sprite {
     }
 
     const body = this.body as Phaser.Physics.Arcade.StaticBody;
-    body.setSize(16, 16);
+    body.setSize(22, 22);
   }
 
   public hit(isCharged = false): boolean {

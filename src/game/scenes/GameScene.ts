@@ -29,6 +29,7 @@ export class GameScene extends Phaser.Scene {
   private readonly enemies: (BeetleEnemy | HopperEnemy | DragonflyEnemy)[] = [];
   private readonly movingPlatforms: MovingPlatform[] = [];
   private readonly fallingPlatforms: FallingPlatform[] = [];
+  private puzzleTarget?: PuzzleTarget;
   private readonly windLeaves: { g: Phaser.GameObjects.Graphics; x: number; y: number; speedX: number; speedY: number; wobble: number }[] = [];
   private isPaused = false;
   private pauseMenuContainer?: Phaser.GameObjects.Container;
@@ -349,9 +350,9 @@ export class GameScene extends Phaser.Scene {
     const chainGfx = this.add.graphics().setDepth(3);
     chainGfx.fillStyle(0x475569, 1).fillRect(3260 - 1, 78, 2, 8);
 
-    // Degraus rústicos de madeira para subir no campanário (fácil alcance a pé)
+    // Degraus rústicos de madeira para subir no campanário (fácil alcance a pé sem bloquear o sino)
     this.addWoodPlatform(3215, 122, 34, true, GROUND_Y);
-    this.addWoodPlatform(3280, 96, 34, false);
+    this.addWoodPlatform(3305, 108, 34, false);
 
     // Plaquinha informativa na base do campanário
     this.add.image(3260, 138, 'decor-signpost').setDepth(2);
@@ -371,7 +372,7 @@ export class GameScene extends Phaser.Scene {
       ease: 'Sine.easeInOut',
     });
 
-    const puzzleTarget = new PuzzleTarget(this, 3260, 94, () => {
+    this.puzzleTarget = new PuzzleTarget(this, 3260, 94, () => {
       GameState.get().recordDefeatEnemy(200);
       secretHighPlatform.reveal();
 
@@ -557,14 +558,6 @@ export class GameScene extends Phaser.Scene {
 
     // PORTAL DE VITÓRIA (Goal Gate) no cume da montanha!
     this.spawnGoalGate(5950, GROUND_Y - 18);
-
-    // Escuta impacto de tiro no Sino de Ouro
-    this.events.on('check-target-hit', (projectile: Projectile) => {
-      if (puzzleTarget.active && !puzzleTarget.isHit && Phaser.Geom.Intersects.RectangleToRectangle(projectile.getBounds(), puzzleTarget.getBounds())) {
-        const wasTriggered = puzzleTarget.hit(projectile.charged);
-        if (wasTriggered) projectile.destroy();
-      }
-    });
   }
 
   // --- SPAWNERS COM OVERLAPS SEGUROS ---
@@ -752,6 +745,18 @@ export class GameScene extends Phaser.Scene {
   private handlePlayerShot(projectile: Projectile): void {
     this.alignProjectileWithSlingshot(projectile);
 
+    // Impacto no Sino de Ouro (PuzzleTarget) verificado continuamente pelo motor de física durante o voo
+    if (this.puzzleTarget && this.puzzleTarget.active && !this.puzzleTarget.isHit) {
+      this.physics.add.overlap(projectile, this.puzzleTarget, () => {
+        if (!projectile.active || !this.puzzleTarget || this.puzzleTarget.isHit) return;
+        this.spawnStoneImpact(projectile.x, projectile.y, projectile.charged);
+        const wasTriggered = this.puzzleTarget.hit(projectile.charged);
+        if (wasTriggered) {
+          projectile.destroy();
+        }
+      });
+    }
+
     for (const surface of this.solidSurfaces) {
       this.physics.add.collider(projectile, surface, () => {
         if (!projectile.active) return;
@@ -768,8 +773,6 @@ export class GameScene extends Phaser.Scene {
         projectile.destroy();
       });
     }
-
-    this.events.emit('check-target-hit', projectile);
   }
 
   private setupEnemyCollisions(enemy: BeetleEnemy | HopperEnemy | DragonflyEnemy): void {
