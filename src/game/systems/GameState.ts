@@ -43,7 +43,7 @@ export class GameState extends Phaser.Events.EventEmitter {
     this.currentStage = stageId;
     this.lives = Math.max(3, this.lives);
     this.hp = 3;
-    this.maxHp = Math.max(this.maxHp, this.hp);
+    this.maxHp = 3;
     this.stamps = 0;
     this.postcards.clear();
     this.enemiesDefeated = 0;
@@ -61,13 +61,14 @@ export class GameState extends Phaser.Events.EventEmitter {
   }
 
   public addHp(amount = 1): void {
-    // Vidas e Corações 100% cumulativos: 3 -> 4 -> 5 -> 6... sem teto artificial!
-    this.hp += amount;
-    this.lives += amount;
-    this.maxHp = Math.max(this.maxHp, this.hp);
-    SaveSystem.get().save({ lives: this.lives });
+    // Coração Vermelho: Saúde / HP (vida atual do personagem na fase)
+    // Recupera a saúde até o máximo de 3 corações. Se já estiver cheio (3/3), concede bônus de pontuação!
+    if (this.hp < this.maxHp) {
+      this.hp = Math.min(this.maxHp, this.hp + amount);
+    } else {
+      this.addScore(250);
+    }
     this.emit('hp-changed', this.hp, this.maxHp);
-    this.emit('lives-changed', this.lives);
   }
 
   public takeDamage(amount = 1): boolean {
@@ -93,13 +94,11 @@ export class GameState extends Phaser.Events.EventEmitter {
   }
 
   public addLife(amount = 1): void {
-    // Vidas acumulativas infinitas
+    // Boné Azul: Contador de Vidas Extras / 1-UP (Continues acumulativos)
+    // 100% cumulativo: X3 -> X4 -> X5 -> X6... sem limite!
     this.lives += amount;
-    this.hp += amount;
-    this.maxHp = Math.max(this.maxHp, this.hp);
     SaveSystem.get().save({ lives: this.lives });
     this.emit('lives-changed', this.lives);
-    this.emit('hp-changed', this.hp, this.maxHp);
   }
 
   public loseLife(): boolean {
