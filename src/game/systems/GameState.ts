@@ -42,8 +42,8 @@ export class GameState extends Phaser.Events.EventEmitter {
   public startStage(stageId: string, startX = 40, startY = 130): void {
     this.currentStage = stageId;
     this.lives = Math.max(3, this.lives);
-    this.hp = 3;
-    this.maxHp = 3;
+    this.hp = this.lives;
+    this.maxHp = this.lives;
     this.stamps = 0;
     this.postcards.clear();
     this.enemiesDefeated = 0;
@@ -61,20 +61,26 @@ export class GameState extends Phaser.Events.EventEmitter {
   }
 
   public addHp(amount = 1): void {
-    // Coração Vermelho: Saúde / HP (vida atual do personagem na fase)
-    // Recupera a saúde até o máximo de 3 corações. Se já estiver cheio (3/3), concede bônus de pontuação!
-    if (this.hp < this.maxHp) {
-      this.hp = Math.min(this.maxHp, this.hp + amount);
-    } else {
-      this.addScore(250);
-    }
-    this.emit('hp-changed', this.hp, this.maxHp);
+    this.addLife(amount);
+  }
+
+  public addLife(amount = 1): void {
+    // Sistema Único de Corações: 100% cumulativo (3 -> 4 -> 5 -> 6... sem teto artificial!)
+    this.lives += amount;
+    this.hp = this.lives;
+    this.maxHp = Math.max(this.maxHp, this.lives);
+    SaveSystem.get().save({ lives: this.lives });
+    this.emit('lives-changed', this.lives);
+    this.emit('hp-changed', this.lives, this.maxHp);
   }
 
   public takeDamage(amount = 1): boolean {
-    this.hp = Math.max(0, this.hp - amount);
-    this.emit('hp-changed', this.hp, this.maxHp);
-    return this.hp <= 0;
+    this.lives = Math.max(0, this.lives - amount);
+    this.hp = this.lives;
+    SaveSystem.get().save({ lives: this.lives });
+    this.emit('lives-changed', this.lives);
+    this.emit('hp-changed', this.lives, this.maxHp);
+    return this.lives <= 0;
   }
 
   public addStamps(amount = 1): boolean {
@@ -93,20 +99,12 @@ export class GameState extends Phaser.Events.EventEmitter {
     return earnedLife;
   }
 
-  public addLife(amount = 1): void {
-    // Boné Azul: Contador de Vidas Extras / 1-UP (Continues acumulativos)
-    // 100% cumulativo: X3 -> X4 -> X5 -> X6... sem limite!
-    this.lives += amount;
-    SaveSystem.get().save({ lives: this.lives });
-    this.emit('lives-changed', this.lives);
-  }
-
   public loseLife(): boolean {
     this.lives = Math.max(0, this.lives - 1);
-    this.hp = 3; // Restaura HP para o respawn
+    this.hp = this.lives;
     SaveSystem.get().save({ lives: this.lives });
     this.emit('lives-changed', this.lives);
-    this.emit('hp-changed', this.hp, this.maxHp);
+    this.emit('hp-changed', this.lives, this.maxHp);
     return this.lives <= 0; // true se Game Over
   }
 
@@ -142,8 +140,10 @@ export class GameState extends Phaser.Events.EventEmitter {
 
   public continueGame(): void {
     this.lives = 3;
-    this.hp = this.maxHp;
+    this.hp = 3;
+    this.maxHp = 3;
     SaveSystem.get().save({ lives: 3 });
+    this.emitChange();
   }
 
   public emitChange(): void {

@@ -5,8 +5,6 @@ import { addPixelText } from '../ui/PixelText';
 
 export class UIScene extends Phaser.Scene {
   private heartIcon?: Phaser.GameObjects.Image;
-  private hpText?: Phaser.GameObjects.GameObject;
-  private capIcon?: Phaser.GameObjects.Image;
   private livesText?: Phaser.GameObjects.GameObject;
   private stampIcon?: Phaser.GameObjects.Image;
   private stampsText?: Phaser.GameObjects.GameObject;
@@ -24,26 +22,14 @@ export class UIScene extends Phaser.Scene {
     // (Não cobre a tela inteira com barra escura; visual moderno de plataforma)
     // =========================================================================
 
-    // 1. CÁPSULA ESQUERDA: Saúde (Coração Único Dinâmico) & Vidas (X: 4 -> 80)
-    this.add.rectangle(42, 11, 76, 17, 0x091424, 0.84)
+    // 1. CÁPSULA ESQUERDA: Sistema Único de Corações (Vidas Diretas do Nilo) (X: 4 -> 56)
+    this.add.rectangle(30, 11, 52, 17, 0x091424, 0.84)
       .setStrokeStyle(1, 0x38bdf8, 0.65)
       .setScrollFactor(0)
       .setDepth(1000);
 
-    // Coração Único Lapidado
-    this.heartIcon = this.add.image(13, 11, 'item-heart')
-      .setScrollFactor(0)
-      .setDepth(1001);
-
-    this.renderHp(gameState.hp);
-
-    // Divisória sutil
-    this.add.rectangle(39, 11, 1, 11, 0x38bdf8, 0.35)
-      .setScrollFactor(0)
-      .setDepth(1001);
-
-    // Boné 1-UP do Nilo
-    this.capIcon = this.add.image(49, 11, 'item-life')
+    // Coração Único Lapidado (Sua Vida Direta)
+    this.heartIcon = this.add.image(15, 11, 'item-heart')
       .setScrollFactor(0)
       .setDepth(1001);
 
@@ -108,11 +94,11 @@ export class UIScene extends Phaser.Scene {
     };
 
     // Listeners com animações reativas de impacto e comemoração
-    const onHpChanged = (hp: number) => {
+    const onLivesChanged = (lives: number) => {
       if (!isAlive()) return;
-      this.renderHp(hp);
+      this.renderLives(lives);
 
-      // Efeito de pulso no coração ao sofrer dano ou curar
+      // Efeito de pulso no coração ao sofrer dano ou ganhar vidas
       if (this.heartIcon && this.heartIcon.active) {
         this.tweens.add({
           targets: this.heartIcon,
@@ -124,20 +110,8 @@ export class UIScene extends Phaser.Scene {
       }
     };
 
-    const onLivesChanged = (lives: number) => {
-      if (!isAlive()) return;
-      this.renderLives(lives);
-
-      // Comemoração ao ganhar 1-UP
-      if (this.capIcon && this.capIcon.active) {
-        this.tweens.add({
-          targets: this.capIcon,
-          y: 7,
-          duration: 120,
-          yoyo: true,
-          repeat: 1,
-        });
-      }
+    const onHpChanged = (hp: number) => {
+      onLivesChanged(hp);
     };
 
     const onStampsChanged = (stamps: number) => {
@@ -204,23 +178,13 @@ export class UIScene extends Phaser.Scene {
     this.events.once('destroy', cleanup);
   }
 
-  private renderHp(hp: number): void {
-    this.hpText?.destroy();
-    // Alerta em amarelo/vermelho se estiver com 1 de vida
-    const color = hp <= 1 ? 0xff4d4d : 0xffffff;
-    this.hpText = addPixelText(this, 23, 8, `${hp}`, {
-      scale: 1,
-      color,
-      scrollFactor: 0,
-      depth: 1001,
-    });
-  }
-
   private renderLives(lives: number): void {
     this.livesText?.destroy();
-    this.livesText = addPixelText(this, 58, 8, `x${lives}`, {
+    // Alerta em vermelho se estiver com 1 de vida
+    const color = lives <= 1 ? 0xff4d4d : 0xffffff;
+    this.livesText = addPixelText(this, 26, 8, `x${lives}`, {
       scale: 1,
-      color: 0xffffff,
+      color,
       scrollFactor: 0,
       depth: 1001,
     });

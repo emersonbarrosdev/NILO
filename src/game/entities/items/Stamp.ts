@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GameState } from '../../systems/GameState';
 import { AudioSystem } from '../../systems/AudioSystem';
+import { addPixelText } from '../../ui/PixelText';
 
 export class Stamp extends Phaser.Physics.Arcade.Sprite {
   private isCollected = false;
@@ -34,6 +35,21 @@ export class Stamp extends Phaser.Physics.Arcade.Sprite {
     const gotLife = GameState.get().addStamps(1);
     if (gotLife) {
       AudioSystem.get().playOneUp();
+      const notice = addPixelText(this.scene, Math.round(this.x), Math.round(this.y - 12), '+1 VIDA!', {
+        scale: 1,
+        color: 0xfde047,
+        originX: 0.5,
+        originY: 0.5,
+        depth: 25,
+      });
+      this.scene.tweens.add({
+        targets: notice,
+        y: notice.y - 16,
+        alpha: 0,
+        duration: 600,
+        ease: 'Cubic.easeOut',
+        onComplete: () => notice.destroy(),
+      });
     } else {
       AudioSystem.get().playStamp();
     }
