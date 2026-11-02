@@ -340,7 +340,7 @@ export class GameScene extends Phaser.Scene {
     // Nunca bloqueia a passagem! Disparar nele toca o sino, libera chuva de moedas e 1-UP!
     const secretHighPlatform = this.addWoodPlatform(3510, 56, 48, false, GROUND_Y, true);
 
-    // Armação rústica do Campanário do Sino
+    // Armação rústica do Campanário do Sino com degraus acessíveis
     for (let py = GROUND_Y - 16; py >= 78; py -= 32) {
       this.add.image(3248, py, 'platform-stilt').setDepth(2);
     }
@@ -348,6 +348,10 @@ export class GameScene extends Phaser.Scene {
     this.add.image(3248, 82, 'platform-bracket').setDepth(2);
     const chainGfx = this.add.graphics().setDepth(3);
     chainGfx.fillStyle(0x475569, 1).fillRect(3260 - 1, 78, 2, 8);
+
+    // Degraus rústicos de madeira para subir no campanário (fácil alcance a pé)
+    this.addWoodPlatform(3215, 122, 34, true, GROUND_Y);
+    this.addWoodPlatform(3280, 96, 34, false);
 
     // Plaquinha informativa na base do campanário
     this.add.image(3260, 138, 'decor-signpost').setDepth(2);
@@ -371,15 +375,41 @@ export class GameScene extends Phaser.Scene {
       GameState.get().recordDefeatEnemy(200);
       secretHighPlatform.reveal();
 
-      [3230, 3250, 3270, 3290].forEach((sx, i) => {
-        this.spawnStamp(sx, 76 - (i % 2 === 0 ? 6 : 0));
+      // CHUVA DE MOEDAS: Moedas jorram do sino e caem com salto elástico no chão para Nilo pegar facilmente!
+      const coinPositions = [3205, 3230, 3260, 3290, 3315];
+      coinPositions.forEach((cx, i) => {
+        const stamp = this.spawnStamp(3260, 90);
+        this.tweens.add({
+          targets: stamp,
+          x: cx,
+          y: 60 - (i % 2 === 0 ? 8 : 0),
+          duration: 180 + i * 40,
+          ease: 'Cubic.easeOut',
+          onComplete: () => {
+            if (!stamp.active) return;
+            this.tweens.add({
+              targets: stamp,
+              y: GROUND_Y - 14,
+              duration: 380,
+              ease: 'Bounce.easeOut',
+            });
+          },
+        });
       });
 
-      const lifeItem = this.spawnLife(3510, 40);
+      // O Boné 1-UP surge flutuando direto do sino para a altura acessível do Nilo!
+      const lifeItem = this.spawnLife(3260, 86);
       this.tweens.add({
         targets: lifeItem,
-        y: 36,
-        duration: 350,
+        y: 114,
+        duration: 500,
+        ease: 'Cubic.easeOut',
+      });
+      this.tweens.add({
+        targets: lifeItem,
+        scaleX: 1.25,
+        scaleY: 1.25,
+        duration: 250,
         yoyo: true,
         repeat: 2,
       });
@@ -405,6 +435,9 @@ export class GameScene extends Phaser.Scene {
     // 3. Posto de desembarque firme
     this.addWoodPlatform(3570, 126, 44, true, GROUND_Y);
     this.spawnStamp(3570, 110);
+
+    // Degrau de subida para o Mirante do Cartão-Postal #2 (alcance perfeito a pé!)
+    this.addWoodPlatform(3580, 116, 38, true, GROUND_Y);
 
     // Mirante com Cartão-Postal #2
     this.addWoodPlatform(3620, 78, 48, false);
@@ -497,6 +530,9 @@ export class GameScene extends Phaser.Scene {
     const flyer3 = new DragonflyEnemy(this, 5600, 80, 55);
     this.enemies.push(flyer3);
     this.setupEnemyCollisions(flyer3);
+
+    // Degrau de subida para o Mirante do Cume (alcance perfeito a pé!)
+    this.addWoodPlatform(5615, 106, 38, true, 142);
 
     // Mirante mais alto da cordilheira com o Cartão-Postal #3
     this.addWoodPlatform(5660, 70, 48, false);

@@ -544,23 +544,24 @@ export class TitleScene extends Phaser.Scene {
 
     // Linhas diretas, limpas e perfeitamente enquadradas dentro da moldura
     const controls = [
-      { action: 'MOVER', keys: 'A, D / SETAS / D-PAD' },
-      { action: 'PULO', keys: 'ESPACO / W / [X] PS5' },
+      { action: 'MOVER', keys: 'A, D / SETAS ESQ, DIR' },
+      { action: 'MIRAR CIMA', keys: 'W / SETA CIMA' },
+      { action: 'PULO', keys: 'ESPACO / [X] PS5' },
       { action: 'ESTILINGUE', keys: 'J / X / [QUADRADO]' },
       { action: 'PAUSA', keys: 'ESC / P / OPTIONS' },
       { action: 'MENUS', keys: 'MOUSE / ENTER / [X]' },
     ];
 
     controls.forEach((ctrl, i) => {
-      const y = 46 + i * 15;
-      const actText = addPixelText(this, 40, y, ctrl.action, {
+      const y = 42 + i * 14;
+      const actText = addPixelText(this, 38, y, ctrl.action, {
         scale: 1,
         color: 0x93c5fd,
         originX: 0,
         originY: 0.5,
       });
 
-      const keyText = addPixelText(this, 280, y, ctrl.keys, {
+      const keyText = addPixelText(this, 282, y, ctrl.keys, {
         scale: 1,
         color: 0xfffbeb,
         originX: 1,

@@ -283,16 +283,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     const padJumpJustPressed = pad.jump && !this.padPrevJump;
     this.padPrevJump = pad.jump;
 
-    const aimingWithSlingshot = this.charging || this.shootKeyJ.isDown || this.shootKeyX.isDown || pad.attack;
-
+    // PULO EXCLUSIVO NO TECLADO: ESPACO (W e Setas Cima sao exclusivamente para mirar para cima!)
     const jumpPressed =
       !crouching && (
         padJumpJustPressed ||
-        Phaser.Input.Keyboard.JustDown(this.jumpKey) ||
-        (!aimingWithSlingshot && (
-          Phaser.Input.Keyboard.JustDown(this.keyW) ||
-          Phaser.Input.Keyboard.JustDown(this.cursors.up)
-        ))
+        Phaser.Input.Keyboard.JustDown(this.jumpKey)
       );
 
     if (jumpPressed) this.jumpBufferedAt = time;
@@ -311,10 +306,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.spawnDustParticle(this.x + 4, this.y + 12, 0.8, 0.2);
     }
 
-    const jumpHeld =
-      pad.jump ||
-      this.jumpKey.isDown ||
-      (!aimingWithSlingshot && (this.keyW.isDown || this.cursors.up.isDown));
+    const jumpHeld = pad.jump || this.jumpKey.isDown;
 
     if (!jumpHeld && body.velocity.y < -110) this.setVelocityY(-110);
   }
