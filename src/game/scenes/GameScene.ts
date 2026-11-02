@@ -637,6 +637,19 @@ export class GameScene extends Phaser.Scene {
         enemy.onPlayerOverlap(this.player!);
       });
     }
+
+    // Se um inimigo atordoado for chutado (isSliding), ele atropela outros inimigos no caminho
+    for (const other of this.enemies) {
+      if (other !== enemy) {
+        this.physics.add.overlap(enemy, other, () => {
+          if (enemy.isSliding && !other.isDefeated) {
+            other.die(enemy.x);
+          } else if (other.isSliding && !enemy.isDefeated) {
+            enemy.die(other.x);
+          }
+        });
+      }
+    }
   }
 
   private alignProjectileWithSlingshot(projectile: Projectile): void {

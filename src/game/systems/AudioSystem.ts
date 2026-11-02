@@ -513,6 +513,32 @@ export class AudioSystem {
     osc.stop(now + 0.19);
   }
 
+  public playStun(): void {
+    if (this.isMuted) return;
+    const ctx = this.initCtx();
+    if (!ctx || ctx.state === 'suspended') return;
+
+    const now = ctx.currentTime;
+    [320, 260, 380, 290].forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const t = now + idx * 0.055;
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, t);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.85, t + 0.05);
+
+      gain.gain.setValueAtTime(0.18, t);
+      gain.gain.linearRampToValueAtTime(0.01, t + 0.05);
+
+      osc.connect(gain);
+      this.connectSfx(gain, ctx);
+
+      osc.start(t);
+      osc.stop(t + 0.06);
+    });
+  }
+
   public playVictory(): void {
     if (this.isMuted) return;
     const ctx = this.initCtx();

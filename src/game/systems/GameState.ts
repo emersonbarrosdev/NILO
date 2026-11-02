@@ -123,10 +123,14 @@ export class GameState extends Phaser.Events.EventEmitter {
     this.emit('checkpoint-activated', id);
   }
 
-  public recordDefeatEnemy(points = 100): void {
-    this.enemiesDefeated++;
+  public addScore(points: number): void {
     this.score += points;
     this.emit('score-changed', this.score);
+  }
+
+  public recordDefeatEnemy(points = 100): void {
+    this.enemiesDefeated++;
+    this.addScore(points);
   }
 
   public continueGame(): void {

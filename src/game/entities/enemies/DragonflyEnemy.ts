@@ -19,19 +19,33 @@ export class DragonflyEnemy extends EnemyBase {
     body.setSize(16, 12);
     body.setOffset(1, 2);
 
+    this.setFlipX(this.direction < 0);
     this.play('flyer-fly');
+  }
+
+  protected override onStunEnter(): void {
+    this.setVelocity(0, 0);
+  }
+
+  protected override onStunExit(): void {
+    this.setVelocityX(this.direction * this.speed);
   }
 
   update(time: number, _delta: number): void {
     if (this.isDefeated) return;
 
+    if (this.isStunned) {
+      this.updateStunVisuals();
+      return;
+    }
+
     // Movimento horizontal de patrulha
     if (this.x > this.startX + this.patrolSpan) {
       this.direction = -1;
-      this.setFlipX(false);
+      this.setFlipX(true); // Olhando para a ESQUERDA
     } else if (this.x < this.startX - this.patrolSpan) {
       this.direction = 1;
-      this.setFlipX(true);
+      this.setFlipX(false); // Olhando para a DIREITA
     }
 
     this.setVelocityX(this.direction * this.speed);
@@ -41,4 +55,3 @@ export class DragonflyEnemy extends EnemyBase {
     this.setY(waveY);
   }
 }
-

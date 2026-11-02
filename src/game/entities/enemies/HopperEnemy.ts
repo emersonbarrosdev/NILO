@@ -27,8 +27,25 @@ export class HopperEnemy extends EnemyBase {
     this.targetPlayer = player;
   }
 
+  protected override onStunEnter(): void {
+    this.play('hopper-prep'); // Fica agachado zonzo
+    this.setVelocity(0, 0);
+  }
+
+  protected override onStunExit(): void {
+    this.play('hopper-idle');
+  }
+
   update(time: number): void {
     if (this.isDefeated) return;
+
+    if (this.isStunned) {
+      this.updateStunVisuals();
+      if (!this.isSliding) {
+        this.setVelocityX(0);
+      }
+      return;
+    }
 
     const body = this.body as Phaser.Physics.Arcade.Body;
     const grounded = body.blocked.down || body.touching.down;
@@ -37,6 +54,11 @@ export class HopperEnemy extends EnemyBase {
       this.setVelocityX(this.isPreparingJump ? 0 : body.velocity.x * 0.8);
       if (!this.isPreparingJump && this.anims.currentAnim?.key !== 'hopper-idle') {
         this.play('hopper-idle', true);
+      }
+
+      if (this.targetPlayer && !this.isPreparingJump) {
+        // Vira de frente para o jogador enquanto espera
+        this.setFlipX(this.targetPlayer.x < this.x);
       }
 
       if (!this.isPreparingJump && time - this.lastJumpTime >= this.jumpCooldown) {
@@ -49,7 +71,7 @@ export class HopperEnemy extends EnemyBase {
             duration: 200,
             yoyo: true,
             onComplete: () => {
-              if (!this.active || this.isDefeated) return;
+              if (!this.active || this.isDefeated || this.isStunned) return;
               this.isPreparingJump = false;
               this.lastJumpTime = time;
               this.jumpTowardPlayer();
@@ -73,8 +95,8 @@ export class HopperEnemy extends EnemyBase {
       dir = 1;
     }
 
-    this.setFlipX(dir > 0);
+    // Sprite original olha para a DIREITA. Ao saltar para a esquerda (dir < 0), setFlipX(true)
+    this.setFlipX(dir < 0);
     this.setVelocity(dir * 55, -210);
   }
 }
-
