@@ -1,144 +1,576 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, SCENE_KEYS } from '../config/constants';
+import { GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '../config/constants';
 import { addPixelText } from '../ui/PixelText';
+import { SaveSystem } from '../systems/SaveSystem';
+import { AudioSystem } from '../systems/AudioSystem';
+import { GameState } from '../systems/GameState';
+import { GamepadSystem } from '../systems/GamepadSystem';
+import { AudioSettingsModal } from '../ui/AudioSettingsModal';
 
-const LOGO_GLYPHS: Record<string, string[]> = {
-  N: ['110011','111011','111111','110111','110011','110011','110011'],
-  I: ['111111','001100','001100','001100','001100','001100','111111'],
-  L: ['110000','110000','110000','110000','110000','110000','111111'],
-  O: ['011110','110011','110011','110011','110011','110011','011110'],
-};
+interface MenuItem {
+  text: string;
+  action: () => void;
+  enabled: boolean;
+}
 
 export class TitleScene extends Phaser.Scene {
+  private selectedIndex = 0;
+  private menuItems: MenuItem[] = [];
+  private menuTexts: Phaser.GameObjects.GameObject[] = [];
+  private menuHitZones: Phaser.GameObjects.Rectangle[] = [];
+  private menuFrame?: Phaser.GameObjects.Rectangle;
+  private cursor?: Phaser.GameObjects.Graphics;
+  private controlsModal?: Phaser.GameObjects.Container;
+  private audioModal?: AudioSettingsModal;
+  private windLeaves: { g: Phaser.GameObjects.Graphics; x: number; y: number; speedX: number; speedY: number; rotSpeed: number }[] = [];
+
   constructor() { super(SCENE_KEYS.title); }
 
   create(): void {
-    this.drawNatureBackdrop();
-    this.drawLogo();
-    this.drawMenuPanel();
+    const saveSystem = SaveSystem.get();
+    const hasSave = saveSystem.hasSave();
 
-    const startGame = () => this.scene.start(SCENE_KEYS.map);
-    this.input.keyboard?.once('keydown-ENTER', startGame);
-    this.input.keyboard?.once('keydown-SPACE', startGame);
-  }
+    // Cenário atmosférico do Mirante do Vale
+    this.drawAtmosphericValley();
+    this.createWindLeaves();
+    this.drawHeroOnCliff();
+    this.drawOriginalLogo();
+    this.setupMenu(hasSave);
 
-  private drawLogo(): void {
-    const shadow = this.add.graphics();
-    const logo = this.add.graphics();
+    // Controles de navegação por teclado
+    const onUp = () => this.navigateMenu(-1);
+    const onDown = () => this.navigateMenu(1);
+    const onConfirm = () => this.selectMenuItem();
+    const onEsc = () => this.closeControlsModal();
 
-    this.drawLogoWord(shadow, 118, 23, 3, 0x301447, 2, 2);
-    this.drawLogoWord(logo, 118, 23, 3, 0xffef9b, 0, 0);
+    this.input.keyboard?.on('keydown-UP', onUp);
+    this.input.keyboard?.on('keydown-W', onUp);
+    this.input.keyboard?.on('keydown-DOWN', onDown);
+    this.input.keyboard?.on('keydown-S', onDown);
+    this.input.keyboard?.on('keydown-ENTER', onConfirm);
+    this.input.keyboard?.on('keydown-SPACE', onConfirm);
+    this.input.keyboard?.on('keydown-ESC', onEsc);
 
-    // Pequeno acento visual inspirado no estilingue, sem competir com o nome.
-    logo.fillStyle(0xff8a3d, 1).fillRect(185, 16, 4, 5);
-    logo.fillRect(191, 16, 4, 5);
-    logo.fillRect(188, 20, 4, 6);
-    logo.fillStyle(0x9ee8ff, 1).fillRect(193, 18, 12, 1);
+    const cleanup = () => {
+      this.input.keyboard?.off('keydown-UP', onUp);
+      this.input.keyboard?.off('keydown-W', onUp);
+      this.input.keyboard?.off('keydown-DOWN', onDown);
+      this.input.keyboard?.off('keydown-S', onDown);
+      this.input.keyboard?.off('keydown-ENTER', onConfirm);
+      this.input.keyboard?.off('keydown-SPACE', onConfirm);
+      this.input.keyboard?.off('keydown-ESC', onEsc);
+    };
 
-    addPixelText(this, GAME_WIDTH / 2, 55, 'DE VOLTA PRA CASA', {
+    this.events.once('shutdown', cleanup);
+    this.events.once('destroy', cleanup);
+
+    // Rodapé de compatibilidade de periféricos
+    addPixelText(this, GAME_WIDTH / 2, 172, 'SUPORTA: TECLADO  •  MOUSE  •  CONTROLE PS5', {
       scale: 1,
-      color: 0xe5fbff,
+      color: 0x5a7a9c,
       originX: 0.5,
       originY: 0.5,
+      depth: 25,
     });
+
+    AudioSystem.get().startBgm('title');
   }
 
-  private drawLogoWord(
-    graphics: Phaser.GameObjects.Graphics,
-    startX: number,
-    startY: number,
-    pixel: number,
-    color: number,
-    offsetX: number,
-    offsetY: number,
-  ): void {
-    let x = startX + offsetX;
-    for (const char of 'NILO') {
-      this.drawGlyph(graphics, LOGO_GLYPHS[char], x, startY + offsetY, pixel, color);
-      x += 7 * pixel;
+  update(time: number): void {
+    // Efeito suave de folhas e brisa cruzando a tela
+    for (const leaf of this.windLeaves) {
+      leaf.x += leaf.speedX;
+      leaf.y += leaf.speedY;
+      leaf.g.rotation += leaf.rotSpeed;
+
+      if (leaf.x > GAME_WIDTH + 10 || leaf.y > GAME_HEIGHT) {
+        leaf.x = -15;
+        leaf.y = Phaser.Math.Between(20, 140);
+      }
+      leaf.g.setPosition(leaf.x, leaf.y);
     }
+
+    // Suporte a controle de PS5 / Gamepad Universal
+    if (this.audioModal?.isOpen) {
+      this.audioModal.updateGamepad(time);
+      return;
+    }
+
+    const pad = GamepadSystem.get().updateMenuNavigation(time);
+    if (this.controlsModal) {
+      if (pad.confirmJustPressed || pad.cancelJustPressed) {
+        this.closeControlsModal();
+      }
+      return;
+    }
+
+    if (pad.upJustPressed) this.navigateMenu(-1);
+    if (pad.downJustPressed) this.navigateMenu(1);
+    if (pad.confirmJustPressed) this.selectMenuItem();
   }
 
-  private drawGlyph(
-    graphics: Phaser.GameObjects.Graphics,
-    glyph: string[],
-    x: number,
-    y: number,
-    pixel: number,
-    color: number,
-  ): void {
-    graphics.fillStyle(color, 1);
-    glyph.forEach((row, rowIndex) => {
-      [...row].forEach((cell, columnIndex) => {
-        if (cell === '1') {
-          graphics.fillRect(x + columnIndex * pixel, y + rowIndex * pixel, pixel, pixel);
-        }
-      });
+  // --- CENÁRIO ATMOSFÉRICO ORIGINAL DO VALE (Mirante ao entardecer) ---
+  private drawAtmosphericValley(): void {
+    const g = this.add.graphics().setDepth(-20);
+
+    // 1. Céu crepuscular elegante em 5 faixas (do azul meia-noite ao dourado do horizonte)
+    g.fillStyle(0x131a38, 1).fillRect(0, 0, GAME_WIDTH, 38);
+    g.fillStyle(0x1f2e5a, 1).fillRect(0, 38, GAME_WIDTH, 34);
+    g.fillStyle(0x324f78, 1).fillRect(0, 72, GAME_WIDTH, 32);
+    g.fillStyle(0x56758f, 1).fillRect(0, 104, GAME_WIDTH, 26);
+    g.fillStyle(0x8faab8, 1).fillRect(0, 130, GAME_WIDTH, 50);
+
+    // Estrelas cintilantes discretas no céu alto
+    g.fillStyle(0xffffff, 0.85);
+    const starCoords = [[24, 12], [85, 20], [140, 8], [210, 16], [290, 10], [180, 24]];
+    starCoords.forEach(([sx, sy]) => {
+      g.fillRect(sx, sy, 1, 1);
+      g.fillRect(sx - 1, sy, 3, 1);
+      g.fillRect(sx, sy - 1, 1, 3);
     });
+
+    // Lua suave ou sol crepuscular distante
+    g.fillStyle(0xfde047, 0.4).fillCircle(250, 48, 18);
+    g.fillStyle(0xfef08a, 0.8).fillCircle(250, 48, 12);
+    g.fillStyle(0xffffff, 1).fillCircle(250, 48, 8);
+
+    // Nuvens estilizadas em faixas horizontais elegantes
+    g.fillStyle(0xdbeafe, 0.5);
+    g.fillRect(15, 42, 60, 4);
+    g.fillRect(25, 38, 40, 4);
+    g.fillRect(170, 56, 75, 4);
+    g.fillRect(190, 52, 45, 4);
+
+    // 2. Silhueta de montanhas distantes com gradiente atmosférico
+    g.fillStyle(0x2d3a54, 1);
+    this.drawMountainPeak(g, 100, 140, 180, 58);
+    this.drawMountainPeak(g, 180, 140, 160, 68);
+    this.drawMountainPeak(g, 250, 140, 140, 50);
+
+    // 3. Colinas verdes médias e vale ao fundo
+    g.fillStyle(0x1b4332, 1);
+    this.drawRoundedHill(g, 90, 145, 110, 42);
+    this.drawRoundedHill(g, 180, 145, 120, 48);
+    this.drawRoundedHill(g, 260, 145, 90, 38);
+
+    // 4. Falésia / Colina proeminente em primeiro plano à esquerda (onde Nilo observa)
+    g.fillStyle(0x1c2b22, 1);
+    g.fillRect(0, 118, 92, 62);
+    g.fillCircle(46, 122, 46);
+    // Borda superior de grama escura
+    g.fillStyle(0x2d6a4f, 1);
+    g.fillRect(0, 114, 90, 6);
+    g.fillRect(0, 112, 78, 4);
+
+    // Árvore solitária na falésia balançando com o vento
+    this.drawCliffPineTree(g, 22, 114);
+
+    // Chão inferior conectando o rodapé
+    g.fillStyle(0x17231c, 1).fillRect(0, 162, GAME_WIDTH, 18);
+    g.fillStyle(0x2d6a4f, 1).fillRect(0, 160, GAME_WIDTH, 3);
   }
 
-  private drawMenuPanel(): void {
-    this.add.rectangle(GAME_WIDTH / 2, 112, 148, 42, 0x13314a, 0.9)
-      .setStrokeStyle(1, 0xf6c453, 1);
-    this.add.rectangle(GAME_WIDTH / 2, 105, 118, 18, 0x286b67, 1)
-      .setStrokeStyle(1, 0xffe06b, 1);
+  private drawMountainPeak(g: Phaser.GameObjects.Graphics, x: number, base: number, width: number, height: number): void {
+    g.beginPath();
+    g.moveTo(x - width / 2, base);
+    g.lineTo(x, base - height);
+    g.lineTo(x + width / 2, base);
+    g.closePath();
+    g.fillPath();
 
-    addPixelText(this, GAME_WIDTH / 2, 105, 'NOVO JOGO', {
-      scale: 2,
-      color: 0xffef9b,
-      originX: 0.5,
-      originY: 0.5,
-    });
-
-    const prompt = addPixelText(this, GAME_WIDTH / 2, 127, 'ENTER / ESPAÇO', {
-      scale: 1,
-      color: 0xe8fbff,
-      originX: 0.5,
-      originY: 0.5,
-    });
-
-    this.tweens.add({ targets: prompt, alpha: 0.35, duration: 650, yoyo: true, repeat: -1 });
+    // Cume nevado sutil
+    g.fillStyle(0xcfdbe6, 0.7);
+    g.beginPath();
+    g.moveTo(x - width * 0.14, base - height * 0.72);
+    g.lineTo(x, base - height);
+    g.lineTo(x + width * 0.14, base - height * 0.72);
+    g.closePath();
+    g.fillPath();
+    g.fillStyle(0x2d3a54, 1);
   }
 
-  private drawNatureBackdrop(): void {
-    const g = this.add.graphics();
+  private drawRoundedHill(g: Phaser.GameObjects.Graphics, x: number, base: number, width: number, height: number): void {
+    g.beginPath();
+    g.moveTo(x - width / 2, base);
+    g.lineTo(x - width * 0.35, base - height * 0.75);
+    g.lineTo(x, base - height);
+    g.lineTo(x + width * 0.35, base - height * 0.75);
+    g.lineTo(x + width / 2, base);
+    g.closePath();
+    g.fillPath();
+  }
 
-    g.fillStyle(0x247ac0, 1).fillRect(0, 0, GAME_WIDTH, 52);
-    g.fillStyle(0x39a7d8, 1).fillRect(0, 52, GAME_WIDTH, 56);
-    g.fillStyle(0x72cfe5, 1).fillRect(0, 108, GAME_WIDTH, 40);
-
-    g.fillStyle(0xffd45a, 1).fillRect(278, 17, 14, 24);
-    g.fillRect(273, 22, 24, 14);
-
-    g.fillStyle(0xe8fbff, 1).fillRect(18, 74, 38, 5);
-    g.fillRect(26, 68, 21, 6);
-    g.fillRect(218, 63, 42, 5);
-    g.fillRect(228, 57, 22, 6);
-
-    g.fillStyle(0x3d8b72, 1);
-    const hills = [
-      [0, 116, 52, 32], [14, 108, 26, 8], [46, 121, 65, 27], [63, 111, 31, 10],
-      [105, 113, 69, 35], [123, 103, 34, 10], [168, 120, 58, 28], [181, 110, 34, 10],
-      [220, 112, 62, 36], [239, 101, 28, 11], [276, 118, 44, 30],
+  private drawCliffPineTree(g: Phaser.GameObjects.Graphics, x: number, y: number): void {
+    // Tronco
+    g.fillStyle(0x402513, 1).fillRect(x, y - 42, 5, 42);
+    // Galhos e copa em camadas orgânicas
+    const layers = [
+      { yOff: 24, w: 26, h: 10 },
+      { yOff: 34, w: 22, h: 9 },
+      { yOff: 44, w: 16, h: 8 },
+      { yOff: 52, w: 10, h: 7 },
     ];
-    hills.forEach(([x, y, w, h]) => g.fillRect(x, y, w, h));
-
-    g.fillStyle(0x2f6f55, 1);
-    for (let x = 0; x < GAME_WIDTH; x += 28) {
-      const height = 8 + ((x / 28) % 3) * 4;
-      g.fillRect(x, 140 - height, 32, height + 8);
-    }
-
-    g.fillStyle(0x64bd55, 1).fillRect(0, 148, GAME_WIDTH, 7);
-    g.fillStyle(0x6f4932, 1).fillRect(0, 155, GAME_WIDTH, 25);
-    g.fillStyle(0x8e5a38, 1);
-    for (let x = 4; x < GAME_WIDTH; x += 16) {
-      g.fillRect(x, 160 + ((x / 16) % 2) * 5, 6, 3);
-    }
-
-    [16, 38, 269, 298].forEach((x, index) => {
-      g.fillStyle(0x2f6f55, 1).fillRect(x, 142, 2, 6);
-      g.fillStyle(index % 2 === 0 ? 0xff8a5b : 0xffdf68, 1).fillRect(x - 2, 140, 6, 3);
+    layers.forEach((l, idx) => {
+      g.fillStyle(idx % 2 === 0 ? 0x1b4332 : 0x2d6a4f, 1);
+      g.fillRect(x + 2 - l.w / 2, y - l.yOff, l.w, l.h);
     });
+  }
+
+  // --- NILO OBSERVANDO O HORIZONTE NA FALÉSIA ---
+  private drawHeroOnCliff(): void {
+    // Usa o sprite autêntico do Nilo da spritesheet oficial
+    const hero = this.add.sprite(58, 102, 'player-sheet', 0).setDepth(15);
+    hero.setScale(1);
+    hero.setFlipX(false); // Olhando para a direita em direção ao vale
+
+    // Sutil animação de respiração
+    this.tweens.add({
+      targets: hero,
+      y: 101,
+      duration: 800,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+  }
+
+  // --- BRISA COM FOLHAS CINTILANTES ---
+  private createWindLeaves(): void {
+    this.windLeaves = [];
+    const colors = [0x52b788, 0x74c69d, 0xfde047, 0xfbbf24];
+
+    for (let i = 0; i < 8; i++) {
+      const g = this.add.graphics().setDepth(12);
+      g.fillStyle(Phaser.Utils.Array.GetRandom(colors), 0.85);
+      g.fillRect(-2, -1, 4, 2);
+
+      const leaf = {
+        g,
+        x: Phaser.Math.Between(0, GAME_WIDTH),
+        y: Phaser.Math.Between(30, 140),
+        speedX: Phaser.Math.FloatBetween(0.8, 1.6),
+        speedY: Phaser.Math.FloatBetween(0.1, 0.4),
+        rotSpeed: Phaser.Math.FloatBetween(0.02, 0.06),
+      };
+      g.setPosition(leaf.x, leaf.y);
+      this.windLeaves.push(leaf);
+    }
+  }
+
+  // --- LOGO ORIGINAL, LIMPO E IMPACTANTE "NILO" ---
+  private drawOriginalLogo(): void {
+    const logoContainer = this.add.container(192, 40).setDepth(20);
+
+    const shadow = this.add.graphics();
+    const fill = this.add.graphics();
+
+    // Fonte estilizada original 7x9 em pixel art puro
+    const LOGO_LETTERS: Record<string, string[]> = {
+      N: [
+        '1100011',
+        '1110011',
+        '1111011',
+        '1101111',
+        '1100111',
+        '1100011',
+        '1100011',
+        '1100011',
+      ],
+      I: [
+        '1111111',
+        '0011100',
+        '0011100',
+        '0011100',
+        '0011100',
+        '0011100',
+        '0011100',
+        '1111111',
+      ],
+      L: [
+        '1100000',
+        '1100000',
+        '1100000',
+        '1100000',
+        '1100000',
+        '1100000',
+        '1111111',
+        '1111111',
+      ],
+      O: [
+        '0111110',
+        '1100011',
+        '1100011',
+        '1100011',
+        '1100011',
+        '1100011',
+        '1100011',
+        '0111110',
+      ],
+    };
+
+    const pixel = 3;
+    const startX = -54;
+    const startY = -14;
+    const chars = ['N', 'I', 'L', 'O'];
+
+    chars.forEach((char, idx) => {
+      const glyph = LOGO_LETTERS[char];
+      const cx = startX + idx * 28;
+
+      // Sombra 3D suave azul marinho profundo
+      shadow.fillStyle(0x0c1324, 1);
+      glyph.forEach((row, r) => {
+        [...row].forEach((c, col) => {
+          if (c === '1') {
+            shadow.fillRect(cx + col * pixel + 2, startY + r * pixel + 2, pixel, pixel);
+          }
+        });
+      });
+
+      // Preenchimento gradiente quente e elegante (amarelo limão -> âmbar -> vermelho coral)
+      glyph.forEach((row, r) => {
+        const colColor = r < 2 ? 0xfef08a : r < 5 ? 0xf59e0b : 0xe11d48;
+        fill.fillStyle(colColor, 1);
+        [...row].forEach((c, col) => {
+          if (c === '1') {
+            fill.fillRect(cx + col * pixel, startY + r * pixel, pixel, pixel);
+          }
+        });
+      });
+
+      // Destaque de luz branca
+      fill.fillStyle(0xffffff, 0.9);
+      if (char === 'N' || char === 'L' || char === 'I') {
+        fill.fillRect(cx + pixel, startY + pixel, pixel, pixel);
+      }
+      if (char === 'O') {
+        fill.fillRect(cx + 2 * pixel, startY + pixel, 2 * pixel, pixel);
+      }
+    });
+
+    logoContainer.add([shadow, fill]);
+
+    // Subtítulo elegante com linha decorativa
+    const subBadge = this.add.rectangle(192, 58, 150, 14, 0x0c1a2e, 0.9)
+      .setStrokeStyle(1, 0xf59e0b, 0.8)
+      .setDepth(21);
+    this.add.existing(subBadge);
+
+    addPixelText(this, 192, 58, 'DE VOLTA PRA CASA', {
+      scale: 1,
+      color: 0xffffff,
+      originX: 0.5,
+      originY: 0.5,
+      depth: 22,
+    });
+  }
+
+  // --- MENU ELEGANTE DE OPÇÕES ---
+  private setupMenu(hasSave: boolean): void {
+    this.menuItems = [
+      {
+        text: 'NOVO JOGO',
+        enabled: true,
+        action: () => {
+          GameState.get().initNewGame();
+          AudioSystem.get().playMenuSelect();
+          this.scene.start(SCENE_KEYS.game, { stageId: '1-1' });
+        },
+      },
+      {
+        text: hasSave ? 'CONTINUAR' : 'CONTINUAR (-)',
+        enabled: hasSave,
+        action: () => {
+          if (!hasSave) return;
+          GameState.get().continueGame();
+          AudioSystem.get().playMenuSelect();
+          this.scene.start(SCENE_KEYS.game, { stageId: GameState.get().currentStage });
+        },
+      },
+      {
+        text: 'AJUSTES DE AUDIO',
+        enabled: true,
+        action: () => {
+          AudioSystem.get().playMenuSelect();
+          this.showAudioModal();
+        },
+      },
+      {
+        text: 'CONTROLES',
+        enabled: true,
+        action: () => {
+          AudioSystem.get().playMenuSelect();
+          this.showControlsModal();
+        },
+      },
+    ];
+
+    this.renderMenu();
+  }
+
+  private renderMenu(): void {
+    this.menuTexts.forEach((t) => t.destroy());
+    this.menuTexts = [];
+    this.menuHitZones.forEach((h) => h.destroy());
+    this.menuHitZones = [];
+    this.cursor?.destroy();
+    this.menuFrame?.destroy();
+
+    const menuX = 192;
+    const startY = 90;
+    const itemHeight = 15;
+
+    // Fundo semitransparente escuro discreto dimensionado para 4 opções
+    this.menuFrame = this.add.rectangle(menuX, 112, 150, 64, 0x0a1424, 0.88)
+      .setStrokeStyle(1, 0x38bdf8, 0.9)
+      .setDepth(30);
+
+    this.menuItems.forEach((item, index) => {
+      const y = startY + index * itemHeight;
+      const isSelected = index === this.selectedIndex;
+      const color = !item.enabled
+        ? 0x526b82
+        : isSelected
+        ? 0xfef08a
+        : 0xcfe6f7;
+
+      const text = addPixelText(this, menuX, y, item.text, {
+        scale: 1,
+        color,
+        originX: 0.5,
+        originY: 0.5,
+        depth: 32,
+      });
+      this.menuTexts.push(text);
+
+      // Suporte direto a Mouse no PC (hover e clique)
+      if (item.enabled) {
+        const hit = this.add.rectangle(menuX, y, 140, itemHeight, 0x000000, 0.001)
+          .setInteractive({ useHandCursor: true })
+          .setDepth(36);
+
+        hit.on('pointerover', () => {
+          if (this.selectedIndex !== index) {
+            this.selectedIndex = index;
+            AudioSystem.get().playMenuNavigate();
+            this.renderMenu();
+          }
+        });
+
+        hit.on('pointerdown', () => {
+          this.selectedIndex = index;
+          this.selectMenuItem();
+        });
+
+        this.menuHitZones.push(hit);
+      }
+    });
+
+    this.cursor = this.add.graphics().setDepth(35);
+    this.updateCursor();
+  }
+
+  private updateCursor(): void {
+    if (!this.cursor) return;
+    this.cursor.clear();
+
+    const menuX = 192;
+    const startY = 90;
+    const itemHeight = 15;
+    const y = startY + this.selectedIndex * itemHeight;
+    const x = menuX - 58;
+
+    // Marcador seta dourada elegante
+    this.cursor.fillStyle(0xf59e0b, 1);
+    this.cursor.fillRect(x, y - 3, 2, 6);
+    this.cursor.fillRect(x + 2, y - 2, 2, 4);
+    this.cursor.fillRect(x + 4, y - 1, 2, 2);
+    this.cursor.fillStyle(0xffffff, 1).fillRect(x + 1, y - 1, 2, 2);
+  }
+
+  private navigateMenu(direction: number): void {
+    if (this.controlsModal || this.audioModal?.isOpen) return;
+
+    let next = this.selectedIndex + direction;
+    if (next < 0) next = this.menuItems.length - 1;
+    if (next >= this.menuItems.length) next = 0;
+
+    this.selectedIndex = next;
+    AudioSystem.get().playMenuNavigate();
+    this.renderMenu();
+  }
+
+  private selectMenuItem(): void {
+    if (this.audioModal?.isOpen) return;
+    if (this.controlsModal) {
+      this.closeControlsModal();
+      return;
+    }
+    const current = this.menuItems[this.selectedIndex];
+    if (current && current.enabled) {
+      current.action();
+    }
+  }
+
+  private showAudioModal(): void {
+    if (this.audioModal?.isOpen) return;
+    this.audioModal = new AudioSettingsModal(this, () => {
+      this.audioModal = undefined;
+    });
+    this.audioModal.open();
+  }
+
+  private showControlsModal(): void {
+    if (this.controlsModal) return;
+
+    this.controlsModal = this.add.container(0, 0).setDepth(2000);
+
+    const backdrop = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x050b14, 0.92);
+    const box = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, 250, 146, 0x112238, 1)
+      .setStrokeStyle(1, 0x38bdf8, 1);
+
+    this.controlsModal.add([backdrop, box]);
+
+    const title = addPixelText(this, GAME_WIDTH / 2, 28, 'GUIA DE CONTROLES', {
+      scale: 1,
+      color: 0xfde047,
+      originX: 0.5,
+      originY: 0.5,
+    });
+
+    const info = addPixelText(
+      this,
+      GAME_WIDTH / 2,
+      74,
+      'TECLADO: A D/SETAS (MOVER)  W/ESPACO (PULO)  J/X (TIRO)\nMOUSE: APONTE E CLIQUE NOS MENUS\nCONTROLE PS5: D-PAD/STICK (MOVER)  [X] (PULO/ENTRAR)\n[O]/[] (ESTILINGUE/VOLTAR)  OPTIONS (PAUSA)',
+      {
+        scale: 1,
+        color: 0xe0f2fe,
+        originX: 0.5,
+        originY: 0.5,
+        lineSpacing: 3,
+      },
+    );
+
+    const closeBtnBg = this.add.rectangle(GAME_WIDTH / 2, 134, 160, 18, 0x1d4ed8, 0.8)
+      .setStrokeStyle(1, 0xfde047, 1)
+      .setInteractive({ useHandCursor: true });
+    closeBtnBg.on('pointerdown', () => this.closeControlsModal());
+
+    const closePrompt = addPixelText(this, GAME_WIDTH / 2, 134, 'CLIQUE OU ENTER - FECHAR', {
+      scale: 1,
+      color: 0xffffff,
+      originX: 0.5,
+      originY: 0.5,
+    });
+
+    this.controlsModal.add([title, info, closeBtnBg, closePrompt]);
+  }
+
+  private closeControlsModal(): void {
+    if (!this.controlsModal) return;
+    this.controlsModal.destroy();
+    this.controlsModal = undefined;
+    AudioSystem.get().playMenuNavigate();
   }
 }

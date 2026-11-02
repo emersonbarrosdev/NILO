@@ -26,6 +26,9 @@ export const gameConfig: Phaser.Types.Core.GameConfig = {
       debug: false,
     },
   },
+  input: {
+    gamepad: true,
+  },
   scale: {
     mode: Phaser.Scale.NONE,
   },

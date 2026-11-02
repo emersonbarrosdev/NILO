@@ -20,5 +20,12 @@ function applyIntegerScale(): void {
   canvas.style.height = `${GAME_HEIGHT * integerScale}px`;
 }
 
-requestAnimationFrame(applyIntegerScale);
+if (game.isBooted) {
+  applyIntegerScale();
+} else {
+  game.events.once(Phaser.Core.Events.READY, applyIntegerScale);
+}
+
 window.addEventListener('resize', applyIntegerScale);
+requestAnimationFrame(applyIntegerScale);
+setTimeout(applyIntegerScale, 100);

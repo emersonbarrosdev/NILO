@@ -65,6 +65,20 @@ const GLYPHS: Record<string, string[]> = {
   '!': ['00100','00100','00100','00100','00100','00000','00100'],
   '(': ['00010','00100','01000','01000','01000','00100','00010'],
   ')': ['01000','00100','00010','00010','00010','00100','01000'],
+  '[': ['01110','01000','01000','01000','01000','01000','01110'],
+  ']': ['01110','00010','00010','00010','00010','00010','01110'],
+  '|': ['00100','00100','00100','00100','00100','00100','00100'],
+  '>': ['10000','01000','00100','00010','00100','01000','10000'],
+  '<': ['00001','00010','00100','01000','00100','00010','00001'],
+  '*': ['00000','10101','01110','11111','01110','10101','00000'],
+  '%': ['11001','11010','00100','01000','01011','10011','00000'],
+  '+': ['00000','00100','00100','11111','00100','00100','00000'],
+  '#': ['01010','11111','01010','01010','11111','01010','00000'],
+  '•': ['00000','00000','01110','01110','01110','00000','00000'],
+  '·': ['00000','00000','00000','00100','00000','00000','00000'],
+  '~': ['00000','01001','10101','10010','00000','00000','00000'],
+  '_': ['00000','00000','00000','00000','00000','00000','11111'],
+  '=': ['00000','11111','00000','11111','00000','00000','00000'],
 };
 
 const REPLACEMENTS: Record<string, string> = {
@@ -74,6 +88,10 @@ const REPLACEMENTS: Record<string, string> = {
   Ó: 'O', Ò: 'O', Ô: 'O', Õ: 'O', Ö: 'O',
   Ú: 'U', Ù: 'U', Û: 'U', Ü: 'U',
   Ç: 'C',
+  '▶': '>',
+  '►': '>',
+  '•': '•',
+  '·': '·',
 };
 
 function normalize(value: string): string {
@@ -120,7 +138,7 @@ export function addPixelText(
       totalHeight,
       options.backgroundColor,
       options.backgroundAlpha ?? 1,
-    ).setOrigin(0.5);
+    );
     container.add(background);
   }
 
@@ -128,32 +146,36 @@ export function addPixelText(
   graphics.fillStyle(options.color ?? 0xffffff, 1);
 
   lines.forEach((line, lineIndex) => {
+    const w = widths[lineIndex];
     let startX = offsetX + paddingX;
-    if (align === 'center') startX += Math.floor((contentWidth - widths[lineIndex]) / 2);
-    if (align === 'right') startX += contentWidth - widths[lineIndex];
+    if (align === 'center') startX += Math.round((contentWidth - w) / 2);
+    else if (align === 'right') startX += contentWidth - w;
+
     const startY = offsetY + paddingY + lineIndex * (glyphHeight + lineSpacing * scale);
 
     let cursorX = startX;
     for (const char of line) {
       const glyph = GLYPHS[char] ?? GLYPHS['?'];
       glyph.forEach((row, rowIndex) => {
-        [...row].forEach((pixel, columnIndex) => {
-          if (pixel === '1') {
+        for (let colIndex = 0; colIndex < row.length; colIndex++) {
+          if (row[colIndex] === '1') {
             graphics.fillRect(
-              cursorX + columnIndex * scale,
+              cursorX + colIndex * scale,
               startY + rowIndex * scale,
               scale,
               scale,
             );
           }
-        });
+        }
       });
       cursorX += 5 * scale + letterSpacing * scale;
     }
   });
 
   container.add(graphics);
-  container.setScrollFactor(options.scrollFactor ?? 1);
-  container.setDepth(options.depth ?? 0);
+
+  if (options.scrollFactor !== undefined) container.setScrollFactor(options.scrollFactor);
+  if (options.depth !== undefined) container.setDepth(options.depth);
+
   return container;
 }
