@@ -13,7 +13,6 @@ export class StageClearScene extends Phaser.Scene {
 
   create(): void {
     AudioSystem.get().stopBgm();
-    AudioSystem.get().playVictory();
     this.hasTransitioned = false;
 
     const gameState = GameState.get();
