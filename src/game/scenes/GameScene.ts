@@ -809,7 +809,7 @@ export class GameScene extends Phaser.Scene {
     const absX = Math.abs(direction.x);
     const absY = Math.abs(direction.y);
     let offsetX = 9 * facing;
-    let offsetY = 0;
+    let offsetY = this.player.isCrouching ? 4 : -2;
 
     if (absY > absX * 1.5) {
       offsetX = 5 * facing;

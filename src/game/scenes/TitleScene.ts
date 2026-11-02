@@ -534,7 +534,7 @@ export class TitleScene extends Phaser.Scene {
 
     this.controlsModal.add([backdrop, box, inner]);
 
-    const title = addPixelText(this, GAME_WIDTH / 2, 27, 'GUIA DE CONTROLES', {
+    const title = addPixelText(this, GAME_WIDTH / 2, 25, 'GUIA DE CONTROLES', {
       scale: 1,
       color: 0xfde047,
       originX: 0.5,
@@ -545,6 +545,7 @@ export class TitleScene extends Phaser.Scene {
     // Linhas diretas, limpas e perfeitamente enquadradas dentro da moldura
     const controls = [
       { action: 'MOVER', keys: 'A, D / SETAS ESQ, DIR' },
+      { action: 'AGACHAR', keys: 'S / SETA BAIXO' },
       { action: 'MIRAR CIMA', keys: 'W / SETA CIMA' },
       { action: 'PULO', keys: 'ESPACO / [X] PS5' },
       { action: 'ESTILINGUE', keys: 'J / X / [QUADRADO]' },
@@ -553,7 +554,7 @@ export class TitleScene extends Phaser.Scene {
     ];
 
     controls.forEach((ctrl, i) => {
-      const y = 42 + i * 14;
+      const y = 38 + i * 13;
       const actText = addPixelText(this, 38, y, ctrl.action, {
         scale: 1,
         color: 0x93c5fd,

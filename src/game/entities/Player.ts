@@ -63,9 +63,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private attackWasDown = false;
   private aimX = 1;
   private aimY = 0;
+  private crouching = false;
 
   public isInvulnerable = false;
   public isDead = false;
+
+  public get isCrouching(): boolean {
+    return this.crouching;
+  }
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, 'player-sheet', 0);
@@ -117,6 +122,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     const input = this.readDirectionalInput();
     const crouching = grounded && input.vertical > 0;
+    this.crouching = crouching;
 
     this.updateFacing(input.horizontal);
     this.updateMovement(input.horizontal, grounded, crouching);
@@ -323,11 +329,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     if (attackDown && !this.attackWasDown && time - this.lastShotAt >= QUICK_SHOT_COOLDOWN_MS) {
       this.charging = true;
       this.chargeStartedAt = time;
-      this.updateAim(horizontal, vertical);
+      this.updateAim(horizontal, vertical, grounded);
       AudioSystem.get().playCharge();
     }
 
-    if (attackDown && this.charging) this.updateAim(horizontal, vertical);
+    if (attackDown && this.charging) this.updateAim(horizontal, vertical, grounded);
 
     if (!attackDown && this.attackWasDown && this.charging) {
       const chargeTime = Phaser.Math.Clamp(time - this.chargeStartedAt, 0, MAX_CHARGE_MS);
@@ -339,11 +345,18 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.attackWasDown = attackDown;
   }
 
-  private updateAim(horizontal: number, vertical: number): void {
+  private updateAim(horizontal: number, vertical: number, grounded = false): void {
     let x = horizontal;
     let y = vertical;
 
-    if (x === 0 && y === 0) x = this.facing;
+    // Se estiver abaixado no chão (grounded e vertical > 0):
+    // Dispara RETO para frente (horizontal), no sentido em que Nilo está virado (facing)!
+    if (grounded && vertical > 0) {
+      y = 0;
+      x = horizontal !== 0 ? horizontal : this.facing;
+    } else if (x === 0 && y === 0) {
+      x = this.facing;
+    }
 
     if (x !== 0) {
       this.facing = x > 0 ? 1 : -1;
@@ -358,12 +371,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.aimY = vector.y;
   }
 
-  private fireProjectile(time: number, charged: boolean, _grounded: boolean): void {
+  private fireProjectile(time: number, charged: boolean, grounded: boolean): void {
     if (time - this.lastShotAt < QUICK_SHOT_COOLDOWN_MS) return;
 
+    const input = this.readDirectionalInput();
+    const crouching = grounded && input.vertical > 0;
     const verticalAim = Math.abs(this.aimX) < 0.2;
     const projectileX = this.x + this.aimX * 13 + (verticalAim ? this.facing * 3 : 0);
-    const projectileY = this.y - 6 + this.aimY * 13;
+    // Quando agachado no chão: projétil sai na altura baixa do estilingue agachado (this.y + 4) para atingir besouros
+    // Em pé: altura normal do peito (this.y - 2 + this.aimY * 11)
+    const projectileY = crouching ? (this.y + 4) : (this.y - 2 + this.aimY * 11);
     const projectile = new Projectile(this.scene, projectileX, projectileY, charged);
     projectile.fire(this.aimX, this.aimY);
 
@@ -400,6 +417,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       grounded && !crouching && (speed > 8 || horizontal !== 0);
 
     if (this.charging) {
+      if (crouching) {
+        this.setPlayerFrame(PLAYER_FRAMES.crouch);
+        return;
+      }
+
       const chargeTime = Phaser.Math.Clamp(time - this.chargeStartedAt, 0, MAX_CHARGE_MS);
       const chargeFrame = Math.min(2, Math.floor(chargeTime / 260));
       const aimPose = resolveAimPose(this.aimX, this.aimY);
@@ -415,6 +437,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     if (time < this.shootPoseUntil) {
+      if (crouching) {
+        this.setPlayerFrame(PLAYER_FRAMES.crouch);
+        return;
+      }
+
       const elapsed = Math.max(0, time - this.shotStartedAt);
       const shootFrame = Math.min(
         SHOOT_FRAME_COUNT - 1,
