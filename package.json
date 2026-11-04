@@ -1,22 +1,64 @@
-{
+﻿{
   "name": "nilo",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.3.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "art:pack": "node scripts/pack-original-player.mjs && node scripts/pack-forest.mjs && node scripts/pack-adventure.mjs && node scripts/pack-terrain.mjs && node scripts/pack-items.mjs",
+    "desktop:dev": "npm run build && electron .",
+    "desktop:build": "npm run build && electron-builder --win nsis --x64",
+    "android:sync": "npm run build && cap sync android",
+    "android:build": "npm run android:sync && node scripts/build-android.mjs",
+    "deploy": "npm run build && wrangler deploy",
+    "test": "playwright test"
   },
   "dependencies": {
+    "@capacitor/android": "^8.6.0",
+    "@capacitor/core": "^8.6.0",
     "phaser": "4.2.1"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.6.0",
+    "@playwright/test": "^1.64.1",
+    "@resvg/resvg-js": "^2.6.2",
+    "electron": "^45.2.1",
+    "electron-builder": "^26.18.0",
+    "sharp": "^0.35.5",
     "typescript": "7.0.2",
-    "vite": "8.3.5"
+    "vite": "8.3.5",
+    "wrangler": "^4.156.2"
   },
   "engines": {
     "node": ">=22.12.0"
+  },
+  "description": "NILO â€” uma aventura 2D na floresta",
+  "author": "Emerson",
+  "main": "electron/main.cjs",
+  "build": {
+    "appId": "com.emerson.nilo",
+    "productName": "NILO",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "artifactName": "NILO-Setup-${version}.${ext}",
+      "icon": "build/icon.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
   }
 }
+

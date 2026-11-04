@@ -1,5 +1,6 @@
+import { bindCamera } from '../systems/PresentationSystem';
 import Phaser from 'phaser';
-import { GAME_WIDTH, SCENE_KEYS } from '../config/constants';
+import { SCENE_KEYS } from '../config/constants';
 import { addPixelText } from '../ui/PixelText';
 import { GameState } from '../systems/GameState';
 import { AudioSystem } from '../systems/AudioSystem';
@@ -23,6 +24,9 @@ export class GameOverScene extends Phaser.Scene {
   }
 
   create(): void {
+    bindCamera(this);
+    this.add.image(160,90,'forest-backdrop').setDisplaySize(320,180).setDepth(-100);
+    this.add.rectangle(160,90,320,180,0x061e12,.75).setDepth(-99);
     this.hasChosen = false;
     this.selectedIndex = 0;
     this.menuItems = [];
@@ -31,46 +35,6 @@ export class GameOverScene extends Phaser.Scene {
 
     // Inicia a comovente e acolhedora trilha sonora de Continue (estilo DKC / Mario / Sonic)
     AudioSystem.get().startBgm('continue');
-
-    // 1. FUNDO ATMOSFÉRICO DE ENTARDECER NO VALE (GRADIENTE RETRÔ 16-BIT)
-    const bgGfx = this.add.graphics();
-    // Céu crepuscular: azul profundo até âmbar dourado no horizonte
-    const skyColors = [
-      { y: 0, h: 45, col: 0x0f172a },
-      { y: 45, h: 45, col: 0x1e1b4b },
-      { y: 90, h: 40, col: 0x3b0764 },
-      { y: 130, h: 30, col: 0x701a75 },
-      { y: 160, h: 20, col: 0x831843 },
-    ];
-    skyColors.forEach((layer) => {
-      bgGfx.fillStyle(layer.col, 1);
-      bgGfx.fillRect(0, layer.y, GAME_WIDTH, layer.h);
-    });
-
-    // Silhuetas distantes da cordilheira ao crepúsculo
-    this.add.image(GAME_WIDTH / 2, 130, 'bg-mountain-far')
-      .setTint(0x3b0764)
-      .setAlpha(0.65)
-      .setScale(3.5, 1);
-
-    // Luar / Estrelas cadentes cintilantes
-    for (let i = 0; i < 18; i++) {
-      const sx = Phaser.Math.Between(8, GAME_WIDTH - 8);
-      const sy = Phaser.Math.Between(4, 95);
-      const star = this.add.rectangle(sx, sy, 1, 1, 0xffffff, Phaser.Math.FloatBetween(0.4, 0.9));
-      this.tweens.add({
-        targets: star,
-        alpha: { from: 0.2, to: 0.95 },
-        duration: Phaser.Math.Between(800, 1800),
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut',
-      });
-    }
-
-    // Solo de acampamento rústico no rodapé
-    this.add.rectangle(GAME_WIDTH / 2, 174, GAME_WIDTH, 14, 0x18181b);
-    this.add.rectangle(GAME_WIDTH / 2, 168, GAME_WIDTH, 3, 0x14532d); // Grama escura do entardecer
 
     // 2. VIGNETTE VIVA: NILO DESCANSANDO NA FOGUEIRA
     // Fogueira de acampamento animada

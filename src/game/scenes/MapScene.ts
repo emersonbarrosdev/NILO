@@ -1,3 +1,4 @@
+import { bindCamera } from '../systems/PresentationSystem';
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '../config/constants';
 import { addPixelText } from '../ui/PixelText';
@@ -12,6 +13,7 @@ export class MapScene extends Phaser.Scene {
   constructor() { super(SCENE_KEYS.map); }
 
   create(): void {
+    bindCamera(this);
     AudioSystem.get().startBgm('title');
     this.hasTransitioned = false;
     const save = SaveSystem.get().load();

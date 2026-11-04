@@ -7,7 +7,7 @@ export class Stamp extends Phaser.Physics.Arcade.Sprite {
   private isCollected = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, 'item-stamp-sheet');
+    super(scene, x, y, 'item-stamp');
 
     scene.add.existing(this);
     scene.physics.add.existing(this, true);
@@ -15,7 +15,7 @@ export class Stamp extends Phaser.Physics.Arcade.Sprite {
 
     const body = this.body as Phaser.Physics.Arcade.StaticBody;
     body.setSize(10, 10);
-    this.play('stamp-spin');
+
 
     // Suave flutuação
     scene.tweens.add({

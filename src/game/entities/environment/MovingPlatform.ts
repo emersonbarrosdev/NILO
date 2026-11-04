@@ -19,7 +19,7 @@ export class MovingPlatform extends Phaser.Physics.Arcade.Sprite {
     distanceY = 0,
     speed = 35,
   ) {
-    super(scene, x, y, 'moving-platform');
+    super(scene, x, y, 'platform-log');
     this.distanceX = distanceX;
     this.distanceY = distanceY;
     this.speed = speed;
@@ -34,6 +34,7 @@ export class MovingPlatform extends Phaser.Physics.Arcade.Sprite {
 
     scene.add.existing(this);
     scene.physics.add.existing(this);
+    this.setOrigin(.5,0).setDisplaySize(48,10);
     this.setDepth(4);
 
     const body = this.body as Phaser.Physics.Arcade.Body;
@@ -46,8 +47,8 @@ export class MovingPlatform extends Phaser.Physics.Arcade.Sprite {
     body.checkCollision.left = false;
     body.checkCollision.right = false;
     body.checkCollision.up = true;
-    body.setSize(48, 8);
-    body.setOffset(0, 2);
+    body.setSize(this.width,12);
+    body.setOffset(0,0);
 
     if (Math.abs(distanceX) > 0) {
       body.setVelocityX(this.dirX * this.speed);

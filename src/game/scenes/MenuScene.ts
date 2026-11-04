@@ -1,3 +1,4 @@
+import { bindCamera } from '../systems/PresentationSystem';
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '../config/constants';
 import { addPixelText } from '../ui/PixelText';
@@ -6,6 +7,7 @@ export class MenuScene extends Phaser.Scene {
   constructor() { super(SCENE_KEYS.menu); }
 
   create(): void {
+    bindCamera(this);
     this.cameras.main.setBackgroundColor('#1b2452');
 
     addPixelText(this, GAME_WIDTH / 2, 52, 'NOVO JOGO', {

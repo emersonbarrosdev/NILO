@@ -6,7 +6,7 @@
 
 Nilo é uma criança em idade escolar. Após sair da escola, ele é levado contra a vontade para longe de casa. Em algum ponto do trajeto ele consegue escapar para uma região de mata e, a partir daí, o objetivo do jogo fica imediatamente claro: **voltar para casa**.
 
-A aventura acompanha esse retorno. Nilo atravessa florestas, rios, serras, campos e caminhos cada vez mais familiares enquanto evita perigos, enfrenta perseguidores e usa o estilingue para se defender e abrir passagem.
+A aventura acompanha esse retorno. Nilo atravessa florestas, rios, serras, campos e caminhos cada vez mais familiares enquanto evita perigos, enfrenta perseguidores e usa o bastão para se defender e abrir passagem.
 
 A história deve ser simples, visual e com pouco texto. O jogador precisa entender o objetivo em poucos segundos: Nilo está perdido, conseguiu escapar e quer chegar em casa.
 
@@ -63,7 +63,7 @@ O cenário começa a ficar familiar. Pela primeira vez o jogador sente que o obj
 
 Depois do chefe final, não deve haver outra grande missão. Nilo simplesmente continua o caminho.
 
-A última sequência mostra a paisagem ficando cada vez mais familiar, até aparecer a casa. Nilo chega ao portão/porta ainda com a mochila e o estilingue, exausto e sujo da aventura. A porta se abre e ele finalmente está em casa.
+A última sequência mostra a paisagem ficando cada vez mais familiar, até aparecer a casa. Nilo chega ao portão/porta ainda com a mochila e o bastão, exausto e sujo da aventura. A porta se abre e ele finalmente está em casa.
 
 O encerramento deve ser emocional sem precisar de diálogo longo. A sensação final é: **a aventura inteira era sobre Nilo voltar para casa, e ele conseguiu**.
 
@@ -75,4 +75,4 @@ A roupa atual combina com a história porque pode ser lida como roupa escolar/ca
 
 - idle normal curto e expressivo;
 - animações extras de personalidade ficam fora do escopo atual e podem voltar depois do vertical slice;
-- o estilingue deve ter origem física coerente: toda pedra disparada nasce visualmente na boca do estilingue, respeitando a direção da mira.
+- o bastão deve ter origem física coerente: toda pedra disparada nasce visualmente na boca do bastão, respeitando a direção da mira.

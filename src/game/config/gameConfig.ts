@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_HEIGHT, GAME_WIDTH } from './constants';
+import { INTERNAL_RENDER } from './presentation';
 import { BootScene } from '../scenes/BootScene';
 import { PreloadScene } from '../scenes/PreloadScene';
 import { TitleScene } from '../scenes/TitleScene';
@@ -13,8 +13,8 @@ import { EndingScene } from '../scenes/EndingScene';
 export const gameConfig: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
   parent: 'app',
-  width: GAME_WIDTH,
-  height: GAME_HEIGHT,
+  width: INTERNAL_RENDER.width,
+  height: INTERNAL_RENDER.height,
   backgroundColor: '#1b2452',
   pixelArt: true,
   roundPixels: true,

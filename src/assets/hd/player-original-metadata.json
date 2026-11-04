@@ -1,0 +1,2657 @@
+{
+  "cellSize": 32,
+  "textureCellSize": 128,
+  "textureResolution": 4,
+  "footBaseline": 29,
+  "columns": 8,
+  "count": 88,
+  "alphaThreshold": 220,
+  "states": {
+    "original": [
+      0,
+      63
+    ],
+    "walk": [
+      64,
+      71
+    ],
+    "run": [
+      72,
+      79
+    ],
+    "throw": [
+      40,
+      47
+    ],
+    "push_standing": [
+      56,
+      63
+    ],
+    "push_crouched": [
+      80,
+      87
+    ]
+  },
+  "baton": {
+    "source": "baton.png",
+    "texture": "baton-horizontal.png",
+    "logicalLength": 18,
+    "logicalThickness": 4,
+    "textureWidth": 72,
+    "textureHeight": 16,
+    "gripAnchor": {
+      "x": 0.12,
+      "y": 0.5
+    }
+  },
+  "handAnchorSource": "player-hand-anchors.json",
+  "handAnchorCoordinates": "Logical pixels relative to cell centre; manual visual calibration, angle in degrees.",
+  "sourceHashes": {
+    "player-unarmed-source.png": "39ff36cefd12c9692f988b3840fd726144d14360982c64c7b3e1e3bc5ee9a376",
+    "player-walk8-source.png": "84d03e721ea9e520f51fdfa1fe7ee364016e459846a16c5c00ab791a9add1ac9",
+    "player-run8-source.png": "60dc1f68ec7371c4465f4eddee0a7a47a0f05ea34ff2dc9d917c5411b6b46870",
+    "player-push-crouched8-source.png": "a4d29081d2eb665271e667be597dda565ab17257490e76666ed66897ab216512"
+  },
+  "frames": [
+    {
+      "index": 0,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 0,
+        "top": 0,
+        "width": 158,
+        "height": 178
+      },
+      "sourceBounds": {
+        "left": 32,
+        "top": 7,
+        "width": 103,
+        "height": 165
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 31,
+        "top": 12,
+        "width": 65,
+        "height": 104
+      },
+      "handAnchor": {
+        "x": 4,
+        "y": 4.75,
+        "angle": -40
+      }
+    },
+    {
+      "index": 1,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 158,
+        "top": 0,
+        "width": 157,
+        "height": 178
+      },
+      "sourceBounds": {
+        "left": 32,
+        "top": 8,
+        "width": 103,
+        "height": 163
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 31,
+        "top": 13,
+        "width": 65,
+        "height": 103
+      },
+      "handAnchor": {
+        "x": 4,
+        "y": 4.75,
+        "angle": -40
+      }
+    },
+    {
+      "index": 2,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 315,
+        "top": 0,
+        "width": 158,
+        "height": 178
+      },
+      "sourceBounds": {
+        "left": 32,
+        "top": 8,
+        "width": 103,
+        "height": 163
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 31,
+        "top": 13,
+        "width": 65,
+        "height": 103
+      },
+      "handAnchor": {
+        "x": 4,
+        "y": 4.75,
+        "angle": -40
+      }
+    },
+    {
+      "index": 3,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 473,
+        "top": 0,
+        "width": 158,
+        "height": 178
+      },
+      "sourceBounds": {
+        "left": 32,
+        "top": 7,
+        "width": 103,
+        "height": 164
+      },
+      "removedMattePixels": 1,
+      "scale": 0.63,
+      "packed": {
+        "left": 31,
+        "top": 13,
+        "width": 65,
+        "height": 103
+      },
+      "handAnchor": {
+        "x": 4,
+        "y": 4.75,
+        "angle": -40
+      }
+    },
+    {
+      "index": 4,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 631,
+        "top": 0,
+        "width": 157,
+        "height": 178
+      },
+      "sourceBounds": {
+        "left": 32,
+        "top": 8,
+        "width": 103,
+        "height": 163
+      },
+      "removedMattePixels": 1,
+      "scale": 0.63,
+      "packed": {
+        "left": 31,
+        "top": 13,
+        "width": 65,
+        "height": 103
+      },
+      "handAnchor": {
+        "x": 4,
+        "y": 4.75,
+        "angle": -40
+      }
+    },
+    {
+      "index": 5,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 788,
+        "top": 0,
+        "width": 158,
+        "height": 178
+      },
+      "sourceBounds": {
+        "left": 33,
+        "top": 8,
+        "width": 102,
+        "height": 163
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 32,
+        "top": 13,
+        "width": 64,
+        "height": 103
+      },
+      "handAnchor": {
+        "x": 4,
+        "y": 4.75,
+        "angle": -40
+      }
+    },
+    {
+      "index": 6,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 946,
+        "top": 0,
+        "width": 157,
+        "height": 178
+      },
+      "sourceBounds": {
+        "left": 33,
+        "top": 8,
+        "width": 102,
+        "height": 163
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 32,
+        "top": 13,
+        "width": 64,
+        "height": 103
+      },
+      "handAnchor": {
+        "x": 4,
+        "y": 4.75,
+        "angle": -40
+      }
+    },
+    {
+      "index": 7,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 1103,
+        "top": 0,
+        "width": 158,
+        "height": 178
+      },
+      "sourceBounds": {
+        "left": 34,
+        "top": 8,
+        "width": 102,
+        "height": 163
+      },
+      "removedMattePixels": 1,
+      "scale": 0.63,
+      "packed": {
+        "left": 32,
+        "top": 13,
+        "width": 64,
+        "height": 103
+      },
+      "handAnchor": {
+        "x": 4,
+        "y": 4.75,
+        "angle": -40
+      }
+    },
+    {
+      "index": 8,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 0,
+        "top": 178,
+        "width": 158,
+        "height": 170
+      },
+      "sourceBounds": {
+        "left": 35,
+        "top": 9,
+        "width": 97,
+        "height": 157
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 33,
+        "top": 17,
+        "width": 61,
+        "height": 99
+      },
+      "handAnchor": {
+        "x": 3.75,
+        "y": 3.25,
+        "angle": -40
+      }
+    },
+    {
+      "index": 9,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 158,
+        "top": 178,
+        "width": 157,
+        "height": 170
+      },
+      "sourceBounds": {
+        "left": 37,
+        "top": 9,
+        "width": 95,
+        "height": 156
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 34,
+        "top": 18,
+        "width": 60,
+        "height": 98
+      },
+      "handAnchor": {
+        "x": 3.5,
+        "y": 3.25,
+        "angle": -40
+      }
+    },
+    {
+      "index": 10,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 315,
+        "top": 178,
+        "width": 158,
+        "height": 170
+      },
+      "sourceBounds": {
+        "left": 33,
+        "top": 10,
+        "width": 99,
+        "height": 155
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 33,
+        "top": 18,
+        "width": 62,
+        "height": 98
+      },
+      "handAnchor": {
+        "x": 4,
+        "y": 3.25,
+        "angle": -40
+      }
+    },
+    {
+      "index": 11,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 473,
+        "top": 178,
+        "width": 158,
+        "height": 170
+      },
+      "sourceBounds": {
+        "left": 25,
+        "top": 9,
+        "width": 107,
+        "height": 155
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 30,
+        "top": 18,
+        "width": 67,
+        "height": 98
+      },
+      "handAnchor": {
+        "x": 5,
+        "y": 3.75,
+        "angle": -35
+      }
+    },
+    {
+      "index": 12,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 631,
+        "top": 178,
+        "width": 157,
+        "height": 170
+      },
+      "sourceBounds": {
+        "left": 33,
+        "top": 9,
+        "width": 98,
+        "height": 155
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 33,
+        "top": 18,
+        "width": 62,
+        "height": 98
+      },
+      "handAnchor": {
+        "x": 4.75,
+        "y": 3.75,
+        "angle": -35
+      }
+    },
+    {
+      "index": 13,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 788,
+        "top": 178,
+        "width": 158,
+        "height": 170
+      },
+      "sourceBounds": {
+        "left": 37,
+        "top": 10,
+        "width": 96,
+        "height": 156
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 34,
+        "top": 18,
+        "width": 60,
+        "height": 98
+      },
+      "handAnchor": {
+        "x": 3.5,
+        "y": 3.5,
+        "angle": -35
+      }
+    },
+    {
+      "index": 14,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 946,
+        "top": 178,
+        "width": 157,
+        "height": 170
+      },
+      "sourceBounds": {
+        "left": 31,
+        "top": 10,
+        "width": 102,
+        "height": 155
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 32,
+        "top": 18,
+        "width": 64,
+        "height": 98
+      },
+      "handAnchor": {
+        "x": 4.75,
+        "y": 3.75,
+        "angle": -35
+      }
+    },
+    {
+      "index": 15,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 1103,
+        "top": 178,
+        "width": 158,
+        "height": 170
+      },
+      "sourceBounds": {
+        "left": 29,
+        "top": 9,
+        "width": 103,
+        "height": 156
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 31,
+        "top": 18,
+        "width": 65,
+        "height": 98
+      },
+      "handAnchor": {
+        "x": 4.5,
+        "y": 3.5,
+        "angle": -35
+      }
+    },
+    {
+      "index": 16,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 0,
+        "top": 348,
+        "width": 158,
+        "height": 162
+      },
+      "sourceBounds": {
+        "left": 17,
+        "top": 9,
+        "width": 124,
+        "height": 149
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 25,
+        "top": 22,
+        "width": 78,
+        "height": 94
+      },
+      "handAnchor": {
+        "x": 5.75,
+        "y": 3.5,
+        "angle": -35
+      }
+    },
+    {
+      "index": 17,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 158,
+        "top": 348,
+        "width": 157,
+        "height": 162
+      },
+      "sourceBounds": {
+        "left": 9,
+        "top": 8,
+        "width": 127,
+        "height": 147
+      },
+      "removedMattePixels": 9,
+      "scale": 0.63,
+      "packed": {
+        "left": 24,
+        "top": 23,
+        "width": 80,
+        "height": 93
+      },
+      "handAnchor": {
+        "x": 4.75,
+        "y": 3.5,
+        "angle": -25
+      }
+    },
+    {
+      "index": 18,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 315,
+        "top": 348,
+        "width": 158,
+        "height": 162
+      },
+      "sourceBounds": {
+        "left": 0,
+        "top": 8,
+        "width": 138,
+        "height": 137
+      },
+      "removedMattePixels": 8,
+      "scale": 0.63,
+      "packed": {
+        "left": 20,
+        "top": 30,
+        "width": 87,
+        "height": 86
+      },
+      "handAnchor": {
+        "x": -3.5,
+        "y": 3.25,
+        "angle": -145
+      }
+    },
+    {
+      "index": 19,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 473,
+        "top": 348,
+        "width": 158,
+        "height": 162
+      },
+      "sourceBounds": {
+        "left": 0,
+        "top": 9,
+        "width": 141,
+        "height": 144
+      },
+      "removedMattePixels": 1,
+      "scale": 0.63,
+      "packed": {
+        "left": 19,
+        "top": 25,
+        "width": 89,
+        "height": 91
+      },
+      "handAnchor": {
+        "x": 6,
+        "y": 4.5,
+        "angle": -20
+      }
+    },
+    {
+      "index": 20,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 631,
+        "top": 348,
+        "width": 157,
+        "height": 162
+      },
+      "sourceBounds": {
+        "left": 25,
+        "top": 9,
+        "width": 117,
+        "height": 150
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 27,
+        "top": 21,
+        "width": 74,
+        "height": 95
+      },
+      "handAnchor": {
+        "x": 3.25,
+        "y": 4.25,
+        "angle": -30
+      }
+    },
+    {
+      "index": 21,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 788,
+        "top": 348,
+        "width": 158,
+        "height": 162
+      },
+      "sourceBounds": {
+        "left": 9,
+        "top": 8,
+        "width": 134,
+        "height": 147
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 22,
+        "top": 23,
+        "width": 84,
+        "height": 93
+      },
+      "handAnchor": {
+        "x": 5.5,
+        "y": 4,
+        "angle": -35
+      }
+    },
+    {
+      "index": 22,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 946,
+        "top": 348,
+        "width": 157,
+        "height": 162
+      },
+      "sourceBounds": {
+        "left": 11,
+        "top": 8,
+        "width": 134,
+        "height": 145
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 22,
+        "top": 25,
+        "width": 84,
+        "height": 91
+      },
+      "handAnchor": {
+        "x": 4.5,
+        "y": 3.25,
+        "angle": -25
+      }
+    },
+    {
+      "index": 23,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 1103,
+        "top": 348,
+        "width": 158,
+        "height": 162
+      },
+      "sourceBounds": {
+        "left": 24,
+        "top": 9,
+        "width": 123,
+        "height": 150
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 25,
+        "top": 21,
+        "width": 77,
+        "height": 95
+      },
+      "handAnchor": {
+        "x": 4.5,
+        "y": 4.25,
+        "angle": -20
+      }
+    },
+    {
+      "index": 24,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 0,
+        "top": 510,
+        "width": 158,
+        "height": 175
+      },
+      "sourceBounds": {
+        "left": 31,
+        "top": 27,
+        "width": 111,
+        "height": 139
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 29,
+        "top": 28,
+        "width": 70,
+        "height": 88
+      },
+      "handAnchor": {
+        "x": 3,
+        "y": 7,
+        "angle": -35
+      }
+    },
+    {
+      "index": 25,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 158,
+        "top": 510,
+        "width": 157,
+        "height": 175
+      },
+      "sourceBounds": {
+        "left": 28,
+        "top": 9,
+        "width": 109,
+        "height": 154
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 29,
+        "top": 19,
+        "width": 69,
+        "height": 97
+      },
+      "handAnchor": {
+        "x": 4,
+        "y": 3,
+        "angle": -40
+      }
+    },
+    {
+      "index": 26,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 315,
+        "top": 510,
+        "width": 158,
+        "height": 175
+      },
+      "sourceBounds": {
+        "left": 25,
+        "top": 6,
+        "width": 109,
+        "height": 138
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 29,
+        "top": 29,
+        "width": 69,
+        "height": 87
+      },
+      "handAnchor": {
+        "x": 4.5,
+        "y": 5,
+        "angle": -40
+      }
+    },
+    {
+      "index": 27,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 473,
+        "top": 510,
+        "width": 158,
+        "height": 175
+      },
+      "sourceBounds": {
+        "left": 17,
+        "top": 5,
+        "width": 114,
+        "height": 132
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 28,
+        "top": 33,
+        "width": 72,
+        "height": 83
+      },
+      "handAnchor": {
+        "x": 5.75,
+        "y": 5,
+        "angle": -35
+      }
+    },
+    {
+      "index": 28,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 631,
+        "top": 510,
+        "width": 157,
+        "height": 175
+      },
+      "sourceBounds": {
+        "left": 24,
+        "top": 6,
+        "width": 108,
+        "height": 141
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 30,
+        "top": 27,
+        "width": 68,
+        "height": 89
+      },
+      "handAnchor": {
+        "x": 4.5,
+        "y": 5.25,
+        "angle": -35
+      }
+    },
+    {
+      "index": 29,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 788,
+        "top": 510,
+        "width": 158,
+        "height": 175
+      },
+      "sourceBounds": {
+        "left": 22,
+        "top": 21,
+        "width": 111,
+        "height": 143
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 29,
+        "top": 26,
+        "width": 70,
+        "height": 90
+      },
+      "handAnchor": {
+        "x": 4.5,
+        "y": 5.25,
+        "angle": -35
+      }
+    },
+    {
+      "index": 30,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 946,
+        "top": 510,
+        "width": 157,
+        "height": 175
+      },
+      "sourceBounds": {
+        "left": 26,
+        "top": 28,
+        "width": 108,
+        "height": 139
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 30,
+        "top": 28,
+        "width": 68,
+        "height": 88
+      },
+      "handAnchor": {
+        "x": 5,
+        "y": 6.5,
+        "angle": -35
+      }
+    },
+    {
+      "index": 31,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 1103,
+        "top": 510,
+        "width": 158,
+        "height": 175
+      },
+      "sourceBounds": {
+        "left": 38,
+        "top": 23,
+        "width": 96,
+        "height": 143
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 34,
+        "top": 26,
+        "width": 60,
+        "height": 90
+      },
+      "handAnchor": {
+        "x": 3.75,
+        "y": 5.25,
+        "angle": -35
+      }
+    },
+    {
+      "index": 32,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 0,
+        "top": 685,
+        "width": 158,
+        "height": 133
+      },
+      "sourceBounds": {
+        "left": 21,
+        "top": 8,
+        "width": 114,
+        "height": 120
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 28,
+        "top": 40,
+        "width": 72,
+        "height": 76
+      },
+      "handAnchor": {
+        "x": 4,
+        "y": 8.25,
+        "angle": -30
+      }
+    },
+    {
+      "index": 33,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 158,
+        "top": 685,
+        "width": 157,
+        "height": 133
+      },
+      "sourceBounds": {
+        "left": 24,
+        "top": 10,
+        "width": 111,
+        "height": 118
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 29,
+        "top": 42,
+        "width": 70,
+        "height": 74
+      },
+      "handAnchor": {
+        "x": 3,
+        "y": 8,
+        "angle": -25
+      }
+    },
+    {
+      "index": 34,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 315,
+        "top": 685,
+        "width": 158,
+        "height": 133
+      },
+      "sourceBounds": {
+        "left": 25,
+        "top": 10,
+        "width": 110,
+        "height": 115
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 29,
+        "top": 44,
+        "width": 69,
+        "height": 72
+      },
+      "handAnchor": {
+        "x": 3.5,
+        "y": 8.25,
+        "angle": -30
+      }
+    },
+    {
+      "index": 35,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 473,
+        "top": 685,
+        "width": 158,
+        "height": 133
+      },
+      "sourceBounds": {
+        "left": 20,
+        "top": 10,
+        "width": 115,
+        "height": 118
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 28,
+        "top": 42,
+        "width": 72,
+        "height": 74
+      },
+      "handAnchor": {
+        "x": 4,
+        "y": 8,
+        "angle": -25
+      }
+    },
+    {
+      "index": 36,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 631,
+        "top": 685,
+        "width": 157,
+        "height": 133
+      },
+      "sourceBounds": {
+        "left": 20,
+        "top": 10,
+        "width": 116,
+        "height": 118
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 27,
+        "top": 42,
+        "width": 73,
+        "height": 74
+      },
+      "handAnchor": {
+        "x": 4.25,
+        "y": 8.25,
+        "angle": -25
+      }
+    },
+    {
+      "index": 37,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 788,
+        "top": 685,
+        "width": 158,
+        "height": 133
+      },
+      "sourceBounds": {
+        "left": 24,
+        "top": 11,
+        "width": 111,
+        "height": 117
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 29,
+        "top": 42,
+        "width": 70,
+        "height": 74
+      },
+      "handAnchor": {
+        "x": 4.25,
+        "y": 8,
+        "angle": -25
+      }
+    },
+    {
+      "index": 38,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 946,
+        "top": 685,
+        "width": 157,
+        "height": 133
+      },
+      "sourceBounds": {
+        "left": 24,
+        "top": 11,
+        "width": 112,
+        "height": 117
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 28,
+        "top": 42,
+        "width": 71,
+        "height": 74
+      },
+      "handAnchor": {
+        "x": 3.5,
+        "y": 8.5,
+        "angle": -20
+      }
+    },
+    {
+      "index": 39,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 1103,
+        "top": 685,
+        "width": 158,
+        "height": 133
+      },
+      "sourceBounds": {
+        "left": 27,
+        "top": 10,
+        "width": 109,
+        "height": 118
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 29,
+        "top": 42,
+        "width": 69,
+        "height": 74
+      },
+      "handAnchor": {
+        "x": 4.25,
+        "y": 8.5,
+        "angle": -25
+      }
+    },
+    {
+      "index": 40,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 0,
+        "top": 818,
+        "width": 158,
+        "height": 160
+      },
+      "sourceBounds": {
+        "left": 29,
+        "top": 10,
+        "width": 102,
+        "height": 146
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 32,
+        "top": 24,
+        "width": 64,
+        "height": 92
+      },
+      "handAnchor": {
+        "x": -6.25,
+        "y": 3.5,
+        "angle": -130
+      }
+    },
+    {
+      "index": 41,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 158,
+        "top": 818,
+        "width": 157,
+        "height": 160
+      },
+      "sourceBounds": {
+        "left": 27,
+        "top": 9,
+        "width": 111,
+        "height": 145
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 29,
+        "top": 25,
+        "width": 70,
+        "height": 91
+      },
+      "handAnchor": {
+        "x": -7,
+        "y": 2,
+        "angle": -140
+      }
+    },
+    {
+      "index": 42,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 315,
+        "top": 818,
+        "width": 158,
+        "height": 160
+      },
+      "sourceBounds": {
+        "left": 30,
+        "top": 8,
+        "width": 100,
+        "height": 146
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 32,
+        "top": 24,
+        "width": 63,
+        "height": 92
+      },
+      "handAnchor": {
+        "x": -6,
+        "y": 2.75,
+        "angle": -135
+      }
+    },
+    {
+      "index": 43,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 473,
+        "top": 818,
+        "width": 158,
+        "height": 160
+      },
+      "sourceBounds": {
+        "left": 22,
+        "top": 6,
+        "width": 109,
+        "height": 149
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 29,
+        "top": 22,
+        "width": 69,
+        "height": 94
+      },
+      "handAnchor": {
+        "x": 5.5,
+        "y": 0,
+        "angle": -15
+      }
+    },
+    {
+      "index": 44,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 631,
+        "top": 818,
+        "width": 157,
+        "height": 160
+      },
+      "sourceBounds": {
+        "left": 15,
+        "top": 8,
+        "width": 114,
+        "height": 147
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 28,
+        "top": 23,
+        "width": 72,
+        "height": 93
+      },
+      "handAnchor": {
+        "x": 7.5,
+        "y": 1,
+        "angle": 0
+      }
+    },
+    {
+      "index": 45,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 788,
+        "top": 818,
+        "width": 158,
+        "height": 160
+      },
+      "sourceBounds": {
+        "left": 19,
+        "top": 9,
+        "width": 112,
+        "height": 146
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 28,
+        "top": 24,
+        "width": 71,
+        "height": 92
+      },
+      "handAnchor": {
+        "x": 7.25,
+        "y": 0.75,
+        "angle": 0
+      }
+    },
+    {
+      "index": 46,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 946,
+        "top": 818,
+        "width": 157,
+        "height": 160
+      },
+      "sourceBounds": {
+        "left": 23,
+        "top": 8,
+        "width": 114,
+        "height": 147
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 28,
+        "top": 23,
+        "width": 72,
+        "height": 93
+      },
+      "handAnchor": {
+        "x": 7,
+        "y": 1.25,
+        "angle": 0
+      }
+    },
+    {
+      "index": 47,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 1103,
+        "top": 818,
+        "width": 158,
+        "height": 160
+      },
+      "sourceBounds": {
+        "left": 31,
+        "top": 7,
+        "width": 85,
+        "height": 148
+      },
+      "removedMattePixels": 1,
+      "scale": 0.63,
+      "packed": {
+        "left": 37,
+        "top": 23,
+        "width": 54,
+        "height": 93
+      },
+      "handAnchor": {
+        "x": 5.25,
+        "y": 4.75,
+        "angle": -40
+      }
+    },
+    {
+      "index": 48,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 0,
+        "top": 978,
+        "width": 158,
+        "height": 130
+      },
+      "sourceBounds": {
+        "left": 17,
+        "top": 11,
+        "width": 92,
+        "height": 114
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 35,
+        "top": 44,
+        "width": 58,
+        "height": 72
+      },
+      "handAnchor": {
+        "x": 5.5,
+        "y": 6.5,
+        "angle": -35
+      }
+    },
+    {
+      "index": 49,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 158,
+        "top": 978,
+        "width": 157,
+        "height": 130
+      },
+      "sourceBounds": {
+        "left": 20,
+        "top": 6,
+        "width": 96,
+        "height": 119
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 34,
+        "top": 41,
+        "width": 60,
+        "height": 75
+      },
+      "handAnchor": {
+        "x": 5,
+        "y": 5.25,
+        "angle": -30
+      }
+    },
+    {
+      "index": 50,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 315,
+        "top": 978,
+        "width": 158,
+        "height": 130
+      },
+      "sourceBounds": {
+        "left": 15,
+        "top": 6,
+        "width": 96,
+        "height": 119
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 34,
+        "top": 41,
+        "width": 60,
+        "height": 75
+      },
+      "handAnchor": {
+        "x": 5.5,
+        "y": 6.75,
+        "angle": -20
+      }
+    },
+    {
+      "index": 51,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 473,
+        "top": 978,
+        "width": 158,
+        "height": 130
+      },
+      "sourceBounds": {
+        "left": 16,
+        "top": 10,
+        "width": 101,
+        "height": 115
+      },
+      "removedMattePixels": 1,
+      "scale": 0.63,
+      "packed": {
+        "left": 32,
+        "top": 44,
+        "width": 64,
+        "height": 72
+      },
+      "handAnchor": {
+        "x": 6.75,
+        "y": 5.25,
+        "angle": -10
+      }
+    },
+    {
+      "index": 52,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 631,
+        "top": 978,
+        "width": 157,
+        "height": 130
+      },
+      "sourceBounds": {
+        "left": 15,
+        "top": 11,
+        "width": 114,
+        "height": 114
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 28,
+        "top": 44,
+        "width": 72,
+        "height": 72
+      },
+      "handAnchor": {
+        "x": 7.25,
+        "y": 5.5,
+        "angle": 0
+      }
+    },
+    {
+      "index": 53,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 788,
+        "top": 978,
+        "width": 158,
+        "height": 130
+      },
+      "sourceBounds": {
+        "left": 12,
+        "top": 10,
+        "width": 114,
+        "height": 115
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 28,
+        "top": 44,
+        "width": 72,
+        "height": 72
+      },
+      "handAnchor": {
+        "x": 7.25,
+        "y": 6.5,
+        "angle": 0
+      }
+    },
+    {
+      "index": 54,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 946,
+        "top": 978,
+        "width": 157,
+        "height": 130
+      },
+      "sourceBounds": {
+        "left": 18,
+        "top": 11,
+        "width": 107,
+        "height": 114
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 30,
+        "top": 44,
+        "width": 67,
+        "height": 72
+      },
+      "handAnchor": {
+        "x": 6.5,
+        "y": 6.5,
+        "angle": -5
+      }
+    },
+    {
+      "index": 55,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 1103,
+        "top": 978,
+        "width": 158,
+        "height": 130
+      },
+      "sourceBounds": {
+        "left": 26,
+        "top": 9,
+        "width": 99,
+        "height": 117
+      },
+      "removedMattePixels": 2,
+      "scale": 0.63,
+      "packed": {
+        "left": 33,
+        "top": 42,
+        "width": 62,
+        "height": 74
+      },
+      "handAnchor": {
+        "x": 5.25,
+        "y": 7.25,
+        "angle": -10
+      }
+    },
+    {
+      "index": 56,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 0,
+        "top": 1108,
+        "width": 158,
+        "height": 139
+      },
+      "sourceBounds": {
+        "left": 26,
+        "top": 8,
+        "width": 110,
+        "height": 126
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 29,
+        "top": 37,
+        "width": 69,
+        "height": 79
+      },
+      "handAnchor": {
+        "x": 6.75,
+        "y": 4,
+        "angle": -90
+      }
+    },
+    {
+      "index": 57,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 158,
+        "top": 1108,
+        "width": 157,
+        "height": 139
+      },
+      "sourceBounds": {
+        "left": 24,
+        "top": 8,
+        "width": 111,
+        "height": 126
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 29,
+        "top": 37,
+        "width": 70,
+        "height": 79
+      },
+      "handAnchor": {
+        "x": 7.25,
+        "y": 4,
+        "angle": -90
+      }
+    },
+    {
+      "index": 58,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 315,
+        "top": 1108,
+        "width": 158,
+        "height": 139
+      },
+      "sourceBounds": {
+        "left": 24,
+        "top": 8,
+        "width": 111,
+        "height": 125
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 29,
+        "top": 37,
+        "width": 70,
+        "height": 79
+      },
+      "handAnchor": {
+        "x": 7.25,
+        "y": 4,
+        "angle": -90
+      }
+    },
+    {
+      "index": 59,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 473,
+        "top": 1108,
+        "width": 158,
+        "height": 139
+      },
+      "sourceBounds": {
+        "left": 19,
+        "top": 9,
+        "width": 114,
+        "height": 124
+      },
+      "removedMattePixels": 1,
+      "scale": 0.63,
+      "packed": {
+        "left": 28,
+        "top": 38,
+        "width": 72,
+        "height": 78
+      },
+      "handAnchor": {
+        "x": 7.5,
+        "y": 4,
+        "angle": -90
+      }
+    },
+    {
+      "index": 60,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 631,
+        "top": 1108,
+        "width": 157,
+        "height": 139
+      },
+      "sourceBounds": {
+        "left": 22,
+        "top": 8,
+        "width": 111,
+        "height": 125
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 29,
+        "top": 37,
+        "width": 70,
+        "height": 79
+      },
+      "handAnchor": {
+        "x": 7.5,
+        "y": 4,
+        "angle": -90
+      }
+    },
+    {
+      "index": 61,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 788,
+        "top": 1108,
+        "width": 158,
+        "height": 139
+      },
+      "sourceBounds": {
+        "left": 17,
+        "top": 9,
+        "width": 124,
+        "height": 123
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 25,
+        "top": 39,
+        "width": 78,
+        "height": 77
+      },
+      "handAnchor": {
+        "x": 7.5,
+        "y": 4,
+        "angle": -90
+      }
+    },
+    {
+      "index": 62,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 946,
+        "top": 1108,
+        "width": 157,
+        "height": 139
+      },
+      "sourceBounds": {
+        "left": 24,
+        "top": 8,
+        "width": 110,
+        "height": 126
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 29,
+        "top": 37,
+        "width": 69,
+        "height": 79
+      },
+      "handAnchor": {
+        "x": 7.5,
+        "y": 4,
+        "angle": -90
+      }
+    },
+    {
+      "index": 63,
+      "source": "player-unarmed-source.png",
+      "sourceRect": {
+        "left": 1103,
+        "top": 1108,
+        "width": 158,
+        "height": 139
+      },
+      "sourceBounds": {
+        "left": 32,
+        "top": 8,
+        "width": 105,
+        "height": 125
+      },
+      "removedMattePixels": 0,
+      "scale": 0.63,
+      "packed": {
+        "left": 31,
+        "top": 37,
+        "width": 66,
+        "height": 79
+      },
+      "handAnchor": {
+        "x": 7,
+        "y": 4,
+        "angle": -90
+      }
+    },
+    {
+      "index": 64,
+      "source": "player-walk8-source.png",
+      "sourceRect": {
+        "left": 0,
+        "top": 0,
+        "width": 444,
+        "height": 444
+      },
+      "sourceBounds": {
+        "left": 79,
+        "top": 10,
+        "width": 283,
+        "height": 409
+      },
+      "removedMattePixels": 0,
+      "scale": 0.24938875305623473,
+      "packed": {
+        "left": 28,
+        "top": 14,
+        "width": 71,
+        "height": 102
+      },
+      "state": "walk",
+      "phase": 0,
+      "handAnchor": {
+        "x": 4.75,
+        "y": 1.25,
+        "angle": -40
+      }
+    },
+    {
+      "index": 65,
+      "source": "player-walk8-source.png",
+      "sourceRect": {
+        "left": 444,
+        "top": 0,
+        "width": 443,
+        "height": 444
+      },
+      "sourceBounds": {
+        "left": 111,
+        "top": 11,
+        "width": 227,
+        "height": 408
+      },
+      "removedMattePixels": 0,
+      "scale": 0.24938875305623473,
+      "packed": {
+        "left": 36,
+        "top": 14,
+        "width": 57,
+        "height": 102
+      },
+      "state": "walk",
+      "phase": 1,
+      "handAnchor": {
+        "x": 4.5,
+        "y": 1.25,
+        "angle": -40
+      }
+    },
+    {
+      "index": 66,
+      "source": "player-walk8-source.png",
+      "sourceRect": {
+        "left": 887,
+        "top": 0,
+        "width": 444,
+        "height": 444
+      },
+      "sourceBounds": {
+        "left": 111,
+        "top": 10,
+        "width": 227,
+        "height": 409
+      },
+      "removedMattePixels": 2,
+      "scale": 0.24938875305623473,
+      "packed": {
+        "left": 36,
+        "top": 14,
+        "width": 57,
+        "height": 102
+      },
+      "state": "walk",
+      "phase": 2,
+      "handAnchor": {
+        "x": 4,
+        "y": 1.75,
+        "angle": -30
+      }
+    },
+    {
+      "index": 67,
+      "source": "player-walk8-source.png",
+      "sourceRect": {
+        "left": 1331,
+        "top": 0,
+        "width": 443,
+        "height": 444
+      },
+      "sourceBounds": {
+        "left": 72,
+        "top": 11,
+        "width": 266,
+        "height": 408
+      },
+      "removedMattePixels": 0,
+      "scale": 0.24938875305623473,
+      "packed": {
+        "left": 26,
+        "top": 14,
+        "width": 66,
+        "height": 102
+      },
+      "state": "walk",
+      "phase": 3,
+      "handAnchor": {
+        "x": 4,
+        "y": 1.75,
+        "angle": -30
+      }
+    },
+    {
+      "index": 68,
+      "source": "player-walk8-source.png",
+      "sourceRect": {
+        "left": 0,
+        "top": 444,
+        "width": 444,
+        "height": 443
+      },
+      "sourceBounds": {
+        "left": 65,
+        "top": 11,
+        "width": 301,
+        "height": 407
+      },
+      "removedMattePixels": 0,
+      "scale": 0.24938875305623473,
+      "packed": {
+        "left": 24,
+        "top": 14,
+        "width": 75,
+        "height": 102
+      },
+      "state": "walk",
+      "phase": 4,
+      "handAnchor": {
+        "x": 3.75,
+        "y": 1.75,
+        "angle": -30
+      }
+    },
+    {
+      "index": 69,
+      "source": "player-walk8-source.png",
+      "sourceRect": {
+        "left": 444,
+        "top": 444,
+        "width": 443,
+        "height": 443
+      },
+      "sourceBounds": {
+        "left": 106,
+        "top": 10,
+        "width": 232,
+        "height": 409
+      },
+      "removedMattePixels": 1,
+      "scale": 0.24938875305623473,
+      "packed": {
+        "left": 35,
+        "top": 14,
+        "width": 58,
+        "height": 102
+      },
+      "state": "walk",
+      "phase": 5,
+      "handAnchor": {
+        "x": 4,
+        "y": 1.75,
+        "angle": -30
+      }
+    },
+    {
+      "index": 70,
+      "source": "player-walk8-source.png",
+      "sourceRect": {
+        "left": 887,
+        "top": 444,
+        "width": 444,
+        "height": 443
+      },
+      "sourceBounds": {
+        "left": 111,
+        "top": 11,
+        "width": 227,
+        "height": 408
+      },
+      "removedMattePixels": 0,
+      "scale": 0.24938875305623473,
+      "packed": {
+        "left": 36,
+        "top": 14,
+        "width": 57,
+        "height": 102
+      },
+      "state": "walk",
+      "phase": 6,
+      "handAnchor": {
+        "x": 5,
+        "y": 1.25,
+        "angle": -40
+      }
+    },
+    {
+      "index": 71,
+      "source": "player-walk8-source.png",
+      "sourceRect": {
+        "left": 1331,
+        "top": 444,
+        "width": 443,
+        "height": 443
+      },
+      "sourceBounds": {
+        "left": 86,
+        "top": 11,
+        "width": 252,
+        "height": 407
+      },
+      "removedMattePixels": 0,
+      "scale": 0.24938875305623473,
+      "packed": {
+        "left": 30,
+        "top": 14,
+        "width": 63,
+        "height": 102
+      },
+      "state": "walk",
+      "phase": 7,
+      "handAnchor": {
+        "x": 5,
+        "y": 1.25,
+        "angle": -40
+      }
+    },
+    {
+      "index": 72,
+      "source": "player-run8-source.png",
+      "sourceRect": {
+        "left": 0,
+        "top": 0,
+        "width": 444,
+        "height": 444
+      },
+      "sourceBounds": {
+        "left": 86,
+        "top": 10,
+        "width": 275,
+        "height": 416
+      },
+      "removedMattePixels": 0,
+      "scale": 0.24519230769230768,
+      "packed": {
+        "left": 30,
+        "top": 14,
+        "width": 67,
+        "height": 102
+      },
+      "state": "run",
+      "phase": 0,
+      "handAnchor": {
+        "x": 4.25,
+        "y": 1,
+        "angle": -40
+      }
+    },
+    {
+      "index": 73,
+      "source": "player-run8-source.png",
+      "sourceRect": {
+        "left": 444,
+        "top": 0,
+        "width": 443,
+        "height": 444
+      },
+      "sourceBounds": {
+        "left": 101,
+        "top": 10,
+        "width": 236,
+        "height": 412
+      },
+      "removedMattePixels": 0,
+      "scale": 0.24519230769230768,
+      "packed": {
+        "left": 34,
+        "top": 15,
+        "width": 58,
+        "height": 101
+      },
+      "state": "run",
+      "phase": 1,
+      "handAnchor": {
+        "x": 4.5,
+        "y": 1,
+        "angle": -40
+      }
+    },
+    {
+      "index": 74,
+      "source": "player-run8-source.png",
+      "sourceRect": {
+        "left": 887,
+        "top": 0,
+        "width": 444,
+        "height": 444
+      },
+      "sourceBounds": {
+        "left": 64,
+        "top": 10,
+        "width": 274,
+        "height": 409
+      },
+      "removedMattePixels": 0,
+      "scale": 0.24519230769230768,
+      "packed": {
+        "left": 25,
+        "top": 16,
+        "width": 67,
+        "height": 100
+      },
+      "state": "run",
+      "phase": 2,
+      "handAnchor": {
+        "x": 4,
+        "y": 0.25,
+        "angle": -30
+      }
+    },
+    {
+      "index": 75,
+      "source": "player-run8-source.png",
+      "sourceRect": {
+        "left": 1331,
+        "top": 0,
+        "width": 443,
+        "height": 444
+      },
+      "sourceBounds": {
+        "left": 41,
+        "top": 11,
+        "width": 335,
+        "height": 369
+      },
+      "removedMattePixels": 0,
+      "scale": 0.24519230769230768,
+      "packed": {
+        "left": 19,
+        "top": 14,
+        "width": 82,
+        "height": 90
+      },
+      "state": "run",
+      "phase": 3,
+      "handAnchor": {
+        "x": 4,
+        "y": 0,
+        "angle": -30
+      }
+    },
+    {
+      "index": 76,
+      "source": "player-run8-source.png",
+      "sourceRect": {
+        "left": 0,
+        "top": 444,
+        "width": 444,
+        "height": 443
+      },
+      "sourceBounds": {
+        "left": 60,
+        "top": 10,
+        "width": 296,
+        "height": 415
+      },
+      "removedMattePixels": 0,
+      "scale": 0.24519230769230768,
+      "packed": {
+        "left": 24,
+        "top": 14,
+        "width": 73,
+        "height": 102
+      },
+      "state": "run",
+      "phase": 4,
+      "handAnchor": {
+        "x": 3.75,
+        "y": 1.25,
+        "angle": -30
+      }
+    },
+    {
+      "index": 77,
+      "source": "player-run8-source.png",
+      "sourceRect": {
+        "left": 444,
+        "top": 444,
+        "width": 443,
+        "height": 443
+      },
+      "sourceBounds": {
+        "left": 100,
+        "top": 10,
+        "width": 237,
+        "height": 416
+      },
+      "removedMattePixels": 0,
+      "scale": 0.24519230769230768,
+      "packed": {
+        "left": 34,
+        "top": 14,
+        "width": 58,
+        "height": 102
+      },
+      "state": "run",
+      "phase": 5,
+      "handAnchor": {
+        "x": 3.75,
+        "y": 1.25,
+        "angle": -30
+      }
+    },
+    {
+      "index": 78,
+      "source": "player-run8-source.png",
+      "sourceRect": {
+        "left": 887,
+        "top": 444,
+        "width": 444,
+        "height": 443
+      },
+      "sourceBounds": {
+        "left": 84,
+        "top": 10,
+        "width": 254,
+        "height": 415
+      },
+      "removedMattePixels": 6,
+      "scale": 0.24519230769230768,
+      "packed": {
+        "left": 30,
+        "top": 14,
+        "width": 62,
+        "height": 102
+      },
+      "state": "run",
+      "phase": 6,
+      "handAnchor": {
+        "x": 4.25,
+        "y": 0.5,
+        "angle": -40
+      }
+    },
+    {
+      "index": 79,
+      "source": "player-run8-source.png",
+      "sourceRect": {
+        "left": 1331,
+        "top": 444,
+        "width": 443,
+        "height": 443
+      },
+      "sourceBounds": {
+        "left": 53,
+        "top": 10,
+        "width": 329,
+        "height": 389
+      },
+      "removedMattePixels": 0,
+      "scale": 0.24519230769230768,
+      "packed": {
+        "left": 22,
+        "top": 14,
+        "width": 81,
+        "height": 95
+      },
+      "state": "run",
+      "phase": 7,
+      "handAnchor": {
+        "x": 4.25,
+        "y": 0.75,
+        "angle": -40
+      }
+    },
+    {
+      "index": 80,
+      "source": "player-push-crouched8-source.png",
+      "sourceRect": {
+        "left": 0,
+        "top": 0,
+        "width": 444,
+        "height": 444
+      },
+      "sourceBounds": {
+        "left": 42,
+        "top": 35,
+        "width": 377,
+        "height": 379
+      },
+      "removedMattePixels": 0,
+      "scale": 0.20580474934036938,
+      "packed": {
+        "left": 15,
+        "top": 38,
+        "width": 78,
+        "height": 78
+      },
+      "state": "push_crouched",
+      "phase": 0,
+      "handAnchor": {
+        "x": 6.5,
+        "y": 4.25,
+        "angle": -90
+      }
+    },
+    {
+      "index": 81,
+      "source": "player-push-crouched8-source.png",
+      "sourceRect": {
+        "left": 444,
+        "top": 0,
+        "width": 443,
+        "height": 444
+      },
+      "sourceBounds": {
+        "left": 95,
+        "top": 35,
+        "width": 324,
+        "height": 377
+      },
+      "removedMattePixels": 0,
+      "scale": 0.20580474934036938,
+      "packed": {
+        "left": 26,
+        "top": 38,
+        "width": 67,
+        "height": 78
+      },
+      "state": "push_crouched",
+      "phase": 1,
+      "handAnchor": {
+        "x": 6.5,
+        "y": 4.25,
+        "angle": -90
+      }
+    },
+    {
+      "index": 82,
+      "source": "player-push-crouched8-source.png",
+      "sourceRect": {
+        "left": 887,
+        "top": 0,
+        "width": 444,
+        "height": 444
+      },
+      "sourceBounds": {
+        "left": 116,
+        "top": 32,
+        "width": 303,
+        "height": 382
+      },
+      "removedMattePixels": 1,
+      "scale": 0.20580474934036938,
+      "packed": {
+        "left": 31,
+        "top": 37,
+        "width": 62,
+        "height": 79
+      },
+      "state": "push_crouched",
+      "phase": 2,
+      "handAnchor": {
+        "x": 6.5,
+        "y": 4.25,
+        "angle": -90
+      }
+    },
+    {
+      "index": 83,
+      "source": "player-push-crouched8-source.png",
+      "sourceRect": {
+        "left": 1331,
+        "top": 0,
+        "width": 443,
+        "height": 444
+      },
+      "sourceBounds": {
+        "left": 60,
+        "top": 29,
+        "width": 358,
+        "height": 383
+      },
+      "removedMattePixels": 0,
+      "scale": 0.20580474934036938,
+      "packed": {
+        "left": 19,
+        "top": 37,
+        "width": 74,
+        "height": 79
+      },
+      "state": "push_crouched",
+      "phase": 3,
+      "handAnchor": {
+        "x": 6.5,
+        "y": 4.25,
+        "angle": -90
+      }
+    },
+    {
+      "index": 84,
+      "source": "player-push-crouched8-source.png",
+      "sourceRect": {
+        "left": 0,
+        "top": 444,
+        "width": 444,
+        "height": 443
+      },
+      "sourceBounds": {
+        "left": 120,
+        "top": 30,
+        "width": 299,
+        "height": 382
+      },
+      "removedMattePixels": 0,
+      "scale": 0.20580474934036938,
+      "packed": {
+        "left": 31,
+        "top": 37,
+        "width": 62,
+        "height": 79
+      },
+      "state": "push_crouched",
+      "phase": 4,
+      "handAnchor": {
+        "x": 6.5,
+        "y": 4.25,
+        "angle": -90
+      }
+    },
+    {
+      "index": 85,
+      "source": "player-push-crouched8-source.png",
+      "sourceRect": {
+        "left": 444,
+        "top": 444,
+        "width": 443,
+        "height": 443
+      },
+      "sourceBounds": {
+        "left": 41,
+        "top": 32,
+        "width": 377,
+        "height": 381
+      },
+      "removedMattePixels": 1,
+      "scale": 0.20580474934036938,
+      "packed": {
+        "left": 16,
+        "top": 38,
+        "width": 78,
+        "height": 78
+      },
+      "state": "push_crouched",
+      "phase": 5,
+      "handAnchor": {
+        "x": 6.5,
+        "y": 4.25,
+        "angle": -90
+      }
+    },
+    {
+      "index": 86,
+      "source": "player-push-crouched8-source.png",
+      "sourceRect": {
+        "left": 887,
+        "top": 444,
+        "width": 444,
+        "height": 443
+      },
+      "sourceBounds": {
+        "left": 75,
+        "top": 32,
+        "width": 344,
+        "height": 384
+      },
+      "removedMattePixels": 0,
+      "scale": 0.20580474934036938,
+      "packed": {
+        "left": 22,
+        "top": 37,
+        "width": 71,
+        "height": 79
+      },
+      "state": "push_crouched",
+      "phase": 6,
+      "handAnchor": {
+        "x": 6.5,
+        "y": 4.25,
+        "angle": -90
+      }
+    },
+    {
+      "index": 87,
+      "source": "player-push-crouched8-source.png",
+      "sourceRect": {
+        "left": 1331,
+        "top": 444,
+        "width": 443,
+        "height": 443
+      },
+      "sourceBounds": {
+        "left": 42,
+        "top": 35,
+        "width": 376,
+        "height": 378
+      },
+      "removedMattePixels": 1,
+      "scale": 0.20580474934036938,
+      "packed": {
+        "left": 15,
+        "top": 38,
+        "width": 77,
+        "height": 78
+      },
+      "state": "push_crouched",
+      "phase": 7,
+      "handAnchor": {
+        "x": 6.5,
+        "y": 4.25,
+        "angle": -90
+      }
+    }
+  ]
+}

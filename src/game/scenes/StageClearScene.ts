@@ -1,3 +1,4 @@
+import { bindCamera } from '../systems/PresentationSystem';
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH, SCENE_KEYS } from '../config/constants';
 import { addPixelText } from '../ui/PixelText';
@@ -12,6 +13,9 @@ export class StageClearScene extends Phaser.Scene {
   constructor() { super(SCENE_KEYS.stageClear); }
 
   create(): void {
+    bindCamera(this);
+    this.add.image(160,90,'forest-backdrop').setDisplaySize(320,180).setDepth(-100);
+    this.add.rectangle(160,90,320,180,0x061e12,.75).setDepth(-99);
     AudioSystem.get().stopBgm();
     this.hasTransitioned = false;
 
@@ -30,8 +34,8 @@ export class StageClearScene extends Phaser.Scene {
     );
 
     // Fundo elegante de vitória
-    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x112338, 0.95);
-    this.add.rectangle(GAME_WIDTH / 2, 28, 220, 24, 0x1b4b6b, 1)
+    this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x071e15, 0.55);
+    this.add.rectangle(GAME_WIDTH / 2, 28, 220, 24, 0x224d25, 1)
       .setStrokeStyle(1, 0xffd740, 1);
 
     addPixelText(this, GAME_WIDTH / 2, 28, 'FASE 1-1 CONCLUIDA!', {
@@ -49,13 +53,13 @@ export class StageClearScene extends Phaser.Scene {
     });
 
     // Quadro de resultados
-    const panel = this.add.rectangle(GAME_WIDTH / 2, 102, 240, 70, 0x162f4a, 0.9)
-      .setStrokeStyle(1, 0x4aa6c4, 1);
+    const panel = this.add.rectangle(GAME_WIDTH / 2, 102, 240, 70, 0x103822, 0.9)
+      .setStrokeStyle(1, 0x8daa45, 1);
     this.add.existing(panel);
 
     const stats = [
       `TEMPO:            ${timeFormatted}`,
-      `SELOS COLETADOS:  ${gameState.stamps}`,
+      `DISTINTIVOS:  ${gameState.stamps}`,
       `POSTAIS SECRETOS: ${gameState.postcards.size} / 3`,
       `INIMIGOS:         ${gameState.enemiesDefeated}`,
       `SCORE FINAL:      ${String(gameState.score).padStart(6, '0')}`,
@@ -111,6 +115,6 @@ export class StageClearScene extends Phaser.Scene {
     if (this.hasTransitioned) return;
     this.hasTransitioned = true;
     AudioSystem.get().playMenuSelect();
-    this.scene.start(SCENE_KEYS.map);
+    this.scene.start(SCENE_KEYS.title);
   }
 }

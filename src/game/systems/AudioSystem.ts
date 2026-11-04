@@ -16,11 +16,12 @@ export class AudioSystem {
   private bgmVolume = 0.7;
   private sfxVolume = 0.8;
   private isMuted: boolean = false;
+  private gameplayPaused = false;
 
   private bgmPlaying: boolean = false;
   private bgmPending: boolean = false;
   private hasUserGesture: boolean = false;
-  private currentTrack: 'title' | 'stage' | 'continue' = 'title';
+  private currentTrack: 'title' | 'stage' | 'continue' | 'boss' = 'title';
   private schedulerInterval: number | null = null;
   private nextNoteTime = 0;
   private currentStep = 0;
@@ -56,6 +57,14 @@ export class AudioSystem {
     }
   }
 
+  public setGameplayPaused(paused: boolean): void { this.gameplayPaused = paused; this.applyGains(); }
+
+  public unlock(): void {
+    this.hasUserGesture = true;
+    const ctx = this.initCtx();
+    void ctx?.resume().then(() => { if (this.bgmPending) { this.bgmPending = false; this.startBgm(this.currentTrack); } });
+  }
+
   public static get(): AudioSystem {
     if (!AudioSystem.instance) {
       AudioSystem.instance = new AudioSystem();
@@ -74,7 +83,10 @@ export class AudioSystem {
 
         this.sfxGain.connect(this.masterGain);
         this.bgmGain.connect(this.masterGain);
-        this.masterGain.connect(this.ctx.destination);
+        const limiter = this.ctx.createDynamicsCompressor();
+        limiter.threshold.value = -12; limiter.knee.value = 16; limiter.ratio.value = 4;
+        limiter.attack.value = .003; limiter.release.value = .18;
+        this.masterGain.connect(limiter); limiter.connect(this.ctx.destination);
 
         this.applyGains();
       }
@@ -92,7 +104,7 @@ export class AudioSystem {
       this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : this.masterVolume, now);
     }
     if (this.bgmGain) {
-      this.bgmGain.gain.setValueAtTime(this.bgmVolume, now);
+      this.bgmGain.gain.setValueAtTime(this.bgmVolume * (this.gameplayPaused ? .25 : 1), now);
     }
     if (this.sfxGain) {
       this.sfxGain.gain.setValueAtTime(this.sfxVolume, now);
@@ -658,14 +670,9 @@ export class AudioSystem {
     source.stop(time + duration + 0.01);
   }
 
-  public startBgm(track: 'title' | 'stage' | 'continue' = 'stage'): void {
+  public startBgm(track: 'title' | 'stage' | 'continue' | 'boss' = 'stage'): void {
     // Se transitar entre 'title' e 'stage', ambos compartilham o tema principal do Vale:
     // Mantém a música tocando continuamente sem cortes bruscos, sem reiniciar do zero e SEM sobreposição!
-    const isValley = (t: string) => t === 'title' || t === 'stage';
-    if (isValley(this.currentTrack) && isValley(track) && this.bgmPlaying) {
-      this.currentTrack = track;
-      return;
-    }
     if (this.currentTrack === track && this.bgmPlaying) return;
 
     this.stopBgm();
@@ -683,7 +690,7 @@ export class AudioSystem {
     if (this.bgmGain) {
       const now = ctx.currentTime;
       this.bgmGain.gain.cancelScheduledValues(now);
-      this.bgmGain.gain.setValueAtTime(this.bgmVolume, now);
+      this.bgmGain.gain.setValueAtTime(this.bgmVolume * (this.gameplayPaused ? .25 : 1), now);
     }
 
     this.bgmPlaying = true;
@@ -742,16 +749,17 @@ export class AudioSystem {
     if (!this.ctx || !this.bgmPlaying || this.isMuted || this.ctx.state === 'suspended') return;
 
     const isContinue = this.currentTrack === 'continue';
-    const bpm = isContinue ? 80 : 92;
+    const bpm = isContinue ? 80 : this.currentTrack === 'title' ? 96 : this.currentTrack === 'boss' ? 144 : 124;
     const stepDuration = 60 / bpm / 4; // Semicolcheia (16th note)
     const lookahead = 0.12;
 
-    const melody = isContinue ? CONTINUE_MELODY : VALLEY_MELODY;
+    const melody = isContinue ? CONTINUE_MELODY : this.currentTrack === 'title' ? VALLEY_MELODY : this.currentTrack === 'boss' ? BOSS_MELODY : FOREST_MELODY;
     const harmony = isContinue ? CONTINUE_HARMONY : VALLEY_HARMONY;
     const bass = isContinue ? CONTINUE_BASS : VALLEY_BASS;
-    const drums = isContinue ? CONTINUE_DRUMS : VALLEY_DRUMS;
+    const drums = isContinue ? CONTINUE_DRUMS : this.currentTrack === 'title' ? VALLEY_DRUMS : FOREST_DRUMS;
     const patternLen = melody.length;
 
+    if (this.nextNoteTime < this.ctx.currentTime - .15) this.nextNoteTime = this.ctx.currentTime + .02;
     while (this.nextNoteTime < this.ctx.currentTime + lookahead) {
       const step = this.currentStep;
       const time = this.nextNoteTime;
@@ -786,7 +794,7 @@ export class AudioSystem {
       }
 
       // 2. CANAL 2: HARMONIA SUAVE DE FUNDO (Almofada harmônica aveludada sem competir com a melodia)
-      const harmFreq = harmony[step];
+      const harmFreq = harmony[step % harmony.length];
       if (harmFreq > 0) {
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
@@ -813,7 +821,7 @@ export class AudioSystem {
       }
 
       // 3. CANAL 3: BAIXO GROOVY AVELUDADO (Triangle Wave encorpada e redonda)
-      const bassFreq = bass[step];
+      const bassFreq = bass[step % bass.length];
       if (bassFreq > 0) {
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
@@ -840,7 +848,7 @@ export class AudioSystem {
       }
 
       // 4. CANAL 4: BATERIA RETRÔ SUAVE & ORGÂNICA (Toques acústicos 8-bit com vassourinha)
-      const drum = drums[step];
+      const drum = drums[step % drums.length];
       if (drum === 'K' || drum === 'B') {
         const kickOsc = this.ctx.createOscillator();
         const kickGain = this.ctx.createGain();
@@ -1097,3 +1105,17 @@ const CONTINUE_DRUMS: string[] = [
   'H', '_', 'H', '_',  'S', '_', 'H', '_',
 ];
 
+
+// Original, syncopated call-and-response for the forest (124 BPM).
+const FOREST_MELODY = [
+  67,0,71,74,0,71,69,0, 67,0,64,0,67,69,71,0,
+  74,0,76,74,0,71,69,0, 66,0,69,0,74,0,0,0,
+  71,0,74,0,78,0,76,74, 72,0,76,0,79,0,76,0,
+  74,0,69,71,0,69,66,0, 67,0,0,0,62,64,66,0,
+  76,0,79,0,76,74,72,0, 71,0,67,0,69,71,74,0,
+  76,0,74,71,0,67,64,0, 67,0,71,0,74,0,0,0,
+  69,0,72,0,76,74,72,0, 74,0,78,0,81,0,78,0,
+  79,0,74,0,71,0,69,0, 67,0,0,0,0,0,62,0,
+].map(note => note ? 440 * 2 ** ((note - 69) / 12) : 0);
+const BOSS_MELODY = [64,0,67,0,71,0,67,69,66,0,69,0,71,0,66,0,64,0,67,71,76,0,74,0,71,0,67,0,63,0,0,0].map(note => note ? 440 * 2 ** ((note - 69) / 12) : 0);
+const FOREST_DRUMS = ['K','_','H','_','S','_','H','H','K','_','H','_','S','H','H','_'];

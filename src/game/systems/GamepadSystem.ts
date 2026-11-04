@@ -11,6 +11,7 @@ export interface GamepadSnapshot {
   cancel: boolean;
   jump: boolean;
   attack: boolean;
+  throw: boolean;
   pause: boolean;
 }
 
@@ -70,7 +71,7 @@ export class GamepadSystem {
         confirm: false,
         cancel: false,
         jump: false,
-        attack: false,
+        attack: false, throw: false,
         pause: false,
       };
     }
@@ -109,7 +110,7 @@ export class GamepadSystem {
     const confirm = btn(0);
     const cancel = btn(1);
     const jump = btn(0) || btn(3) || btn(4) || btn(5); // X, Triângulo, L1, R1
-    const attack = btn(2) || btn(1) || btn(7) || btn(6); // Quadrado, Círculo, R2, L2
+    const attack = btn(2) || btn(6); // Quadrado, Círculo, R2, L2
     const pause = btn(9); // Options / Start
 
     return {
@@ -125,6 +126,7 @@ export class GamepadSystem {
       cancel,
       jump,
       attack,
+      throw: btn(1) || btn(7),
       pause,
     };
   }

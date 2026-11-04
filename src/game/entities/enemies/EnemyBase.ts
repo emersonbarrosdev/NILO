@@ -5,7 +5,8 @@ import { Player } from '../Player';
 import { addPixelText } from '../../ui/PixelText';
 
 export abstract class EnemyBase extends Phaser.Physics.Arcade.Sprite {
-  public hp = 1;
+  abstract update(time:number,delta:number):void;
+  public hp = 2;
   public isDefeated = false;
   public isStunned = false;
   public isSliding = false;
@@ -14,6 +15,7 @@ export abstract class EnemyBase extends Phaser.Physics.Arcade.Sprite {
   private stunTimer?: Phaser.Time.TimerEvent;
   private starsGfx?: Phaser.GameObjects.Graphics;
   private starsAngle = 0;
+  private lastDamageAt = -1000;
 
   constructor(scene: Phaser.Scene, x: number, y: number, texture: string) {
     super(scene, x, y, texture);
@@ -23,9 +25,9 @@ export abstract class EnemyBase extends Phaser.Physics.Arcade.Sprite {
   }
 
   public takeDamage(damage: number, impactX?: number): void {
-    if (this.isDefeated) return;
-    this.clearStunVisuals();
-    this.hp -= damage;
+    if (this.isDefeated || this.scene.time.now-this.lastDamageAt<250) return;
+    this.lastDamageAt=this.scene.time.now;
+    this.hp -= Math.min(1,damage);
 
     AudioSystem.get().playHit();
     this.setTint(0xffffff);
@@ -35,7 +37,7 @@ export abstract class EnemyBase extends Phaser.Physics.Arcade.Sprite {
 
     if (this.hp <= 0) {
       this.die(impactX);
-    }
+    } else { this.stun(); }
   }
 
   public stun(): void {
@@ -52,7 +54,7 @@ export abstract class EnemyBase extends Phaser.Physics.Arcade.Sprite {
     this.onStunEnter();
 
     // Feedback visual "ZONZO!"
-    this.showFloatingNotice('ZONZO!', 0xfde047);
+
 
     // Cria estrelinhas orbitando sobre a cabeça
     this.createStunStars();
@@ -71,38 +73,6 @@ export abstract class EnemyBase extends Phaser.Physics.Arcade.Sprite {
 
   protected onStunExit(): void {
     // Override pelas subclasses (ex: voltar a andar)
-  }
-
-  public kick(kickDir: number): void {
-    if (this.isDefeated || !this.isStunned) return;
-    this.isSliding = true;
-    this.clearStunVisuals();
-
-    const body = this.body as Phaser.Physics.Arcade.Body;
-    if (body) {
-      body.setVelocityX(kickDir * 210);
-      body.setBounceX(0.8);
-    }
-
-    AudioSystem.get().playShoot(true);
-    GameState.get().addScore(150);
-    this.showFloatingNotice('+150 CHUTE!', 0x38bdf8);
-
-    // Efeito de rolamento do casco/bicho
-    this.scene.tweens.add({
-      targets: this,
-      angle: kickDir * 720,
-      duration: 1200,
-      repeat: -1,
-      ease: 'Linear',
-    });
-
-    // Desliza por 3 segundos antes de desaparecer em poeira estelar
-    this.scene.time.delayedCall(3000, () => {
-      if (this.active && !this.isDefeated && this.isSliding) {
-        this.die();
-      }
-    });
   }
 
   private recoverFromStun(): void {
@@ -218,30 +188,7 @@ export abstract class EnemyBase extends Phaser.Physics.Arcade.Sprite {
   }
 
   public onPlayerOverlap(player: Player): void {
-    if (this.isDefeated) return;
-
-    const playerBody = player.body as Phaser.Physics.Arcade.Body;
-    const isStomp = playerBody.velocity.y > 20 && player.y < this.y - 4;
-
-    if (isStomp) {
-      // SALTO ACROBÁTICO ÚNICO DO NILO (Vault & Daze):
-      // NÃO mata o bichinho como no Sonic/Mario! Usa o bicho como apoio elástico para saltar bem alto!
-      playerBody.setVelocityY(-260);
-      AudioSystem.get().playBounce();
-      GameState.get().addScore(50);
-      this.showFloatingNotice('+50 ACROBACIA!', 0x4ade80);
-
-      // Atordoa a criatura (fica zonza com estrelinhas, sem morrer)
-      this.stun();
-    } else if (this.isStunned && !this.isSliding) {
-      // Se a criatura estiver atordoada e Nilo colidir pelos lados:
-      // Nilo NÃO toma dano! Ele dá um chute no casco para fazê-lo deslizar estilo projétil!
-      const kickDir = player.x < this.x ? 1 : -1;
-      this.kick(kickDir);
-    } else if (!this.isStunned && !this.isSliding) {
-      // Criatura ativa em movimento causa dano de toque normal
-      player.receiveDamage(this.touchDamage, this.x);
-    }
+    if (!this.isDefeated && !this.isStunned) player.receiveDamage(this.touchDamage, this.x);
   }
 
   public override destroy(fromScene?: boolean): void {

@@ -7,6 +7,8 @@ export interface AudioSettings {
 
 export interface SaveData {
   version: 1;
+  started?: boolean;
+  checkpoint?: { id: string; x: number; y: number } | null;
   currentStage: string;
   lives: number;
   totalStamps: number;
@@ -65,7 +67,8 @@ export class SaveSystem {
   }
 
   hasSave(): boolean {
-    return localStorage.getItem(SAVE_KEY) !== null;
+    const data = this.load();
+    return data.started === true || Object.keys(data.bestTimes).length > 0;
   }
 
   save(data: Partial<SaveData>): void {

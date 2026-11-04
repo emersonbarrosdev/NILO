@@ -1,0 +1,6 @@
+{
+  "name": "nilo-game",
+  "account_id": "35da96d3f508f99b2f6f104de83db277",
+  "compatibility_date": "2026-11-02",
+  "assets": { "directory": "./dist", "not_found_handling": "single-page-application" }
+}

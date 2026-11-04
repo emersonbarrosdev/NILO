@@ -25,7 +25,7 @@ export class HeartItem extends Phaser.Physics.Arcade.Sprite {
     AudioSystem.get().playHeart();
     GameState.get().addHp(1);
 
-    const notice = addPixelText(this.scene, Math.round(this.x), Math.round(this.y - 10), '+1 VIDA!', {
+    const notice = addPixelText(this.scene, Math.round(this.x), Math.round(this.y - 10), '+1 CORAÇÃO', {
       scale: 1,
       color: 0xff4d4d,
       originX: 0.5,

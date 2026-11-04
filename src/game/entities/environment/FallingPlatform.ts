@@ -10,12 +10,13 @@ export class FallingPlatform extends Phaser.Physics.Arcade.Sprite {
   private respawnTime = 3200;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, 'platform-crumble');
+    super(scene, x, y, 'platform-log');
     this.initialX = x;
     this.initialY = y;
 
     scene.add.existing(this);
     scene.physics.add.existing(this);
+    this.setOrigin(.5,0).setDisplaySize(44,10);
     this.setDepth(3);
 
     const body = this.body as Phaser.Physics.Arcade.Body;
@@ -28,8 +29,8 @@ export class FallingPlatform extends Phaser.Physics.Arcade.Sprite {
     body.checkCollision.left = false;
     body.checkCollision.right = false;
     body.checkCollision.up = true;
-    body.setSize(44, 8);
-    body.setOffset(0, 1);
+    body.setSize(this.width,12);
+    body.setOffset(0,0);
   }
 
   public checkPlayerStep(player: Player): void {
@@ -106,7 +107,7 @@ export class FallingPlatform extends Phaser.Physics.Arcade.Sprite {
     this.isTriggered = false;
     this.isFalling = false;
     this.setAngle(0);
-    this.setPosition(this.initialX, this.initialY);
+    (this.body as Phaser.Physics.Arcade.Body).reset(this.initialX,this.initialY);
     this.setAlpha(0);
 
     const body = this.body as Phaser.Physics.Arcade.Body;

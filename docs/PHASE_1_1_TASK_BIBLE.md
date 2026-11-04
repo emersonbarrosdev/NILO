@@ -1,3 +1,5 @@
+> **Registro histórico do protótipo.** As regras de arte, combate, vida e fluxo abaixo foram substituídas pelo [estado atual da Fase 1](FASE_1_ATUAL.md), versão 0.3.0. Não usar estilingue, pixel art 8-bit ou corações intermediários nas próximas mudanças. A produção continua restrita à Fase 1.
+
 # NILO — Bíblia de Tarefas da Fase 1-1
 
 > **NILO** é o nome oficial do jogo e do protagonista. Esta bíblia cobre somente o vertical slice da **Fase 1-1 — Vale da Brisa**.

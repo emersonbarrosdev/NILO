@@ -1,14 +1,14 @@
 import Phaser from 'phaser';
 import { GameState } from '../../systems/GameState';
 import { AudioSystem } from '../../systems/AudioSystem';
-import { addPixelText } from '../../ui/PixelText';
+
 
 export class Checkpoint extends Phaser.Physics.Arcade.Sprite {
   public id: string;
   public isActivated = false;
 
   constructor(scene: Phaser.Scene, x: number, y: number, id: string) {
-    super(scene, x, y, 'checkpoint-totem-sheet');
+    super(scene, x, y, 'checkpoint-pole-inactive');
     this.id = id;
 
     scene.add.existing(this);
@@ -17,33 +17,16 @@ export class Checkpoint extends Phaser.Physics.Arcade.Sprite {
 
     const body = this.body as Phaser.Physics.Arcade.StaticBody;
     body.setSize(16, 28);
-    this.play('checkpoint-idle');
+
   }
 
   public activate(): void {
     if (this.isActivated) return;
     this.isActivated = true;
 
-    this.play('checkpoint-activate');
+    this.setTexture('checkpoint-pole-active');
     AudioSystem.get().playCheckpoint();
     GameState.get().setCheckpoint(this.id, this.x, this.y);
-
-    // Feedback flutuante em pixel art
-    const notice = addPixelText(this.scene, Math.round(this.x), Math.round(this.y - 20), 'CHECKPOINT ATIVADO!', {
-      scale: 1,
-      color: 0x4ade80,
-      originX: 0.5,
-      originY: 0.5,
-      depth: 25,
-    });
-    this.scene.tweens.add({
-      targets: notice,
-      y: notice.y - 18,
-      alpha: 0,
-      duration: 800,
-      ease: 'Cubic.easeOut',
-      onComplete: () => notice.destroy(),
-    });
 
     // Efeito de brilho ascendente com anel de centelhas
     const spark = this.scene.add.graphics().setDepth(15);

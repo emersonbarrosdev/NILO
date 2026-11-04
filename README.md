@@ -1,108 +1,67 @@
-# NILO
+﻿# NILO
 
-Action-platformer 2D em pixel art 8-bit, construído com **Phaser 4 + TypeScript + Vite**.
+Plataforma 2D cartoon para Windows e Android. Produção restrita a **uma tela de laboratório da Fase 1 — Vale da Brisa**. Versão de desenvolvimento **0.3.1**.
 
-**NILO** é o nome oficial do jogo e também do protagonista.
+A referência a Sonic 1 (Master System), Super Mario World e outros clássicos orienta a leitura do cenário, o ritmo e os padrões dos inimigos. Personagens, arte, música e percurso são próprios.
 
-## Premissa
+## Jogar
 
-Nilo é uma criança em idade escolar. Depois de ser levado para longe de casa, ele consegue escapar em uma região de mata e inicia uma jornada para voltar para casa. A campanha acompanha essa travessia por florestas, rios, serras, campos e caminhos cada vez mais familiares.
+- Windows: `release/NILO-Setup-0.3.1.exe` instala o jogo; F11 alterna tela cheia.
+- Android: `release/NILO-0.3.1-debug.apk`, pacote de teste instalável, em paisagem.
+- Cloudflare: [prévia publicada](https://nilo-game.botanstudio.workers.dev). Os aplicativos instalados carregam os recursos locais e não dependem desse endereço.
 
-## Estado atual
+## Controles
 
-Fundação técnica e produção do **vertical slice da Fase 1-1 — Vale da Brisa**.
+| Ação | Teclado padrão | Controle padrão | Android |
+|---|---|---|---|
+| Mover | A/D ou setas | Analógico / direcional | Direcionais |
+| Abaixar / andar abaixado | S / ↓ + direção | ↓ + direção | ↓ + direção |
+| Pular, altura variável | Espaço | A / Cruz | PULO |
+| Golpear | J | X / Quadrado | BATER |
+| Lançar bastão | K; W/↑ para lançar alto | B / Círculo; ↑ para alto | LANÇAR; ↑ para alto |
+| Pausar | Esc / P | Start / Options | Pausa |
 
-## Direção atual
+As teclas podem ser alteradas em Controles e passam a valer ao entrar novamente na fase. Após lançar, o bastão precisa ser recolhido. Se cair em um buraco ou ficar inacessível por 12 segundos, reaparece ao lado de Nilo.
 
-- mundo colorido, natural e fantástico;
-- primeira fase com céu amplo, colinas, vegetação, plataformas e elementos de caminho;
-- **não usar cidade, skyline de prédios ou estética urbana como identidade do jogo**;
-- inspiração nos clássicos 8-bit está na fluidez, leitura, ritmo, cores e música — não em copiar fases ou personagens;
-- protagonista criança, com roupa escolar/casual e estilingue;
-- combate principal com estilingue;
-- plataforma, inimigos, obstáculos, puzzles curtos e exploração;
-- música chiptune melódica e memorável;
-- campanha completa planejada para até ~3h em 100%;
-- nenhuma produção em massa dos demais mundos antes da Fase 1-1 ficar divertida e completa.
+## Laboratório atual
 
-## Controles atuais
+Uma tela fixa de 400 × 225 unidades para validar arte, escala, movimento, taco e cenário. Mundo, câmera e apresentação são independentes. PC e Android usam a mesma lógica, física e sprites. As faixas touch ficam fora da área jogável segura 16:9.
 
-- **A / D** ou **← / →**: mover;
-- **W**, **↑** ou **SPACE**: pular;
-- **S** ou **↓**: agachar/direcionar mira para baixo;
-- **J** ou **X**: estilingue;
-- tocar **J/X**: tiro normal;
-- segurar **J/X**: carregar tiro;
-- durante a carga, usar **WASD/setas** para mirar, incluindo diagonais.
+[Arquitetura PC/Android e validação](docs/PC_ANDROID_VERTICAL_SLICE.md) · [Pesquisa de gameplay clássico](docs/REFERENCIAS_GAMEPLAY.md)
 
-## Protagonista
+## Regras compartilhadas e percurso preservado
 
-Nilo já possui estados visuais separados para:
+O percurso completo anterior está preservado no preset interno forest para regressões; não é a versão pública de teste. Boss, postais e puzzles maiores pertencem a esse preset.
 
-- idle;
-- caminhada/corrida;
-- salto/subida;
-- ápice;
-- queda;
-- aterrissagem;
-- agachado;
-- frenagem/troca de direção;
-- tiro no chão;
-- tiro no ar;
-- carga do estilingue;
-- idle especial após 10 segundos parado.
+- Um golpe tira **uma vida diretamente**, com breve invulnerabilidade; não existem três corações intermediários. Queda custa uma vida e retorna ao checkpoint. Zero vidas abre Continue.
+- Primeiro golpe nos inimigos comuns atordoa; segundo derrota. Pular sobre eles não atordoa nem elimina.
+- Caixas marcadas podem ser empurradas e usadas como degrau. A caixa da passagem inferior deve alcançar o encaixe para abrir a rota superior de retorno.
+- Túneis baixos exigem agachar e impedem levantar sob o teto.
+- Aranhas, abelhas, sapos e cobras patrulham a floresta.
+- Macaco no final: cascas de banana, pausa vulnerável; a 50% da vida, fúria e cabeçadas com aviso e recuperação. Um golpe por janela. A arena fecha durante a luta.
+- Distintivos de exploração: 50 concedem uma vida. Três postais secretos. Uma lancheira extra fica dentro da caixa do segredo do sino.
 
-### Regra do ciclo de corrida
+## Desenvolvimento
 
-O ciclo visual avança pela **distância real percorrida em X**, mantendo a passada ligada ao deslocamento do personagem e evitando o efeito de deslize.
+Node >= 22.12. `npm ci` instala as versões travadas.
 
-### Idle especial
-
-- após 10 segundos sem input, Nilo senta;
-- enquanto estiver sentado, joga uma pedrinha a cada 5 segundos;
-- qualquer input cancela imediatamente o idle especial.
-
-## Estilingue
-
-- pedra normal visível;
-- origem do projétil alinhada ao estilingue conforme a direção da mira;
-- tiro carregado maior e mais rápido;
-- disparo permitido durante o salto;
-- tiro não cancela o momentum do personagem;
-- pedra colide com chão/plataformas e gera impacto pixelado.
-
-## Fluxo atual
-
-As cenas `BootScene` e `PreloadScene` são técnicas e ficam invisíveis para o jogador. O fluxo visível do vertical slice é:
-
-**Tela inicial/menu → rota da aventura → Fase 1-1**
-
-## Stack
-
-- Phaser 4.2.1
-- TypeScript 7.0.2
-- Vite 8.3.5
-- Arcade Physics
-- Tiled (planejado para mapas)
-- Aseprite ou equivalente (planejado para sprites)
-- localStorage para save local
-
-## Rodar
-
-```bash
-npm install
+```sh
 npm run dev
-```
-
-## Validar
-
-```bash
 npm run typecheck
+npm test
 npm run build
+npm run art:pack
+npm run desktop:build
+npm run android:build
+npm run deploy
 ```
+
+Android requer SDK 36 e JDK 21; o script detecta as instalações locais usuais. Windows usa Electron + NSIS. Android usa Capacitor. O motor compartilhado é Phaser 4 / TypeScript / Vite, com assets locais. O APK atual usa assinatura de desenvolvimento; publicação em loja exige chave de lançamento própria.
 
 ## Documentação
 
-- [`docs/GAME_BIBLE.md`](docs/GAME_BIBLE.md) — Bíblia geral do jogo.
-- [`docs/STORY_CAMPAIGN.md`](docs/STORY_CAMPAIGN.md) — história e estrutura da campanha.
-- [`docs/PHASE_1_1_TASK_BIBLE.md`](docs/PHASE_1_1_TASK_BIBLE.md) — plano para produzir somente a Fase 1-1.
+- [Estado atual e decisões da Fase 1](docs/FASE_1_ATUAL.md)
+- [Origem e preparação da arte](docs/ART_PROVENANCE.md)
+- [Premissa e campanha futura](docs/STORY_CAMPAIGN.md)
+- [Bíblia original — contexto histórico](docs/GAME_BIBLE.md)
+- [Checklist original — contexto histórico](docs/PHASE_1_1_TASK_BIBLE.md)

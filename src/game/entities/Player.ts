@@ -1,531 +1,281 @@
-import Phaser from 'phaser';
-import { Projectile } from './Projectile';
-import { resolveAimPose, type AimPose } from './playerAnimationModel';
+﻿import Phaser from 'phaser';
+import { InputSettings, touchInput, type InputAction } from '../systems/InputSettings';
 import { AudioSystem } from '../systems/AudioSystem';
 import { GameState } from '../systems/GameState';
 import { GamepadSystem } from '../systems/GamepadSystem';
+import { PLAYER_ART, PLAYER_POSES, playerHandAnchor, type PlayerPoseState } from '../config/playerArt';
+import { BATON, type HandPose } from '../config/batonConfig';
+import { LocomotionCycle, LocomotionGuard, type PlayerMotionState } from '../systems/LocomotionCycle';
 
-const RUN_SPEED = 118;
-const GROUND_ACCELERATION = 840;
-const BRAKE_ACCELERATION = 1300;
-const AIR_ACCELERATION = 600;
-const GROUND_DRAG = 920;
-const AIR_DRAG = 50;
-const JUMP_SPEED = 288;
-const COYOTE_TIME_MS = 140;
-const JUMP_BUFFER_MS = 160;
-const QUICK_SHOT_COOLDOWN_MS = 140;
-const CHARGED_SHOT_THRESHOLD_MS = 400;
-const MAX_CHARGE_MS = 1000;
-const LAND_POSE_MS = 60;
-const SHOOT_POSE_MS = 130;
-const SHOOT_FRAME_COUNT = 3;
-const PLAYER_SCALE = 1;
-
-const PLAYER_FRAMES = {
-  crouch: 5,
-  skid: 6,
-  walkBase: 8,
-  runBase: 16,
-  apex: 27,
-  fall: 28,
-  aimForward: [32, 33],
-  aimUpward: [34, 35],
-  shootForward: [36, 37, 38],
-  shootUpward: [39, 40, 41],
-  charge: [42, 43, 44],
-} as const;
+type PlayerAction = { kind: 'throw' | 'melee' | 'retrieve'; startedAt: number; direction: number; up: boolean; released: boolean };
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
-  private readonly cursors: Phaser.Types.Input.Keyboard.CursorKeys;
-  private readonly keyW: Phaser.Input.Keyboard.Key;
-  private readonly keyA: Phaser.Input.Keyboard.Key;
-  private readonly keyS: Phaser.Input.Keyboard.Key;
-  private readonly keyD: Phaser.Input.Keyboard.Key;
-  private readonly jumpKey: Phaser.Input.Keyboard.Key;
-  private readonly shootKeyJ: Phaser.Input.Keyboard.Key;
-  private readonly shootKeyX: Phaser.Input.Keyboard.Key;
-
+  private keys: Record<InputAction, Phaser.Input.Keyboard.Key>;
+  private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
   private facing = 1;
-  private lastGroundedAt = 0;
-  private jumpBufferedAt = Number.NEGATIVE_INFINITY;
-  private wasGrounded = false;
-  private landPoseUntil = 0;
-  private shootPoseUntil = 0;
-  private shotStartedAt = Number.NEGATIVE_INFINITY;
-  private shotAimPose: AimPose = 'horizontal';
-  private lastShotAt = Number.NEGATIVE_INFINITY;
-  private hasJumpedInAir = false;
-  private padPrevJump = false;
-
-  private charging = false;
-  private chargeStartedAt = 0;
-  private attackWasDown = false;
-  private aimX = 1;
-  private aimY = 0;
+  private groundedAt = -1000;
+  private jumpAt = -1000;
+  private jumped = false;
+  private previousJump = false;
+  private previousAttack = false;
+  private previousThrow = false;
+  private attackAt = -1000;
+  private action?: PlayerAction;
   private crouching = false;
-
+  private pushingUntil = 0;
+  private pushBlocked = false;
+  private clock = 0;
+  private horizontalIntent = 0;
+  public readonly locomotion = new LocomotionCycle(PLAYER_ART.strideLength);
+  public readonly locomotionGuard = new LocomotionGuard(this.locomotion);
+  public motionState: PlayerMotionState = 'IDLE';
+  public poseState: PlayerPoseState = 'idle';
+  private wasGrounded = false;
+  private gaitWasGrounded = false;
+  private landedUntil = 0;
+  private hurtUntil = 0;
+  private animationX = 0;
+  private support?: Phaser.Physics.Arcade.Body;
+  private previousSupport?: Phaser.Physics.Arcade.Body;
+  private previousSupportX = 0;
+  public lastGroundRelativeDelta = 0;
+  private readonly contactShadow: Phaser.GameObjects.Ellipse;
+  public hasBaton = true;
   public isInvulnerable = false;
   public isDead = false;
-
-  public get isCrouching(): boolean {
-    return this.crouching;
-  }
+  public canStand: () => boolean = () => true;
+  public get isCrouching(): boolean { return this.crouching; }
+  public get facingDirection(): number { return this.facing; }
+  public get isActing(): boolean { return !!this.action; }
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, 'player-sheet', 0);
-
-    scene.add.existing(this);
-    scene.physics.add.existing(this);
-
-    this.setScale(PLAYER_SCALE);
-    this.setCollideWorldBounds(false); // Permite quedas controladas em buracos
-    this.setMaxVelocity(RUN_SPEED, 520);
-    this.setDragX(GROUND_DRAG);
-
-    const body = this.body as Phaser.Physics.Arcade.Body;
-    body.setSize(14, 26);
-    body.setOffset(9, 3);
-
+    // All equipment variants share the canonical detailed body. BatonSystem owns the weapon layer.
+    super(scene, x, y, 'player-unarmed-sheet', 0);
+    scene.add.existing(this); scene.physics.add.existing(this);
+    this.animationX = x;
+    this.setMaxVelocity(PLAYER_ART.runSpeed, 520).setDragX(920);
+    (this.body as Phaser.Physics.Arcade.Body).setSize(14, 25).setOffset(9, 4);
     const keyboard = scene.input.keyboard!;
     this.cursors = keyboard.createCursorKeys();
-    this.keyW = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
-    this.keyA = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
-    this.keyS = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
-    this.keyD = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
-    this.jumpKey = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-    this.shootKeyJ = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.J);
-    this.shootKeyX = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
+    this.keys = Object.fromEntries(Object.entries(InputSettings.bindings()).map(([action, key]) => [action, keyboard.addKey(key)])) as Record<InputAction, Phaser.Input.Keyboard.Key>;
+    this.contactShadow = scene.add.ellipse(x, y + 13, 11, 1.8, 0x10230d, .33).setDepth(9).setVisible(false);
+    scene.events.on(Phaser.Scenes.Events.POST_UPDATE, this.afterPhysics, this);
+    this.once('destroy', () => {
+      scene.events.off(Phaser.Scenes.Events.POST_UPDATE, this.afterPhysics, this);
+      this.contactShadow.destroy();
+    });
+  }
 
-    this.play('player-idle');
+  /** Called by the moving-platform collider after Arcade has resolved contact. */
+  public noteGroundSupport(body: Phaser.Physics.Arcade.Body): void {
+    const own = this.body as Phaser.Physics.Arcade.Body;
+    if (own.velocity.y >= 0 && own.bottom <= body.top + 3 && own.right > body.left && own.left < body.right) this.support = body;
+  }
+
+  private afterPhysics(): void {
+    const body = this.body as Phaser.Physics.Arcade.Body | null;
+    if (!body) return;
+    const grounded = (body.blocked.down || body.touching.down) && body.velocity.y >= 0;
+    const support = grounded && this.support?.enable && body.bottom <= this.support.top + 3
+      && body.right > this.support.left && body.left < this.support.right ? this.support : undefined;
+    const carried = support && support === this.previousSupport ? support.position.x - this.previousSupportX : 0;
+    const worldDelta = this.x - this.animationX;
+    const eligible = grounded && this.gaitWasGrounded && this.clock >= this.hurtUntil && !this.isDead;
+    // Teleports, first landing and involuntary displacement are not locomotion.
+    this.lastGroundRelativeDelta = eligible && Math.abs(worldDelta) < 32 ? worldDelta - carried : 0;
+    const movingVoluntarily = eligible && (this.horizontalIntent !== 0 || Math.abs(body.velocity.x) > 1);
+    const movementAllowed = this.locomotionGuard.step(this.lastGroundRelativeDelta, movingVoluntarily);
+    if (!movementAllowed && movingVoluntarily) {
+      // Preserve passive platform carry. Only a verified logical gait failure stops voluntary ground motion.
+      this.setX(this.animationX + carried); body.updateFromGameObject(); this.setVelocityX(0);
+    }
+    this.animationX = this.x;
+    this.gaitWasGrounded = grounded;
+    this.previousSupport = support;
+    this.previousSupportX = support?.position.x ?? 0;
+    this.support = undefined;
+    this.contactShadow.setVisible(grounded && !this.isDead && this.visible).setPosition(body.center.x, body.bottom + .35);
+  }
+
+  public markPushing(blocked = false): void { this.pushingUntil = this.clock + 100; this.pushBlocked = blocked; }
+
+  public getHandPose(): HandPose {
+    const hand = playerHandAnchor(Number(this.frame.name));
+    return { x: this.x + hand.x * this.facing, y: this.y + hand.y, angle: this.facing > 0 ? hand.angle : 180 - hand.angle };
+  }
+
+  public beginRetrieve(): boolean {
+    if (this.isDead || this.hasBaton || this.action) return false;
+    this.action = { kind: 'retrieve', startedAt: this.clock, direction: this.facing, up: false, released: false };
+    return true;
+  }
+
+  private pose(state: PlayerPoseState, index = 0): void {
+    this.poseState = state;
+    const frames = PLAYER_POSES[state].frames;
+    this.anims.stop();
+    this.setFrame(frames[Math.min(index, frames.length - 1)]!);
   }
 
   update(time = this.scene.time.now): void {
+    this.clock = time;
     if (this.isDead) return;
-
     const body = this.body as Phaser.Physics.Arcade.Body;
     const grounded = body.blocked.down || body.touching.down;
-
+    const pad = GamepadSystem.get().poll();
+    const held = (action: InputAction) => this.keys[action].isDown || touchInput[action];
+    const horizontal = Number(held('right') || this.cursors.right.isDown || pad.right) - Number(held('left') || this.cursors.left.isDown || pad.left);
+    this.horizontalIntent = horizontal;
+    const down = held('down') || this.cursors.down.isDown || pad.down;
+    const up = held('up') || this.cursors.up.isDown || pad.up;
     if (grounded) {
-      this.lastGroundedAt = time;
-      this.hasJumpedInAir = false;
+      this.groundedAt = time; this.jumped = false;
+      if (!this.wasGrounded) this.landedUntil = time + 65;
     }
-
-    if (grounded && !this.wasGrounded && body.velocity.y >= 0) {
-      this.landPoseUntil = time + LAND_POSE_MS;
-      this.play('player-land', true);
-      this.spawnDustParticle(this.x - 5, this.y + 12, -1, -0.4);
-      this.spawnDustParticle(this.x + 5, this.y + 12, 1, -0.4);
-    }
-
     this.wasGrounded = grounded;
-
-    const input = this.readDirectionalInput();
-    const crouching = grounded && input.vertical > 0;
-    this.crouching = crouching;
-
-    this.updateFacing(input.horizontal);
-    this.updateMovement(input.horizontal, grounded, crouching);
-    this.updateAttack(time, grounded, input.horizontal, input.vertical);
-    this.updateJump(time, grounded, crouching);
-    this.updateVisualState(time, grounded, input.horizontal, input.vertical);
-
-    // Queda fatal fora do mundo
-    if (this.y > 220) {
-      this.handleDeath(true);
-    }
-  }
-
-  public receiveDamage(amount: number, sourceX: number): void {
-    if (this.isInvulnerable || this.isDead) return;
-
-    AudioSystem.get().playPlayerHurt();
-    const isGameOverOrDead = GameState.get().takeDamage(amount);
-
-    if (isGameOverOrDead) {
-      this.handleDeath(false);
-      return;
-    }
-
-    // Knockback
-    const knockbackDir = sourceX < this.x ? 1 : -1;
-    this.setVelocity(knockbackDir * 90, -160);
-
-    // Invulnerabilidade temporária
-    this.isInvulnerable = true;
-    const blinkTween = this.scene.tweens.add({
-      targets: this,
-      alpha: 0.3,
-      duration: 80,
-      yoyo: true,
-      repeat: 7,
-      onComplete: () => {
-        this.setAlpha(1);
-        this.isInvulnerable = false;
-      },
-    });
-
-    this.scene.events.once('shutdown', () => blinkTween.stop());
-  }
-
-  public handleDeath(_isFall: boolean): void {
-    if (this.isDead) return;
-    this.isDead = true;
-
-    const body = this.body as Phaser.Physics.Arcade.Body;
-    if (body) {
-      body.checkCollision.none = true;
-    }
-
-    AudioSystem.get().playPlayerDeath();
-    this.anims.stop();
-    this.setFrame(24); // Pose de choque / salto dramático
-    this.setVelocity(0, 0);
-
-    this.scene.cameras.main.shake(180, 0.004);
-
-    // Salto dramático para o alto com rotação no ar (estilo clássico Mario / Mega Man / DKC)
-    this.scene.time.delayedCall(80, () => {
-      if (body) {
-        body.setVelocityY(-260);
-        body.setVelocityX(this.facing * -20);
-      }
-      this.scene.tweens.add({
-        targets: this,
-        angle: this.facing * 360,
-        duration: 700,
-        ease: 'Linear',
-      });
-    });
-
-    this.scene.events.emit('player-died');
-  }
-
-  public respawn(x: number, y: number): void {
-    this.isDead = false;
-    this.hasJumpedInAir = false;
-    this.setAngle(0);
-    this.setPosition(x, y);
-    this.setVelocity(0, 0);
-    this.setAlpha(1);
-
-    const body = this.body as Phaser.Physics.Arcade.Body;
-    if (body) {
-      body.checkCollision.none = false;
-    }
-
-    // Breve invulnerabilidade ao renascer
-    this.isInvulnerable = true;
-    this.scene.tweens.add({
-      targets: this,
-      alpha: 0.4,
-      duration: 100,
-      yoyo: true,
-      repeat: 6,
-      onComplete: () => {
-        this.setAlpha(1);
-        this.isInvulnerable = false;
-      },
-    });
-  }
-
-  private readDirectionalInput(): { horizontal: number; vertical: number } {
-    const pad = GamepadSystem.get().poll();
-    const left = this.cursors.left.isDown || this.keyA.isDown || pad.left;
-    const right = this.cursors.right.isDown || this.keyD.isDown || pad.right;
-    const up = this.cursors.up.isDown || this.keyW.isDown || pad.up;
-    const down = this.cursors.down.isDown || this.keyS.isDown || pad.down;
-
-    return {
-      horizontal: Number(right) - Number(left),
-      vertical: Number(down) - Number(up),
-    };
-  }
-
-  private updateFacing(horizontal: number): void {
-    if (horizontal === 0) return;
-    this.facing = horizontal > 0 ? 1 : -1;
-    this.setFlipX(this.facing < 0);
-  }
-
-  private updateMovement(horizontal: number, grounded: boolean, crouching: boolean): void {
-    const body = this.body as Phaser.Physics.Arcade.Body;
-    const movementScale = this.charging ? 0.78 : 1;
-
-    if (crouching) {
-      this.setAccelerationX(0);
-      this.setDragX(0);
-      this.setVelocityX(0);
-      body.setMaxVelocity(RUN_SPEED * movementScale, 520);
-      return;
-    }
-
-    if (horizontal !== 0) {
-      // Impulso inicial imediato ao sair do repouso para eliminar qualquer sensação de arrasto ou deslize
-      if (grounded && Math.abs(body.velocity.x) < 10) {
-        body.setVelocityX(horizontal * 36);
-      }
-      const velocityDirection = Math.sign(body.velocity.x);
-      const reversing = grounded && Math.abs(body.velocity.x) > 22 && velocityDirection !== horizontal;
-      const acceleration = grounded
-        ? reversing
-          ? BRAKE_ACCELERATION
-          : GROUND_ACCELERATION
-        : AIR_ACCELERATION;
-
-      this.setAccelerationX(horizontal * acceleration * movementScale);
-      this.setDragX(0);
+    this.crouching = (grounded && down) || (this.crouching && !this.canStand());
+    body.setSize(14, this.crouching ? 17 : 25, false).setOffset(9, this.crouching ? 12 : 4);
+    if (horizontal && !this.action) { this.facing = horizontal; this.setFlipX(horizontal < 0); }
+    body.setMaxVelocity(this.crouching ? PLAYER_ART.crouchSpeed : PLAYER_ART.runSpeed, 520);
+    const hurt = time < this.hurtUntil;
+    const movementAllowed = !grounded || this.locomotionGuard.groundMovementAllowed;
+    if (hurt) {
+      // Knockback retains its impulse; gait safety does not pin it or apply idle drag.
+      this.setAccelerationX(0).setDragX(0);
     } else {
-      this.setAccelerationX(0);
-      this.setDragX(grounded ? GROUND_DRAG : AIR_DRAG);
+      const retrieving = this.action?.kind === 'retrieve';
+      this.setAccelerationX(movementAllowed && !retrieving ? horizontal * (grounded ? 900 : 600) : 0);
+      this.setDragX(horizontal && !retrieving ? 0 : grounded ? 1050 : 55);
+      if (movementAllowed && grounded && horizontal && !retrieving && Math.abs(body.velocity.x) < 8) this.setVelocityX(horizontal * 28);
     }
 
-    body.setMaxVelocity(RUN_SPEED * movementScale, 520);
+    const jump = held('jump') || pad.jump;
+    if (jump && !this.previousJump && !this.crouching && !hurt) this.jumpAt = time;
+    this.previousJump = jump;
+    if (!this.jumped && !this.crouching && !hurt && time - this.groundedAt < 130 && time - this.jumpAt < 150) {
+      this.jumped = true; this.groundedAt = -1000; this.jumpAt = -1000;
+      this.setVelocityY(-288); AudioSystem.get().playJump();
+    }
+    if (!jump && body.velocity.y < -110 && !hurt) this.setVelocityY(-110);
+
+    const attack = held('attack') || pad.attack, throwDown = held('throw') || pad.throw;
+    if (throwDown && !this.previousThrow && !this.hasBaton && !this.action && !hurt) this.scene.events.emit('baton-retrieve-request');
+    if (this.hasBaton && !this.action && !hurt && time - this.attackAt > BATON.melee.durationMs) {
+      if (throwDown && !this.previousThrow) {
+        this.attackAt = time;
+        this.action = { kind: 'throw', startedAt: time, direction: this.facing, up, released: false };
+        this.scene.events.emit('baton-prepare', time);
+      } else if (attack && !this.previousAttack) {
+        this.attackAt = time;
+        this.action = { kind: 'melee', startedAt: time, direction: this.facing, up: false, released: false };
+        this.scene.events.emit('baton-swing', this.facing, time);
+        AudioSystem.get().playShoot(false);
+      }
+    }
+    this.previousAttack = attack; this.previousThrow = throwDown;
+
+    if (hurt) {
+      this.motionState = 'HURT'; this.pose(body.velocity.y < 0 ? 'knockback' : 'hurt');
+    } else if (this.animateAction(time)) {
+      // Action pose and exact release are evaluated together before the weapon is updated.
+    } else if (!grounded || body.velocity.y < -1) {
+      this.motionState = body.velocity.y < 0 ? 'JUMP' : 'FALL';
+      this.pose(body.velocity.y < -35 ? 'jump_up' : 'fall', body.velocity.y < -150 ? 0 : 1);
+    } else if (time < this.pushingUntil && horizontal) {
+      this.motionState = 'PUSH';
+      this.pose(this.crouching ? 'push_crouched' : this.pushBlocked ? 'push_blocked' : 'push_standing', this.pushBlocked ? Math.floor(time / 110) % 2 : this.locomotion.sample.frameIndex);
+    } else if (this.crouching) {
+      this.motionState = 'CROUCH'; this.pose(horizontal ? 'crouch_move' : 'crouch', this.locomotion.sample.frameIndex);
+    } else if (Math.abs(body.velocity.x) > 8) {
+      this.motionState = Math.abs(body.velocity.x) > 65 ? 'RUN' : 'WALK';
+      this.pose(this.motionState === 'RUN' ? 'run' : 'walk', this.locomotion.sample.frameIndex);
+    } else if (time < this.landedUntil) {
+      this.motionState = 'LAND'; this.pose('land', time < this.landedUntil - 32 ? 0 : 1);
+    } else {
+      this.motionState = 'IDLE';
+      const idleTime = time % 3600;
+      this.pose(idleTime > 3430 ? 'blink' : 'idle', idleTime > 3515 ? 1 : 0);
+    }
+    if (this.x < 8) this.setX(8);
+    const right = this.scene.physics.world.bounds.right - 8;
+    if (this.x > right) { this.setX(right); this.setVelocityX(0); }
+    if (this.y > this.scene.physics.world.bounds.height + 32) this.handleDeath(true);
   }
 
-  private updateJump(time: number, grounded: boolean, crouching: boolean): void {
+  private animateAction(time: number): boolean {
+    const action = this.action;
+    if (!action) return false;
+    const elapsed = time - action.startedAt;
+    if (action.kind === 'throw') {
+      if (elapsed >= BATON.throw.durationMs) { this.action = undefined; return false; }
+      this.motionState = 'THROW';
+      const throwPose = (state: 'throw_prepare' | 'throw_release' | 'throw_recover', index: number, crouchIndex: number): void => {
+        if (this.crouching) { this.poseState = state; this.anims.stop(); this.setFrame(48 + crouchIndex); }
+        else this.pose(state, index);
+      };
+      if (elapsed < BATON.throw.releaseMs) throwPose('throw_prepare', Math.floor(elapsed / 60), Math.floor(elapsed / 60));
+      else if (!action.released) {
+        throwPose('throw_release', 0, 3);
+        action.released = true; this.hasBaton = false;
+        this.scene.events.emit('baton-throw', action.direction, action.up, time);
+        AudioSystem.get().playShoot(true);
+      } else {
+        const index = Math.max(0, Math.min(3, Math.floor((elapsed - BATON.throw.releaseMs - 55) / 55)));
+        throwPose('throw_recover', index, 4 + index);
+      }
+    } else if (action.kind === 'melee') {
+      if (elapsed >= BATON.melee.durationMs) { this.action = undefined; return false; }
+      this.motionState = 'ATTACK';
+      if (this.crouching) { this.poseState = 'melee'; this.setFrame(48 + Math.min(7, Math.floor(elapsed / 45))); }
+      else this.pose('melee', Math.floor(elapsed / 60));
+    } else {
+      if (elapsed >= BATON.retrieve.durationMs) { this.action = undefined; return false; }
+      this.motionState = 'RETRIEVE'; this.pose('retrieve_bat', Math.floor(elapsed / 60));
+      if (!action.released && elapsed >= BATON.retrieve.recoverMs) {
+        action.released = true;
+        this.scene.events.emit('baton-recover', time);
+      }
+    }
+    return true;
+  }
+
+  receiveDamage(_amount: number, sourceX: number): void {
+    if (this.isInvulnerable || this.isDead) return;
+    AudioSystem.get().playPlayerHurt();
+    if (GameState.get().takeDamage(1)) { this.handleDeath(false, true); return; }
+    this.action = undefined; this.scene.events.emit('baton-action-cancel');
+    this.hurtUntil = this.clock + 240;
+    this.motionState = 'HURT';
+    this.setAccelerationX(0).setDragX(0).setVelocity(this.x < sourceX ? -95 : 95, -155);
+    this.grantInvulnerability();
+  }
+
+  handleDeath(_isFall: boolean, lifeAlreadyLost = false): void {
+    if (this.isDead) return;
+    this.isDead = true; this.motionState = 'DEAD'; this.action = undefined; this.setAccelerationX(0);
+    this.scene.events.emit('baton-action-cancel');
+    (this.body as Phaser.Physics.Arcade.Body).checkCollision.none = true;
+    AudioSystem.get().playPlayerDeath();
+    this.pose('defeat'); this.setVelocity(0, -240);
+    this.scene.cameras.main.shake(160, .004);
+    this.scene.events.emit('player-died', lifeAlreadyLost);
+  }
+
+  respawn(x: number, y: number): void {
+    this.locomotionGuard.reset(); this.animationX = x; this.motionState = 'IDLE';
+    this.wasGrounded = false; this.gaitWasGrounded = false; this.hurtUntil = 0;
+    this.support = undefined; this.previousSupport = undefined; this.lastGroundRelativeDelta = 0;
+    this.action = undefined; this.attackAt = -1000; this.pushingUntil = 0;
+    this.isDead = false; this.jumped = false; this.crouching = false; this.hasBaton = true;
+    this.setPosition(x, y).setVelocity(0, 0).setAccelerationX(0).setAngle(0).setAlpha(1);
     const body = this.body as Phaser.Physics.Arcade.Body;
-    const pad = GamepadSystem.get().poll();
-    const padJumpJustPressed = pad.jump && !this.padPrevJump;
-    this.padPrevJump = pad.jump;
-
-    // PULO EXCLUSIVO NO TECLADO: ESPACO (W e Setas Cima sao exclusivamente para mirar para cima!)
-    const jumpPressed =
-      !crouching && (
-        padJumpJustPressed ||
-        Phaser.Input.Keyboard.JustDown(this.jumpKey)
-      );
-
-    if (jumpPressed) this.jumpBufferedAt = time;
-
-    const canUseCoyoteTime = (grounded || time - this.lastGroundedAt <= COYOTE_TIME_MS) && !this.hasJumpedInAir;
-    const jumpBuffered = time - this.jumpBufferedAt <= JUMP_BUFFER_MS;
-
-    if (canUseCoyoteTime && jumpBuffered) {
-      this.hasJumpedInAir = true;
-      this.setVelocityY(-JUMP_SPEED);
-      this.jumpBufferedAt = Number.NEGATIVE_INFINITY;
-      this.lastGroundedAt = Number.NEGATIVE_INFINITY;
-      this.play('player-jump', true);
-      AudioSystem.get().playJump();
-      this.spawnDustParticle(this.x - 4, this.y + 12, -0.8, 0.2);
-      this.spawnDustParticle(this.x + 4, this.y + 12, 0.8, 0.2);
-    }
-
-    const jumpHeld = pad.jump || this.jumpKey.isDown;
-
-    if (!jumpHeld && body.velocity.y < -110) this.setVelocityY(-110);
+    body.checkCollision.none = false; body.setSize(14, 25, false).setOffset(9, 4);
+    body.updateFromGameObject(); this.pose('respawn');
+    this.grantInvulnerability();
   }
 
-  private updateAttack(
-    time: number,
-    grounded: boolean,
-    horizontal: number,
-    vertical: number,
-  ): void {
-    const pad = GamepadSystem.get().poll();
-    const attackDown = this.shootKeyJ.isDown || this.shootKeyX.isDown || pad.attack;
-
-    if (attackDown && !this.attackWasDown && time - this.lastShotAt >= QUICK_SHOT_COOLDOWN_MS) {
-      this.charging = true;
-      this.chargeStartedAt = time;
-      this.updateAim(horizontal, vertical, grounded);
-      AudioSystem.get().playCharge();
-    }
-
-    if (attackDown && this.charging) this.updateAim(horizontal, vertical, grounded);
-
-    if (!attackDown && this.attackWasDown && this.charging) {
-      const chargeTime = Phaser.Math.Clamp(time - this.chargeStartedAt, 0, MAX_CHARGE_MS);
-      const charged = chargeTime >= CHARGED_SHOT_THRESHOLD_MS;
-      this.fireProjectile(time, charged, grounded);
-      this.charging = false;
-    }
-
-    this.attackWasDown = attackDown;
-  }
-
-  private updateAim(horizontal: number, vertical: number, grounded = false): void {
-    let x = horizontal;
-    let y = vertical;
-
-    // Se estiver abaixado no chão (grounded e vertical > 0):
-    // Dispara RETO para frente (horizontal), no sentido em que Nilo está virado (facing)!
-    if (grounded && vertical > 0) {
-      y = 0;
-      x = horizontal !== 0 ? horizontal : this.facing;
-    } else if (x === 0 && y === 0) {
-      x = this.facing;
-    }
-
-    if (x !== 0) {
-      this.facing = x > 0 ? 1 : -1;
-      this.setFlipX(this.facing < 0);
-    }
-
-    const vector = new Phaser.Math.Vector2(x, y);
-    if (vector.lengthSq() === 0) vector.set(this.facing, 0);
-    vector.normalize();
-
-    this.aimX = vector.x;
-    this.aimY = vector.y;
-  }
-
-  private fireProjectile(time: number, charged: boolean, grounded: boolean): void {
-    if (time - this.lastShotAt < QUICK_SHOT_COOLDOWN_MS) return;
-
-    const input = this.readDirectionalInput();
-    const crouching = grounded && input.vertical > 0;
-    const verticalAim = Math.abs(this.aimX) < 0.2;
-    const projectileX = this.x + this.aimX * 13 + (verticalAim ? this.facing * 3 : 0);
-    // Quando agachado no chão: projétil sai na altura baixa do estilingue agachado (this.y + 4) para atingir besouros
-    // Em pé: altura normal do peito (this.y - 2 + this.aimY * 11)
-    const projectileY = crouching ? (this.y + 4) : (this.y - 2 + this.aimY * 11);
-    const projectile = new Projectile(this.scene, projectileX, projectileY, charged);
-    projectile.fire(this.aimX, this.aimY);
-
-    this.lastShotAt = time;
-    this.shotStartedAt = time;
-    this.shootPoseUntil = time + SHOOT_POSE_MS;
-    this.shotAimPose = resolveAimPose(this.aimX, this.aimY);
-
-    AudioSystem.get().playShoot(charged);
-
-    this.scene.events.emit('player-shot', projectile);
-    this.scene.cameras.main.shake(charged ? 45 : 22, charged ? 0.0015 : 0.0007);
-  }
-
-  private setPlayerFrame(frame: number): void {
-    this.anims.stop();
-    this.setFrame(frame);
-  }
-
-  private isUpwardPose(aimPose: AimPose): boolean {
-    return aimPose === 'up' || aimPose === 'up-diagonal';
-  }
-
-  private updateVisualState(
-    time: number,
-    grounded: boolean,
-    horizontal: number,
-    vertical: number,
-  ): void {
-    const body = this.body as Phaser.Physics.Arcade.Body;
-    const speed = Math.abs(body.velocity.x);
-    const crouching = grounded && vertical > 0;
-    const movingOnGround =
-      grounded && !crouching && (speed > 8 || horizontal !== 0);
-
-    if (this.charging) {
-      if (crouching) {
-        this.setPlayerFrame(PLAYER_FRAMES.crouch);
-        return;
-      }
-
-      const chargeTime = Phaser.Math.Clamp(time - this.chargeStartedAt, 0, MAX_CHARGE_MS);
-      const chargeFrame = Math.min(2, Math.floor(chargeTime / 260));
-      const aimPose = resolveAimPose(this.aimX, this.aimY);
-
-      if (this.isUpwardPose(aimPose)) {
-        this.setPlayerFrame(PLAYER_FRAMES.aimUpward[chargeFrame > 0 ? 1 : 0]);
-      } else if (chargeFrame === 0) {
-        this.setPlayerFrame(PLAYER_FRAMES.aimForward[0]);
-      } else {
-        this.setPlayerFrame(PLAYER_FRAMES.charge[chargeFrame]);
-      }
-      return;
-    }
-
-    if (time < this.shootPoseUntil) {
-      if (crouching) {
-        this.setPlayerFrame(PLAYER_FRAMES.crouch);
-        return;
-      }
-
-      const elapsed = Math.max(0, time - this.shotStartedAt);
-      const shootFrame = Math.min(
-        SHOOT_FRAME_COUNT - 1,
-        Math.floor(elapsed / (SHOOT_POSE_MS / SHOOT_FRAME_COUNT)),
-      );
-
-      if (this.isUpwardPose(this.shotAimPose)) {
-        this.setPlayerFrame(PLAYER_FRAMES.shootUpward[shootFrame]);
-      } else {
-        this.setPlayerFrame(PLAYER_FRAMES.shootForward[shootFrame]);
-      }
-      return;
-    }
-
-    if (!grounded) {
-      if (body.velocity.y < -35) {
-        this.play('player-jump', true);
-        return;
-      }
-
-      if (Math.abs(body.velocity.y) <= 35) {
-        this.setPlayerFrame(PLAYER_FRAMES.apex);
-        return;
-      }
-
-      this.play('player-fall', true);
-      return;
-    }
-
-    if (time < this.landPoseUntil && !movingOnGround) return;
-
-    if (crouching) {
-      this.play('player-crouch', true);
-      return;
-    }
-
-    const movingAgainstVelocity =
-      horizontal !== 0 && speed > 32 && Math.sign(body.velocity.x) !== horizontal;
-
-    if (movingAgainstVelocity) {
-      this.play('player-skid', true);
-      if (Phaser.Math.Between(0, 10) > 6) {
-        this.spawnDustParticle(this.x - this.facing * 7, this.y + 12, -this.facing * 1.2, -0.3);
-      }
-      return;
-    }
-
-    if (movingOnGround) {
-      if (speed >= 65) {
-        this.play('player-run', true);
-        if (this.anims.currentAnim?.key === 'player-run') {
-          this.anims.timeScale = Math.min(1.4, Math.max(0.85, speed / RUN_SPEED));
-        }
-      } else {
-        this.play('player-walk', true);
-        if (this.anims.currentAnim?.key === 'player-walk') {
-          this.anims.timeScale = Math.min(1.3, Math.max(0.75, speed / 55));
-        }
-      }
-      return;
-    }
-
-    this.play('player-idle', true);
-  }
-
-  private spawnDustParticle(x: number, y: number, velX: number, velY: number): void {
-    if (!this.scene) return;
-    const dust = this.scene.add.graphics().setDepth(8);
-    dust.fillStyle(0xfef9c3, 0.85);
-    dust.fillRect(-1, -1, 3, 3);
-    dust.fillStyle(0xffffff, 0.95);
-    dust.fillRect(0, 0, 1, 1);
-    dust.setPosition(x, y);
-
-    this.scene.tweens.add({
-      targets: dust,
-      x: x + velX * 10,
-      y: y + velY * 5,
-      scaleX: 0.3,
-      scaleY: 0.3,
-      alpha: 0,
-      duration: 220,
-      ease: 'Cubic.easeOut',
-      onComplete: () => dust.destroy(),
-    });
+  private grantInvulnerability(): void {
+    this.isInvulnerable = true;
+    this.scene.tweens.add({ targets: this, alpha: .3, duration: 90, yoyo: true, repeat: 8, onComplete: () => { this.setAlpha(1); this.isInvulnerable = false; } });
   }
 }

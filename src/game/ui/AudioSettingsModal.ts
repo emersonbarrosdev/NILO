@@ -1,3 +1,4 @@
+import { pinOverlay } from '../systems/PresentationSystem';
 import Phaser from 'phaser';
 import { GAME_HEIGHT, GAME_WIDTH } from '../config/constants';
 import { AudioSystem } from '../systems/AudioSystem';
@@ -33,6 +34,7 @@ export class AudioSettingsModal {
     this.interactiveHitZones = [];
 
     this.container = this.scene.add.container(0, 0).setDepth(8000).setScrollFactor(0);
+    pinOverlay(this.scene,this.container);
 
     // Fundo semitransparente escuro
     const backdrop = this.scene.add.rectangle(
@@ -50,9 +52,9 @@ export class AudioSettingsModal {
       GAME_HEIGHT / 2,
       258,
       148,
-      0x0c1c2e,
+      0x103722,
       1,
-    ).setStrokeStyle(1, 0x38bdf8, 1);
+    ).setStrokeStyle(1, 0x90bd43, 1);
 
     const inner = this.scene.add.rectangle(
       GAME_WIDTH / 2,
@@ -82,7 +84,7 @@ export class AudioSettingsModal {
     this.renderRows();
 
     // Botão interativo de Fechar e Salvar (Mouse / Teclado / Controle)
-    const closeBtnBg = this.scene.add.rectangle(GAME_WIDTH / 2, 134, 150, 16, 0x1d4ed8, 0.85)
+    const closeBtnBg = this.scene.add.rectangle(GAME_WIDTH / 2, 134, 150, 16, 0x326925, 0.85)
       .setStrokeStyle(1, 0xfde047, 1)
       .setInteractive({ useHandCursor: true })
       .setDepth(8004);
@@ -171,7 +173,7 @@ export class AudioSettingsModal {
       const y = startY + idx * rowHeight;
       const isSelected = idx === this.selectedIndex;
       const labelColor = isSelected ? 0xfef08a : 0xcfe6f7;
-      const valColor = isSelected ? 0x38bdf8 : 0x94a3b8;
+      const valColor = isSelected ? 0x90bd43 : 0x94a3b8;
 
       // Nome do ajuste
       const labelText = addPixelText(this.scene, 42, y, item.label, {
@@ -213,7 +215,7 @@ export class AudioSettingsModal {
         if (this.selectedIndex !== idx) {
           this.selectedIndex = idx;
           AudioSystem.get().playMenuNavigate();
-          this.renderRows();
+          this.updateCursor();
         }
       });
 
@@ -221,7 +223,7 @@ export class AudioSettingsModal {
         // Clicar no lado esquerdo da linha diminui o volume, lado direito aumenta
         rowHit.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
           this.selectedIndex = idx;
-          if (pointer.x < GAME_WIDTH / 2 + 20) {
+          if (pointer.x < this.scene.scale.width * .56) {
             this.adjustValue(-0.1);
           } else {
             this.adjustValue(0.1);
@@ -235,6 +237,7 @@ export class AudioSettingsModal {
         });
       }
 
+      this.container?.add(rowHit);
       this.interactiveHitZones.push(rowHit);
     });
 
