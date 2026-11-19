@@ -1,0 +1,58 @@
+{
+  "generator": "scripts/generate-bloco2-icons.mjs",
+  "originalArt": [
+    "trail-marker",
+    "breath-fruit",
+    "breath-leaf-full",
+    "breath-leaf-empty"
+  ],
+  "portrait": {
+    "source": "player-unarmed-source.png",
+    "sha256": "39ff36cefd12c9692f988b3840fd726144d14360982c64c7b3e1e3bc5ee9a376",
+    "crop": {
+      "left": 24,
+      "top": 0,
+      "width": 119,
+      "height": 88
+    },
+    "alphaThreshold": 220,
+    "transform": "Direct crop, original RGB, no redraw. Only largest connected silhouette retained."
+  },
+  "assets": [
+    {
+      "file": "src\\assets\\hd\\bloco2-trail-marker.png",
+      "width": 64,
+      "height": 64,
+      "transparentPixels": 1921,
+      "opaquePixels": 2017
+    },
+    {
+      "file": "src\\assets\\hd\\bloco2-breath-fruit.png",
+      "width": 64,
+      "height": 64,
+      "transparentPixels": 1968,
+      "opaquePixels": 1895
+    },
+    {
+      "file": "src\\assets\\hd\\bloco2-breath-leaf-full.png",
+      "width": 64,
+      "height": 64,
+      "transparentPixels": 2577,
+      "opaquePixels": 1333
+    },
+    {
+      "file": "src\\assets\\hd\\bloco2-breath-leaf-empty.png",
+      "width": 64,
+      "height": 64,
+      "transparentPixels": 2577,
+      "opaquePixels": 1333
+    },
+    {
+      "file": "src\\assets\\hd\\bloco2-nilo-face.png",
+      "width": 128,
+      "height": 128,
+      "transparentPixels": 10605,
+      "opaquePixels": 5779
+    }
+  ]
+}
